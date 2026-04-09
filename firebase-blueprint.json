@@ -1,0 +1,109 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user preferences and settings for the AI agent.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "selectedPersona": { "type": "string", "enum": ["funny", "analytical", "frugal"] },
+        "avatarUrl": { "type": "string" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "currency": { "type": "string", "enum": ["BRL", "USD", "EUR"] },
+            "notificationsEnabled": { "type": "boolean" }
+          }
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "Transaction": {
+      "title": "Financial Transaction",
+      "description": "Income or expense record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "type", "date"]
+    },
+    "ShoppingItem": {
+      "title": "Shopping List Item",
+      "description": "Item in the shopping list or purchase history.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "number" },
+        "category": { "type": "string" },
+        "purchased": { "type": "boolean" },
+        "lastPrice": { "type": "number" },
+        "lastPurchasedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "History of interactions with the AI agent.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "agentType": { "type": "string" }
+      },
+      "required": ["userId", "role", "content", "timestamp"]
+    },
+    "Share": {
+      "title": "Resource Share",
+      "description": "Defines sharing of finance or shopping resources between users.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "ownerEmail": { "type": "string" },
+        "sharedWithEmail": { "type": "string" },
+        "sharedWithId": { "type": "string" },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "finance": { "type": "string", "enum": ["none", "read", "write"] },
+            "shopping": { "type": "string", "enum": ["none", "read", "write"] }
+          }
+        },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "ownerEmail", "sharedWithEmail", "permissions", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles and settings."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Financial history for the user."
+    },
+    "/users/{userId}/shoppingList/{itemId}": {
+      "schema": "ShoppingItem",
+      "description": "Current shopping list and purchase history."
+    },
+    "/users/{userId}/chatHistory/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Conversation history with the AI agent."
+    },
+    "/shares/{shareId}": {
+      "schema": "Share",
+      "description": "Sharing records between users."
+    }
+  }
+}

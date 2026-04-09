@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string &&
+             data.email.size() < 100;
+    }
+
+    function isValidTransaction(data) {
+      return data.userId is string &&
+             data.amount is number &&
+             data.type in ['income', 'expense'] &&
+             data.date is string;
+    }
+
+    function isValidShoppingItem(data) {
+      return data.userId is string &&
+             data.name is string &&
+             data.name.size() < 100;
+    }
+
+    function isValidChatMessage(data) {
+      return data.userId == request.auth.uid &&
+             data.role in ['user', 'assistant'] &&
+             data.content is string &&
+             data.content.size() < 10000 &&
+             data.timestamp is string;
+    }
+
+    function hasSharedReadAccess(ownerId, module) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/shares/$(ownerId + "_" + request.auth.token.email)) && 
+             get(/databases/$(database)/documents/shares/$(ownerId + "_" + request.auth.token.email)).data.status == 'accepted' &&
+             get(/databases/$(database)/documents/shares/$(ownerId + "_" + request.auth.token.email)).data.permissions[module] in ['read', 'write'];
+    }
+
+    function hasSharedWriteAccess(ownerId, module) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/shares/$(ownerId + "_" + request.auth.token.email)) && 
+             get(/databases/$(database)/documents/shares/$(ownerId + "_" + request.auth.token.email)).data.status == 'accepted' &&
+             get(/databases/$(database)/documents/shares/$(ownerId + "_" + request.auth.token.email)).data.permissions[module] == 'write';
+    }
+
+    function isValidShare(data) {
+      return data.ownerId is string &&
+             data.ownerEmail is string &&
+             data.sharedWithEmail is string &&
+             data.status in ['pending', 'accepted', 'declined'] &&
+             data.permissions.finance in ['none', 'read', 'write'] &&
+             data.permissions.shopping in ['none', 'read', 'write'] &&
+             (!('upgradeRequested' in data) || data.upgradeRequested is bool) &&
+             (!('upgradeRequestedAt' in data) || data.upgradeRequestedAt is string);
+    }
+
+    match /shares/{shareId} {
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid || 
+        resource.data.sharedWithId == request.auth.uid ||
+        resource.data.sharedWithEmail == request.auth.token.email
+      );
+      allow create: if isAuthenticated() && 
+                    request.resource.data.ownerId == request.auth.uid &&
+                    isValidShare(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (resource.data.ownerId == request.auth.uid && isValidShare(request.resource.data)) ||
+        (
+          (resource.data.sharedWithEmail == request.auth.token.email || resource.data.sharedWithId == request.auth.uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'sharedWithId', 'upgradeRequested', 'upgradeRequestedAt']) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'sharedWithId', 'upgradeRequested', 'upgradeRequestedAt']) &&
+          (request.resource.data.status == resource.data.status || request.resource.data.status in ['accepted', 'declined'])
+        )
+      );
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser(request.resource.data);
+      
+      match /transactions/{transactionId} {
+        allow read: if isOwner(userId) || hasSharedReadAccess(userId, 'finance');
+        allow create, update: if (isOwner(userId) || hasSharedWriteAccess(userId, 'finance')) && isValidTransaction(request.resource.data);
+        allow delete: if isOwner(userId) || hasSharedWriteAccess(userId, 'finance');
+      }
+
+      match /shoppingList/{itemId} {
+        allow read: if isOwner(userId) || hasSharedReadAccess(userId, 'shopping');
+        allow create, update: if (isOwner(userId) || hasSharedWriteAccess(userId, 'shopping')) && isValidShoppingItem(request.resource.data);
+        allow delete: if isOwner(userId) || hasSharedWriteAccess(userId, 'shopping');
+      }
+
+      match /chatHistory/{messageId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidChatMessage(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
