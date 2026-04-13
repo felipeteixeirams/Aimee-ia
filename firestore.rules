@@ -101,7 +101,7 @@ service cloud.firestore {
 
       match /chatHistory/{messageId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidChatMessage(request.resource.data);
+        allow create, update: if isOwner(userId) && isValidChatMessage(request.resource.data);
         allow delete: if isOwner(userId);
       }
     }

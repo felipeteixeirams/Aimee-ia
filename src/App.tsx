@@ -50,7 +50,10 @@ import {
   ChevronDown,
   Moon,
   Sun,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Copy,
+  Edit2,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -98,6 +101,9 @@ export default function App() {
   const [financePeriod, setFinancePeriod] = useState<Period>('30d');
   const [financeCategory, setFinanceCategory] = useState<string>('all');
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true' || 
@@ -169,11 +175,12 @@ export default function App() {
     const chatPath = `users/${user.uid}/chatHistory`;
     const chatQuery = query(
       collection(db, chatPath),
-      orderBy('timestamp', 'asc'),
+      orderBy('timestamp', 'desc'),
       limit(50)
     );
     const unsubChat = onSnapshot(chatQuery, (snap) => {
-      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage)));
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage));
+      setMessages(msgs.reverse());
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, chatPath);
     });
@@ -296,26 +303,84 @@ export default function App() {
     });
   };
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || !user) return;
+  const formatDateSeparator = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
 
-    const userMsg: ChatMessage = {
-      userId: user.uid,
-      role: 'user',
-      content: inputText,
-      timestamp: new Date().toISOString()
-    };
+    if (date.toDateString() === now.toDateString()) return 'Hoje';
+    if (date.toDateString() === yesterday.toDateString()) return 'Ontem';
+    
+    const dayOfWeek = format(date, 'EEEE', { locale: ptBR });
+    const formattedDate = format(date, 'dd/MM/yyyy');
+    return `${formattedDate} - ${dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}`;
+  };
 
-    setInputText('');
-    try {
-      await addDoc(collection(db, 'users', user.uid, 'chatHistory'), userMsg);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleEditMessage = async (msg: ChatMessage) => {
+    if (!msg.id || !user) return;
+    
+    const newValue = editValue.trim();
+    if (!newValue) {
+      setEditingMessage(null);
+      return;
     }
 
+    // If content didn't change, just close
+    if (newValue === msg.content) {
+      setEditingMessage(null);
+      return;
+    }
+
+    try {
+      // Update the message in Firestore
+      await updateDoc(doc(db, `users/${user.uid}/chatHistory`, msg.id), {
+        content: newValue,
+        timestamp: new Date().toISOString()
+      });
+      
+      setEditingMessage(null);
+      
+      // Small delay to let the UI update from the snapshot
+      setTimeout(() => {
+        handleSendMessage(newValue, true);
+      }, 300);
+      
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory/${msg.id}`);
+    }
+  };
+
+  const handleSendMessage = async (overrideText?: string, skipAddDoc = false) => {
+    const text = overrideText || inputText;
+    if (!text.trim() || !user) return;
+
+    if (!skipAddDoc) {
+      const userMsg: ChatMessage = {
+        userId: user.uid,
+        role: 'user',
+        content: text,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        await addDoc(collection(db, 'users', user.uid, 'chatHistory'), userMsg);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
+      }
+    }
+
+    if (!overrideText) setInputText('');
+    
     setIsTyping(true);
     const response = await orchestrator(
-      inputText, 
+      text, 
       messages, 
       user.uid, 
       shoppingList, 
@@ -328,8 +393,9 @@ export default function App() {
     // Split response into blocks (paragraphs) for a more natural feel
     const blocks = response.split('\n\n').filter(b => b.trim());
 
-    for (const block of blocks) {
-      await typeText(block, 8); // Fast typing speed
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      await typeText(block, 8); 
       
       const aiMsg: ChatMessage = {
         userId: user.uid,
@@ -344,11 +410,16 @@ export default function App() {
         handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
       }
       
-      // Clear typing content after the message is persisted and should appear in the list
-      setTypingContent(null);
-      
-      // Small pause between blocks
-      await new Promise(r => setTimeout(r, 300));
+      // Keep the typing content visible for a moment after saving to DB
+      // to allow the Firestore snapshot to update the messages list
+      if (i === blocks.length - 1) {
+        await new Promise(r => setTimeout(r, 600));
+        setTypingContent(null);
+      } else {
+        // Between blocks, wait a bit then clear typing content to start the next block
+        await new Promise(r => setTimeout(r, 400));
+        setTypingContent(null);
+      }
     }
   };
 
@@ -529,27 +600,121 @@ export default function App() {
                     <p className="text-neutral-400 text-sm">Como posso te ajudar hoje?</p>
                   </div>
                 )}
-                {messages.map((msg, i) => (
-                  <div key={i} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
-                    <div className={cn(
-                      "max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
-                      msg.role === 'user' 
-                        ? "bg-brand text-brand-foreground rounded-tr-none shadow-md" 
-                        : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm"
-                    )}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
+                {messages.reduce((acc: any[], msg, i) => {
+                  const dateStr = msg.timestamp.split('T')[0];
+                  const prevDateStr = i > 0 ? messages[i-1].timestamp.split('T')[0] : null;
+                  
+                  if (dateStr !== prevDateStr) {
+                    acc.push(
+                      <div key={`sep-${dateStr}`} className="flex justify-center my-6">
+                        <span className="px-3 py-1 bg-neutral-50 dark:bg-neutral-900/50 text-[10px] text-neutral-400 font-medium rounded-full uppercase tracking-widest">
+                          {formatDateSeparator(msg.timestamp)}
+                        </span>
+                      </div>
+                    );
+                  }
+                  
+                  acc.push(
+                    <motion.div 
+                      key={msg.id || i} 
+                      layout
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      className={cn("flex group", msg.role === 'user' ? "justify-end" : "justify-start")}
+                    >
+                      <div className={cn(
+                        "relative max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all",
+                        msg.role === 'user' 
+                          ? "bg-brand text-brand-foreground rounded-tr-none shadow-md" 
+                          : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-tl-none"
+                      )}>
+                        {editingMessage?.id === msg.id ? (
+                          <div className="flex flex-col gap-2 min-w-[200px]">
+                            <textarea
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              className="w-full bg-transparent border-none focus:ring-0 resize-none text-sm p-0 text-brand-foreground placeholder:text-brand-foreground/50"
+                              autoFocus
+                              rows={3}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => setEditingMessage(null)} className="p-1 hover:bg-black/10 rounded transition-colors">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => handleEditMessage(msg)} className="p-1 hover:bg-black/10 rounded transition-colors">
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {msg.content}
+                            <div className={cn(
+                              "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1",
+                              msg.role === 'user' ? "right-full mr-2" : "left-full ml-2"
+                            )}>
+                              <button 
+                                onClick={() => copyToClipboard(msg.content, msg.id || i.toString())}
+                                className="p-1.5 bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-lg shadow-sm text-neutral-400 hover:text-brand transition-colors relative"
+                                title="Copiar"
+                              >
+                                {copiedId === (msg.id || i.toString()) ? (
+                                  <Check className="w-3.5 h-3.5 text-green-500" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                                <AnimatePresence>
+                                  {copiedId === (msg.id || i.toString()) && (
+                                    <motion.span 
+                                      initial={{ opacity: 0, y: 10, x: '-50%' }}
+                                      animate={{ opacity: 1, y: 0, x: '-50%' }}
+                                      exit={{ opacity: 0, y: -10, x: '-50%' }}
+                                      className="absolute bottom-full mb-2 left-1/2 px-3 py-1.5 bg-neutral-900 dark:bg-neutral-800 text-white text-[11px] font-medium rounded-lg whitespace-nowrap pointer-events-none shadow-xl border border-neutral-700/50 z-50"
+                                    >
+                                      Copiado para a área de transferência!
+                                    </motion.span>
+                                  )}
+                                </AnimatePresence>
+                              </button>
+                              {msg.role === 'user' && (
+                                <button 
+                                  onClick={() => {
+                                    setEditingMessage(msg);
+                                    setEditValue(msg.content);
+                                  }}
+                                  className="p-1.5 bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-lg shadow-sm text-neutral-400 hover:text-brand transition-colors"
+                                  title="Editar"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                  return acc;
+                }, [])}
                 {typingContent && (
-                  <div className="flex justify-start">
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
                     <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-none bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 shadow-sm text-sm leading-relaxed">
                       {typingContent}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
                 {isTyping && (
-                  <div className="flex justify-start">
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
                     <div className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
                       <div className="flex gap-1">
                         <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce" />
@@ -557,7 +722,7 @@ export default function App() {
                         <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:0.4s]" />
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
