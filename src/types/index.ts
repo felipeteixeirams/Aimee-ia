@@ -29,6 +29,9 @@ export interface ShoppingItem {
   purchased: boolean;
   lastPrice?: number;
   lastPurchasedAt?: string;
+  urgency?: 'low' | 'medium' | 'high';
+  isStock?: boolean; // If true, it's in the pantry, not the shopping list
+  frequency?: number; // How many times it was added/bought
 }
 
 export interface ChatMessage {
@@ -38,6 +41,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   agentType?: string;
+  isInsight?: boolean;
 }
 
 export interface Share {

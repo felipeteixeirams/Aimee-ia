@@ -23,7 +23,7 @@ const addTransactionFn: FunctionDeclaration = {
 
 const addShoppingItemsFn: FunctionDeclaration = {
   name: "addShoppingItems",
-  description: "Adiciona um ou mais itens à lista de compras de uma só vez.",
+  description: "Adiciona um ou mais itens à lista de compras ou ao estoque doméstico.",
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -35,7 +35,9 @@ const addShoppingItemsFn: FunctionDeclaration = {
           properties: {
             name: { type: Type.STRING, description: "Nome do item" },
             quantity: { type: Type.NUMBER, description: "Quantidade" },
-            category: { type: Type.STRING, description: "Categoria do item" }
+            category: { type: Type.STRING, description: "Categoria do item" },
+            urgency: { type: Type.STRING, enum: ["low", "medium", "high"], description: "Urgência do item" },
+            isStock: { type: Type.BOOLEAN, description: "Se true, adiciona ao estoque doméstico (pensa na despensa). Se false, adiciona à lista de compras." }
           },
           required: ["name"]
         }
@@ -47,7 +49,7 @@ const addShoppingItemsFn: FunctionDeclaration = {
 
 const updateShoppingItemsFn: FunctionDeclaration = {
   name: "updateShoppingItems",
-  description: "Atualiza um ou mais itens da lista de compras (ex: marcar como comprado, mudar quantidade).",
+  description: "Atualiza itens da lista de compras ou estoque (ex: marcar como comprado, mover para estoque, mudar urgência).",
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -57,11 +59,13 @@ const updateShoppingItemsFn: FunctionDeclaration = {
         items: {
           type: Type.OBJECT,
           properties: {
-            id: { type: Type.STRING, description: "ID do item no banco de dados" },
-            name: { type: Type.STRING, description: "Nome do item (se o ID não for conhecido)" },
-            quantity: { type: Type.NUMBER, description: "Nova quantidade" },
-            category: { type: Type.STRING, description: "Nova categoria" },
-            purchased: { type: Type.BOOLEAN, description: "Se o item foi comprado" }
+            id: { type: Type.STRING, description: "ID do item" },
+            name: { type: Type.STRING, description: "Nome do item" },
+            quantity: { type: Type.NUMBER },
+            category: { type: Type.STRING },
+            purchased: { type: Type.BOOLEAN },
+            urgency: { type: Type.STRING, enum: ["low", "medium", "high"] },
+            isStock: { type: Type.BOOLEAN, description: "Mover entre lista de compras e estoque" }
           },
           required: ["name"]
         }
@@ -95,31 +99,31 @@ const removeShoppingItemsFn: FunctionDeclaration = {
 };
 
 const getSystemInstruction = (persona: string = 'funny') => {
-  const base = `Seu nome é **Aimee**, a Agente Orquestradora de Inteligência Pessoal.
+  const base = `Seu nome é **Aimee**, a Agente Orquestradora de Inteligência Pessoal e sua nova função principal é ser uma **Consultora Financeira Proativa**.
   
-**Diretriz de Produtividade (CRÍTICA):**
-- **Seja Sucinta:** Se o usuário for direto (ex: "Quanto tenho no caixa?", "Adicione pão"), responda de forma curta, objetiva e produtiva. Não enrole.
-- **Flexibilidade:** Apenas seja mais detalhista ou expressiva se o usuário for vago ou iniciar uma conversa informal.
-- **Personalidade vs Eficiência:** Sua personalidade deve transparecer no *tom*, mas nunca deve prejudicar a velocidade da resposta ou a clareza da informação.
+**Capacidades Avançadas (CRÍTICO):**
+1. **Classificação Automática:** Se o usuário não informar uma categoria para um gasto (ex: "Gastei 40 no iFood"), identifique a categoria mais provável (ex: "Alimentação") e use-a no 'addTransaction'.
+2. **Alertas Inteligentes:** Sempre que registrar um gasto, compare-o com o histórico fornecido. Se o valor for significativamente maior que a média daquela categoria (ex: 50% acima), adicione um aviso sutil na sua resposta (ex: "Registrado, mas notei que este valor está acima da sua média em Lazer").
+3. **Análise Preditiva:** Use o histórico de transações para prever gastos futuros. Se o usuário perguntar "Quanto vou gastar mês que vem?", projete com base na média atual.
+4. **Simulações Financeiras:** Responda a cenários "E se...". Se o usuário disser "E se eu cortar 20% de Uber?", calcule a economia em 3, 6 e 12 meses com base nos gastos reais de transporte que você vê no histórico.
+5. **Gestão de Compras e Estoque:**
+   - **Sugestões Inteligentes:** Sugira itens com base no histórico de compras (recorrência) ou sazonalidade (ex: frutas da época).
+   - **Receitas:** Se o usuário pedir para fazer um prato (ex: "Quero fazer Lasanha"), sugira todos os ingredientes necessários e pergunte se quer adicionar à lista o que ele não tem.
+   - **Controle de Estoque:** Diferencie o que está na "Lista de Compras" do que está no "Estoque" (despensa). Use 'isStock: true' para itens que o usuário já tem.
+   - **Priorização:** Use 'urgency' (low, medium, high) para organizar a lista.
 
-**Guard-rails (Regras de Segurança):**
-- **Privacidade:** Nunca compartilhe dados de um usuário com outro.
-- **Escopo:** Mantenha o foco em gestão financeira, listas de compras e tarefas cotidianas.
-- **Conselhos Profissionais:** Você NÃO é um consultor financeiro ou advogado. Sempre adicione um aviso se o usuário pedir conselhos complexos de investimento.
-- **Integridade:** Recuse pedidos para realizar ações ilegais, antiéticas ou prejudiciais.
-- **Confirmação:** Sempre confirme quando realizar uma ação no banco de dados (usando as ferramentas fornecidas).
+**Diretriz de Produtividade:**
+- **Seja Sucinta mas Inteligente:** Mantenha a objetividade, mas não hesite em trazer insights financeiros se notar padrões importantes.
+- **Personalidade vs Eficiência:** Sua personalidade deve transparecer no tom, mas a precisão dos dados é prioridade.
+
+**Guard-rails:**
+- **Privacidade:** Nunca compartilhe dados entre usuários.
+- **Aviso Legal:** Adicione sempre um pequeno aviso: "*Lembre-se: sou uma IA, valide estes dados antes de tomar decisões financeiras críticas.*" quando fizer projeções ou simulações complexas.
 
 **Agentes Especializados:**
-1. FINANCEIRO: Use 'addTransaction' para registrar gastos ou ganhos.
+1. FINANCEIRO: Use 'addTransaction' para registrar gastos ou ganhos. Sempre tente inferir a categoria se não for dita.
 2. COMPRAS: Gerencie a lista de mercado.
-   - Use 'addShoppingItems' para adicionar itens.
-   - Use 'updateShoppingItems' para editar itens (mudar quantidade, categoria ou marcar como comprado).
-   - Use 'removeShoppingItems' para remover itens.
-   Identifique todos os itens mencionados no texto corrido do usuário e execute as ações de uma vez.
-
-**Fluxo de Conversa:**
-- Após realizar uma ação, dê um feedback curto.
-- Sugira o próximo passo apenas se for realmente útil para o contexto.
+   - Use 'addShoppingItems', 'updateShoppingItems', 'removeShoppingItems'.
 
 Responda sempre em Português do Brasil.`;
 
@@ -160,7 +164,7 @@ export const orchestrator = async (
       : "";
 
     const financeContext = transactions.length > 0
-      ? `\n\nResumo Financeiro Atual (Espaço Ativo):\n${transactions.slice(0, 20).map(t => `- ${t.date}: ${t.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${t.amount.toFixed(2)} - ${t.description} (${t.category})`).join('\n')}`
+      ? `\n\nResumo Financeiro Atual (Espaço Ativo):\n${transactions.slice(0, 50).map(t => `- ${t.date}: ${t.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${t.amount.toFixed(2)} - ${t.description} (${t.category})`).join('\n')}`
       : "\n\nNenhuma transação financeira encontrada no espaço ativo.";
 
     const response = await ai.models.generateContent({
@@ -179,8 +183,8 @@ export const orchestrator = async (
     });
 
     const functionCalls = response.functionCalls;
+    let feedback = "";
     if (functionCalls) {
-      let feedback = "";
       for (const call of functionCalls) {
         if (call.name === 'addTransaction') {
           const args = call.args as any;
@@ -195,27 +199,40 @@ export const orchestrator = async (
           } catch (error) {
             handleFirestoreError(error, OperationType.WRITE, transPath);
           }
-          feedback += `Registrado: ${args.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${args.amount.toFixed(2)} (${args.description}). `;
+          feedback += `✅ Registrado: ${args.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${args.amount.toFixed(2)} (${args.description}). `;
         }
         if (call.name === 'addShoppingItems') {
           const args = call.args as any;
           const items = args.items as any[];
           const shopPath = `users/${activeUserId}/shoppingList`;
           for (const item of items) {
+            const existing = shoppingList.find(i => i.name.toLowerCase() === item.name.toLowerCase());
             try {
-              await addDoc(collection(db, shopPath), {
-                ...item,
-                userId: activeUserId,
-                purchased: false,
-                quantity: item.quantity || 1,
-                category: item.category || "Geral"
-              });
+              if (existing && existing.id) {
+                await updateDoc(doc(db, shopPath, existing.id), {
+                  quantity: (existing.quantity || 0) + (item.quantity || 1),
+                  frequency: (existing.frequency || 1) + 1,
+                  urgency: item.urgency || existing.urgency || 'medium',
+                  isStock: item.isStock !== undefined ? item.isStock : existing.isStock
+                });
+              } else {
+                await addDoc(collection(db, shopPath), {
+                  ...item,
+                  userId: activeUserId,
+                  purchased: false,
+                  quantity: item.quantity || 1,
+                  category: item.category || "Geral",
+                  urgency: item.urgency || "medium",
+                  isStock: item.isStock || false,
+                  frequency: 1
+                });
+              }
             } catch (error) {
               handleFirestoreError(error, OperationType.WRITE, shopPath);
             }
           }
           const itemNames = items.map(i => i.name).join(", ");
-          feedback += `Adicionado: ${itemNames}. 🛒 `;
+          feedback += `🛒 Itens processados: ${itemNames}. `;
         }
         if (call.name === 'updateShoppingItems') {
           const args = call.args as any;
@@ -251,20 +268,12 @@ export const orchestrator = async (
           }
         }
       }
-
-      // After function calls, we need to get the final text response from the model
-      // Or we can just return the feedback + a follow-up if the model didn't provide one.
-      // Better: call the model again with the tool output to get the final conversational response.
-      // But for simplicity and to follow user request "me da o feedback e sugere os proximos passo", 
-      // I'll let the model generate the final response by providing the tool results.
-      
-      // However, the current orchestrator doesn't support multi-turn tool use easily.
-      // Let's just append a generic follow-up for now or try to make it more robust.
-      
-      return feedback.trim();
     }
 
-    return response.text || "Entendido. Como posso ajudar mais?";
+    const modelText = response.text || "";
+    const finalContent = feedback ? `${feedback}\n\n${modelText}` : modelText;
+    
+    return finalContent.trim() || "Entendido. Como posso ajudar mais?";
   } catch (error) {
     console.error("AI Error:", error);
     return "Erro ao conectar com o agente de IA.";
