@@ -1,3 +1,14 @@
+export interface FinancialGoal {
+  id?: string;
+  userId: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: string;
+  category: 'travel' | 'renovation' | 'education' | 'emergency' | 'other';
+  createdAt: string;
+}
+
 export interface UserProfile {
   uid: string;
   displayName: string;
@@ -7,6 +18,21 @@ export interface UserProfile {
   preferences: {
     currency: string;
     notificationsEnabled: boolean;
+  };
+  gamification: {
+    points: number;
+    level: number;
+    badges: string[];
+    weeklyGoal?: number;
+    currentWeeklySpending: number;
+  };
+  healthGoals?: {
+    dietType: 'balanced' | 'low-sugar' | 'vegan' | 'keto' | 'none';
+    focus: string[];
+  };
+  location?: {
+    city: string;
+    region: string;
   };
 }
 
@@ -29,9 +55,11 @@ export interface ShoppingItem {
   purchased: boolean;
   lastPrice?: number;
   lastPurchasedAt?: string;
+  lastDepletedAt?: string; // When the item ran out
   urgency?: 'low' | 'medium' | 'high';
   isStock?: boolean; // If true, it's in the pantry, not the shopping list
   frequency?: number; // How many times it was added/bought
+  isEcoFriendly?: boolean;
 }
 
 export interface ChatMessage {
@@ -53,7 +81,30 @@ export interface Share {
   permissions: {
     finance: 'none' | 'read' | 'write';
     shopping: 'none' | 'read' | 'write';
+    routines: 'none' | 'read' | 'write';
   };
   status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+}
+
+export interface HouseholdTask {
+  id?: string;
+  userId: string;
+  title: string;
+  description?: string;
+  category: 'cleaning' | 'maintenance' | 'errand' | 'other';
+  status: 'todo' | 'done';
+  dueDate?: string;
+  assignedTo?: string;
+  createdAt: string;
+}
+
+export interface FamilyEvent {
+  id?: string;
+  userId: string;
+  title: string;
+  description?: string;
+  date: string;
+  type: 'social' | 'holiday' | 'appointment';
   createdAt: string;
 }

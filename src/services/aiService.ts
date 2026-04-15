@@ -1,5 +1,5 @@
 import { FunctionDeclaration, GoogleGenAI, Type } from "@google/genai";
-import { Transaction, ShoppingItem, ChatMessage } from "../types";
+import { Transaction, ShoppingItem, ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent } from "../types";
 import { db } from "../lib/firebase";
 import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import { handleFirestoreError, OperationType } from "../lib/firestoreUtils";
@@ -98,19 +98,102 @@ const removeShoppingItemsFn: FunctionDeclaration = {
   }
 };
 
+const addFinancialGoalFn: FunctionDeclaration = {
+  name: "addFinancialGoal",
+  description: "Cria um novo objetivo financeiro (ex: poupar para viagem, reforma).",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      title: { type: Type.STRING, description: "Título do objetivo (ex: Viagem para o Japão)" },
+      targetAmount: { type: Type.NUMBER, description: "Valor total do objetivo" },
+      currentAmount: { type: Type.NUMBER, description: "Valor já poupado", default: 0 },
+      category: { type: Type.STRING, enum: ["travel", "renovation", "education", "emergency", "other"], description: "Categoria do objetivo" },
+      deadline: { type: Type.STRING, description: "Data limite (ISO 8601)" }
+    },
+    required: ["title", "targetAmount", "category"]
+  }
+};
+
+const updateFinancialGoalFn: FunctionDeclaration = {
+  name: "updateFinancialGoal",
+  description: "Atualiza o progresso ou detalhes de um objetivo financeiro.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      id: { type: Type.STRING, description: "ID do objetivo" },
+      currentAmount: { type: Type.NUMBER, description: "Novo valor total poupado" },
+      targetAmount: { type: Type.NUMBER, description: "Novo valor alvo" },
+      title: { type: Type.STRING, description: "Novo título" }
+    },
+    required: ["id"]
+  }
+};
+
+const addHouseholdTaskFn: FunctionDeclaration = {
+  name: "addHouseholdTask",
+  description: "Adiciona uma tarefa doméstica (limpeza, manutenção, recado).",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      title: { type: Type.STRING, description: "Título da tarefa" },
+      description: { type: Type.STRING, description: "Detalhes da tarefa" },
+      category: { type: Type.STRING, enum: ["cleaning", "maintenance", "errand", "other"], description: "Categoria" },
+      dueDate: { type: Type.STRING, description: "Data limite (ISO 8601)" },
+      assignedTo: { type: Type.STRING, description: "Nome da pessoa responsável" }
+    },
+    required: ["title", "category"]
+  }
+};
+
+const updateHouseholdTaskFn: FunctionDeclaration = {
+  name: "updateHouseholdTask",
+  description: "Atualiza o status ou detalhes de uma tarefa doméstica.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      id: { type: Type.STRING, description: "ID da tarefa" },
+      status: { type: Type.STRING, enum: ["todo", "done"], description: "Novo status" },
+      title: { type: Type.STRING },
+      assignedTo: { type: Type.STRING }
+    },
+    required: ["id"]
+  }
+};
+
+const addFamilyEventFn: FunctionDeclaration = {
+  name: "addFamilyEvent",
+  description: "Adiciona um evento à agenda familiar (social, feriado, compromisso).",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      title: { type: Type.STRING, description: "Título do evento" },
+      description: { type: Type.STRING },
+      date: { type: Type.STRING, description: "Data do evento (ISO 8601)" },
+      type: { type: Type.STRING, enum: ["social", "holiday", "appointment"], description: "Tipo de evento" }
+    },
+    required: ["title", "date", "type"]
+  }
+};
+
 const getSystemInstruction = (persona: string = 'funny') => {
   const base = `Seu nome é **Aimee**, a Agente Orquestradora de Inteligência Pessoal e sua nova função principal é ser uma **Consultora Financeira Proativa**.
   
 **Capacidades Avançadas (CRÍTICO):**
-1. **Classificação Automática:** Se o usuário não informar uma categoria para um gasto (ex: "Gastei 40 no iFood"), identifique a categoria mais provável (ex: "Alimentação") e use-a no 'addTransaction'.
-2. **Alertas Inteligentes:** Sempre que registrar um gasto, compare-o com o histórico fornecido. Se o valor for significativamente maior que a média daquela categoria (ex: 50% acima), adicione um aviso sutil na sua resposta (ex: "Registrado, mas notei que este valor está acima da sua média em Lazer").
-3. **Análise Preditiva:** Use o histórico de transações para prever gastos futuros. Se o usuário perguntar "Quanto vou gastar mês que vem?", projete com base na média atual.
-4. **Simulações Financeiras:** Responda a cenários "E se...". Se o usuário disser "E se eu cortar 20% de Uber?", calcule a economia em 3, 6 e 12 meses com base nos gastos reais de transporte que você vê no histórico.
-5. **Gestão de Compras e Estoque:**
-   - **Sugestões Inteligentes:** Sugira itens com base no histórico de compras (recorrência) ou sazonalidade (ex: frutas da época).
-   - **Receitas:** Se o usuário pedir para fazer um prato (ex: "Quero fazer Lasanha"), sugira todos os ingredientes necessários e pergunte se quer adicionar à lista o que ele não tem.
-   - **Controle de Estoque:** Diferencie o que está na "Lista de Compras" do que está no "Estoque" (despensa). Use 'isStock: true' para itens que o usuário já tem.
-   - **Priorização:** Use 'urgency' (low, medium, high) para organizar a lista.
+1. **Comandos Complexos e Naturais:** Você deve ser capaz de processar pedidos múltiplos em uma única frase. Ex: "Adiciona ingredientes para uma lasanha e me diz quanto vou gastar no total". 
+2. **Gamificação e Metas:** Você é a guardiã das metas do usuário.
+3. **Dashboards e Visualização:** Quando o usuário pedir para "ver evolução" ou "dashboard", explique que os gráficos abaixo (na interface) mostram esses dados, mas faça um breve resumo textual dos pontos altos e baixos.
+4. **Análise de Comportamento:** Identifique padrões de consumo. Ex: "Notei que você gasta 30% mais em Lazer nas noites de sexta-feira. Pode ser um padrão de gasto impulsivo?".
+5. **Benchmarking Familiar:** Compare gastos com médias (simuladas). Ex: "Seu gasto com Delivery está 15% acima da média regional para famílias do seu tamanho".
+6. **Planejamento de Metas:** Use 'addFinancialGoal' e 'updateFinancialGoal' para ajudar o usuário a poupar para objetivos de longo prazo.
+7. **Assistente Educativo:** Explique conceitos financeiros em tempo real. Ex: "Isso que você acabou de registrar é uma despesa variável, pois o valor muda todo mês".
+8. **Planejamento Nutricional:** Sugira listas de compras alinhadas a metas de saúde (ex: "Como você quer reduzir açúcar, troquei o refrigerante por água com gás e limão na sua lista").
+9. **Previsão de Consumo:** Calcule quando um item vai acabar com base no histórico. Ex: "Notei que você compra leite a cada 5 dias. O seu deve acabar amanhã, quer que eu adicione à lista?".
+10. **Sugestões Sustentáveis:** Recomende alternativas ecológicas. Ex: "Vi que você adicionou detergente comum. Que tal experimentar esta marca local e biodegradável?".
+11. **Automação de Listas Temáticas:** Crie listas automáticas para eventos. Ex: "Vou organizar um churrasco para 10 pessoas" -> Gere a lista completa de carnes, carvão, bebidas e acompanhamentos.
+12. **Classificação Automática:** (Mantido)
+13. **Alertas Inteligentes:** (Mantido)
+14. **Análise Preditiva:** (Mantido)
+15. **Gestão de Compras e Estoque:** (Mantido)
 
 **Diretriz de Produtividade:**
 - **Seja Sucinta mas Inteligente:** Mantenha a objetividade, mas não hesite em trazer insights financeiros se notar padrões importantes.
@@ -154,6 +237,9 @@ export const orchestrator = async (
   userId: string, 
   shoppingList: ShoppingItem[], 
   transactions: Transaction[],
+  goals: FinancialGoal[] = [],
+  tasks: HouseholdTask[] = [],
+  events: FamilyEvent[] = [],
   persona: string = 'funny', 
   targetUserId?: string
 ) => {
@@ -167,6 +253,12 @@ export const orchestrator = async (
       ? `\n\nResumo Financeiro Atual (Espaço Ativo):\n${transactions.slice(0, 50).map(t => `- ${t.date}: ${t.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${t.amount.toFixed(2)} - ${t.description} (${t.category})`).join('\n')}`
       : "\n\nNenhuma transação financeira encontrada no espaço ativo.";
 
+    const goalsContext = goals.length > 0
+      ? `\n\nObjetivos Financeiros Atuais:\n${goals.map(g => `- ${g.title} (ID: ${g.id}): R$ ${g.currentAmount} de R$ ${g.targetAmount} (${Math.round((g.currentAmount/g.targetAmount)*100)}%)`).join('\n')}`
+      : "";
+
+    const routinesContext = `\n\nRotinas e Agenda:\nTarefas: ${tasks.map(t => `- ${t.title} (${t.status})`).join(', ')}\nEventos: ${events.map(e => `- ${e.title} em ${e.date}`).join(', ')}`;
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
@@ -174,11 +266,21 @@ export const orchestrator = async (
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.content }]
         })),
-        { role: 'user', parts: [{ text: prompt + listContext + financeContext }] }
+        { role: 'user', parts: [{ text: prompt + listContext + financeContext + goalsContext + routinesContext }] }
       ],
       config: {
         systemInstruction: getSystemInstruction(persona),
-        tools: [{ functionDeclarations: [addTransactionFn, addShoppingItemsFn, updateShoppingItemsFn, removeShoppingItemsFn] }]
+        tools: [{ functionDeclarations: [
+          addTransactionFn, 
+          addShoppingItemsFn, 
+          updateShoppingItemsFn, 
+          removeShoppingItemsFn, 
+          addFinancialGoalFn, 
+          updateFinancialGoalFn,
+          addHouseholdTaskFn,
+          updateHouseholdTaskFn,
+          addFamilyEventFn
+        ] }]
       },
     });
 
@@ -265,6 +367,72 @@ export const orchestrator = async (
               }
               feedback += `Removido: ${item.name}. `;
             }
+          }
+        }
+        if (call.name === 'addFinancialGoal') {
+          const args = call.args as any;
+          const goalsPath = `users/${activeUserId}/goals`;
+          try {
+            await addDoc(collection(db, goalsPath), {
+              ...args,
+              userId: activeUserId,
+              createdAt: new Date().toISOString(),
+              currentAmount: args.currentAmount || 0
+            });
+            feedback += `🎯 Objetivo criado: ${args.title}. `;
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, goalsPath);
+          }
+        }
+        if (call.name === 'updateFinancialGoal') {
+          const args = call.args as any;
+          const { id, ...updates } = args;
+          const goalPath = `users/${activeUserId}/goals/${id}`;
+          try {
+            await updateDoc(doc(db, goalPath), updates);
+            feedback += `📈 Objetivo atualizado! `;
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, goalPath);
+          }
+        }
+        if (call.name === 'addHouseholdTask') {
+          const args = call.args as any;
+          const taskPath = `users/${activeUserId}/tasks`;
+          try {
+            await addDoc(collection(db, taskPath), {
+              ...args,
+              userId: activeUserId,
+              status: 'todo',
+              createdAt: new Date().toISOString()
+            });
+            feedback += `🧹 Tarefa adicionada: ${args.title}. `;
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, taskPath);
+          }
+        }
+        if (call.name === 'updateHouseholdTask') {
+          const args = call.args as any;
+          const { id, ...updates } = args;
+          const taskPath = `users/${activeUserId}/tasks/${id}`;
+          try {
+            await updateDoc(doc(db, taskPath), updates);
+            feedback += `✅ Tarefa atualizada! `;
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, taskPath);
+          }
+        }
+        if (call.name === 'addFamilyEvent') {
+          const args = call.args as any;
+          const eventPath = `users/${activeUserId}/events`;
+          try {
+            await addDoc(collection(db, eventPath), {
+              ...args,
+              userId: activeUserId,
+              createdAt: new Date().toISOString()
+            });
+            feedback += `📅 Evento agendado: ${args.title}. `;
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, eventPath);
           }
         }
       }

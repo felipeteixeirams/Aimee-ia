@@ -58,8 +58,30 @@ service cloud.firestore {
              data.status in ['pending', 'accepted', 'declined'] &&
              data.permissions.finance in ['none', 'read', 'write'] &&
              data.permissions.shopping in ['none', 'read', 'write'] &&
+             data.permissions.routines in ['none', 'read', 'write'] &&
              (!('upgradeRequested' in data) || data.upgradeRequested is bool) &&
              (!('upgradeRequestedAt' in data) || data.upgradeRequestedAt is string);
+    }
+
+    function isValidFinancialGoal(data) {
+      return data.userId is string &&
+             data.title is string &&
+             data.targetAmount is number &&
+             data.category in ["travel", "renovation", "education", "emergency", "other"];
+    }
+
+    function isValidHouseholdTask(data) {
+      return data.userId is string &&
+             data.title is string &&
+             data.category in ["cleaning", "maintenance", "errand", "other"] &&
+             data.status in ["todo", "done"];
+    }
+
+    function isValidFamilyEvent(data) {
+      return data.userId is string &&
+             data.title is string &&
+             data.date is string &&
+             data.type in ["social", "holiday", "appointment"];
     }
 
     match /shares/{shareId} {
@@ -103,6 +125,24 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow create, update: if isOwner(userId) && isValidChatMessage(request.resource.data);
         allow delete: if isOwner(userId);
+      }
+
+      match /goals/{goalId} {
+        allow read: if isOwner(userId) || hasSharedReadAccess(userId, 'finance');
+        allow create, update: if (isOwner(userId) || hasSharedWriteAccess(userId, 'finance')) && isValidFinancialGoal(request.resource.data);
+        allow delete: if isOwner(userId) || hasSharedWriteAccess(userId, 'finance');
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isOwner(userId) || hasSharedReadAccess(userId, 'routines');
+        allow create, update: if (isOwner(userId) || hasSharedWriteAccess(userId, 'routines')) && isValidHouseholdTask(request.resource.data);
+        allow delete: if isOwner(userId) || hasSharedWriteAccess(userId, 'routines');
+      }
+
+      match /events/{eventId} {
+        allow read: if isOwner(userId) || hasSharedReadAccess(userId, 'routines');
+        allow create, update: if (isOwner(userId) || hasSharedWriteAccess(userId, 'routines')) && isValidFamilyEvent(request.resource.data);
+        allow delete: if isOwner(userId) || hasSharedWriteAccess(userId, 'routines');
       }
     }
   }

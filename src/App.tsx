@@ -26,7 +26,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { orchestrator } from './services/aiService';
-import { ChatMessage, Transaction, ShoppingItem, UserProfile, Share } from './types';
+import { ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, HouseholdTask, FamilyEvent } from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
 import { Login } from './components/Login';
 import { 
@@ -54,12 +54,22 @@ import {
   Link as LinkIcon,
   Copy,
   Edit2,
-  Check
+  Check,
+  Target,
+  GraduationCap,
+  Home,
+  Plane,
+  AlertCircle,
+  Leaf,
+  Apple,
+  Calendar,
+  CheckSquare,
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { 
   LineChart, 
   Line, 
@@ -67,18 +77,19 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  ResponsiveContainer, 
+  AreaChart, 
+  Area,
   BarChart,
   Bar,
-  Legend,
-  AreaChart,
-  Area
+  Cell,
+  PieChart,
+  Pie,
+  Legend
 } from 'recharts';
+import { ptBR } from 'date-fns/locale';
 
-type Tab = 'chat' | 'finance' | 'shopping' | 'settings';
+type Tab = 'chat' | 'finance' | 'shopping' | 'routines' | 'settings';
 type Period = '7d' | '30d' | 'all';
 
 const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=1000";
@@ -91,6 +102,9 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
+  const [goals, setGoals] = useState<FinancialGoal[]>([]);
+  const [tasks, setTasks] = useState<HouseholdTask[]>([]);
+  const [events, setEvents] = useState<FamilyEvent[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [shares, setShares] = useState<Share[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null); // null means own space
@@ -158,7 +172,26 @@ export default function App() {
                 displayName: u.displayName || 'Usuário',
                 email: u.email || '',
                 selectedPersona: 'analytical',
-                avatarUrl: 'https://picsum.photos/seed/aimee1/200'
+                avatarUrl: 'https://picsum.photos/seed/aimee1/200',
+                preferences: {
+                  currency: 'BRL',
+                  notificationsEnabled: true
+                },
+                gamification: {
+                  points: 0,
+                  level: 1,
+                  badges: [],
+                  weeklyGoal: 500,
+                  currentWeeklySpending: 0
+                },
+                location: {
+                  city: 'São Paulo',
+                  region: 'Sudeste'
+                },
+                healthGoals: {
+                  dietType: 'balanced',
+                  focus: ['Redução de Açúcar', 'Mais Proteína']
+                }
               });
             } catch (error) {
               handleFirestoreError(error, OperationType.WRITE, `users/${u.uid}`);
@@ -240,14 +273,78 @@ export default function App() {
       handleFirestoreError(error, OperationType.GET, shopPath);
     });
 
+    // Listen to Financial Goals
+    const goalsPath = `users/${targetId}/goals`;
+    const goalsQuery = query(
+      collection(db, goalsPath),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubGoals = onSnapshot(goalsQuery, (snap) => {
+      setGoals(snap.docs.map(d => ({ id: d.id, ...d.data() } as FinancialGoal)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, goalsPath);
+    });
+
+    // Listen to Tasks
+    const tasksPath = `users/${targetId}/tasks`;
+    const tasksQuery = query(
+      collection(db, tasksPath),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubTasks = onSnapshot(tasksQuery, (snap) => {
+      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as HouseholdTask)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, tasksPath);
+    });
+
+    // Listen to Events
+    const eventsPath = `users/${targetId}/events`;
+    const eventsQuery = query(
+      collection(db, eventsPath),
+      orderBy('date', 'asc')
+    );
+    const unsubEvents = onSnapshot(eventsQuery, (snap) => {
+      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyEvent)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, eventsPath);
+    });
+
     return () => {
       unsubChat();
       unsubProfile();
       unsubShares();
       unsubTrans();
       unsubShop();
+      unsubGoals();
+      unsubTasks();
+      unsubEvents();
     };
   }, [user, activeSpace]);
+
+  useEffect(() => {
+    if (!user || !profile || transactions.length === 0) return;
+
+    // Calculate weekly spending
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const weeklySpending = transactions
+      .filter(t => t.type === 'expense' && new Date(t.date) >= startOfWeek)
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    // Update profile if spending changed or points need updating
+    if (weeklySpending !== (profile.gamification?.currentWeeklySpending ?? 0)) {
+      const pointsToAdd = transactions.length * 5; // Simple point logic
+      const level = Math.floor(pointsToAdd / 100) + 1;
+
+      updateDoc(doc(db, 'users', user.uid), {
+        'gamification.currentWeeklySpending': weeklySpending,
+        'gamification.points': pointsToAdd,
+        'gamification.level': level
+      }).catch(err => console.error("Error updating gamification:", err));
+    }
+  }, [transactions, user, profile?.uid]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (scrollRef.current) {
@@ -435,8 +532,11 @@ export default function App() {
       messages, 
       user.uid, 
       shoppingList, 
-      transactions, // Pass transactions for context
-      profile?.selectedPersona, 
+      transactions, 
+      goals,
+      tasks,
+      events,
+      profile?.selectedPersona || 'funny', 
       activeSpace || undefined
     );
     setIsTyping(false);
@@ -500,42 +600,65 @@ export default function App() {
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => acc + t.amount, 0);
 
-  const categories = Array.from(new Set(transactions.map(t => t.category)));
+  const chartData = useMemo(() => {
+    const data: { name: string; income: number; expense: number }[] = [];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().split('T')[0];
+    }).reverse();
 
-  // Chart Data: Daily totals
-  const chartData = filteredTransactions.reduce((acc: any[], t) => {
-    const day = format(new Date(t.date), 'dd/MM');
-    const existing = acc.find(a => a.name === day);
-    if (existing) {
-      if (t.type === 'income') existing.income += t.amount;
-      else existing.expense += t.amount;
-    } else {
-      acc.push({ 
-        name: day, 
-        income: t.type === 'income' ? t.amount : 0, 
-        expense: t.type === 'expense' ? t.amount : 0,
-        rawDate: new Date(t.date).getTime()
+    last7Days.forEach(date => {
+      const dayTransactions = transactions.filter(t => t.date.startsWith(date));
+      const income = dayTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+      const expense = dayTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+      data.push({
+        name: format(new Date(date), 'dd/MM', { locale: ptBR }),
+        income,
+        expense
       });
+    });
+    return data;
+  }, [transactions]);
+
+  const categoryData = useMemo(() => {
+    const data: { name: string; value: number }[] = [];
+    const expenses = transactionsByPeriod.filter(t => t.type === 'expense');
+    const cats = Array.from(new Set(expenses.map(t => t.category))) as string[];
+    
+    cats.forEach(cat => {
+      const total = expenses.filter(t => t.category === cat).reduce((acc, t) => acc + t.amount, 0);
+      data.push({ name: cat, value: total });
+    });
+    return data.sort((a, b) => b.value - a.value);
+  }, [transactionsByPeriod]);
+
+  const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+
+  const behaviorData = useMemo(() => {
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const data = days.map(day => ({ name: day, value: 0 }));
+    
+    transactionsByPeriod
+      .filter(t => t.type === 'expense')
+      .forEach(t => {
+        const dayIndex = new Date(t.date).getDay();
+        data[dayIndex].value += t.amount;
+      });
+    return data;
+  }, [transactionsByPeriod]);
+
+  const getGoalIcon = (category: string) => {
+    switch (category) {
+      case 'travel': return <Plane className="w-5 h-5" />;
+      case 'education': return <GraduationCap className="w-5 h-5" />;
+      case 'renovation': return <Home className="w-5 h-5" />;
+      case 'emergency': return <AlertCircle className="w-5 h-5" />;
+      default: return <Target className="w-5 h-5" />;
     }
-    return acc;
-  }, []).sort((a, b) => a.rawDate - b.rawDate);
+  };
 
-  // Category Data for Pie Chart
-  const categoryData = filteredTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc: any[], t) => {
-      const existing = acc.find(a => a.name === t.category);
-      if (existing) existing.value += t.amount;
-      else acc.push({ name: t.category, value: t.amount });
-      return acc;
-    }, []);
-
-  const COLORS = useMemo(() => 
-    isDarkMode 
-      ? ['#fafafa', '#d4d4d4', '#a3a3a3', '#737373', '#404040'] 
-      : ['#171717', '#404040', '#737373', '#a3a3a3', '#d4d4d4'],
-    [isDarkMode]
-  );
+  const categories = Array.from(new Set(transactions.map(t => t.category)));
 
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !user) return;
@@ -836,27 +959,246 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="h-full overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 no-scrollbar"
             >
-              {/* Header & Period Selector */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Finanças</h3>
-                  <p className="text-xs text-neutral-500 font-medium">Acompanhe seu fluxo de caixa e gastos</p>
+              {/* Gamification & Goals Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-brand to-indigo-600 p-6 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
+                          <Shield className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Nível {profile?.gamification?.level || 1}</p>
+                          <p className="text-lg font-black tracking-tight">Mestre das Finanças</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Pontos</p>
+                        <p className="text-xl font-black">{profile?.gamification?.points || 0}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                        <span>Progresso do Nível</span>
+                        <span>{(profile?.gamification?.points || 0) % 100}%</span>
+                      </div>
+                      <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(profile?.gamification?.points || 0) % 100}%` }}
+                          className="h-full bg-white rounded-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-2xl self-start md:self-auto">
-                  {(['7d', '30d', 'all'] as Period[]).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setFinancePeriod(p)}
-                      className={cn(
-                        "px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all",
-                        financePeriod === p 
-                          ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-md scale-105" 
-                          : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-                      )}
-                    >
-                      {p === '7d' ? '7 Dias' : p === '30d' ? '30 Dias' : 'Tudo'}
+
+                <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center">
+                        <TrendingDown className="w-5 h-5 text-brand" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Meta Semanal</p>
+                        <p className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">R$ {profile?.gamification?.weeklyGoal || 500}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Gasto Atual</p>
+                      <p className={cn(
+                        "text-xl font-black",
+                        (profile?.gamification?.currentWeeklySpending || 0) > (profile?.gamification?.weeklyGoal || 500) ? "text-rose-500" : "text-emerald-500"
+                      )}>
+                        R$ {profile?.gamification?.currentWeeklySpending || 0}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                      <span>Uso do Orçamento</span>
+                      <span>{Math.min(100, Math.round(((profile?.gamification?.currentWeeklySpending || 0) / (profile?.gamification?.weeklyGoal || 500)) * 100))}%</span>
+                    </div>
+                    <div className="h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, ((profile?.gamification?.currentWeeklySpending || 0) / (profile?.gamification?.weeklyGoal || 500)) * 100)}%` }}
+                        className={cn(
+                          "h-full rounded-full",
+                          (profile?.gamification?.currentWeeklySpending || 0) > (profile?.gamification?.weeklyGoal || 500) ? "bg-rose-500" : "bg-brand"
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Graphical Dashboards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Evolução Diária</h4>
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 10, fontWeight: 600, fill: '#9ca3af' }}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 10, fontWeight: 600, fill: '#9ca3af' }}
+                        />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Area type="monotone" dataKey="income" stroke="#10b981" fillOpacity={1} fill="url(#colorIncome)" strokeWidth={3} />
+                        <Area type="monotone" dataKey="expense" stroke="#f43f5e" fillOpacity={1} fill="url(#colorExpense)" strokeWidth={3} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Gastos por Categoria</h4>
+                    <PieChart className="w-4 h-4 text-brand" />
+                  </div>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Legend verticalAlign="bottom" height={36}/>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              {/* Goals & Behavior Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Behavioral Analysis */}
+                <div className="lg:col-span-1 bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Padrão Semanal</h4>
+                    <TrendingUp className="w-4 h-4 text-brand" />
+                  </div>
+                  <div className="h-[200px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={behaviorData}>
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 10, fontWeight: 600, fill: '#9ca3af' }}
+                        />
+                        <Tooltip 
+                          cursor={{ fill: 'transparent' }}
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Bar dataKey="value" radius={[4, 4, 4, 4]}>
+                          {behaviorData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.value > 0 ? COLORS[index % COLORS.length] : '#f3f4f6'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="mt-4 text-[10px] text-neutral-400 font-medium leading-relaxed">
+                    Seus gastos tendem a se concentrar nos fins de semana. Considere planejar melhor suas compras de lazer.
+                  </p>
+                </div>
+
+                {/* Financial Goals */}
+                <div className="lg:col-span-2 bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Metas de Longo Prazo</h4>
+                    <button className="text-brand hover:bg-brand/10 p-2 rounded-xl transition-colors">
+                      <Plus className="w-4 h-4" />
                     </button>
-                  ))}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {goals.map((goal, i) => (
+                      <div key={goal.id || i} className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-3xl border border-neutral-100 dark:border-neutral-800">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-2xl flex items-center justify-center shadow-sm text-brand">
+                            {getGoalIcon(goal.category)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-black text-neutral-800 dark:text-white truncate">{goal.title}</p>
+                            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+                              R$ {goal.currentAmount} / R$ {goal.targetAmount}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)}%` }}
+                              className="h-full bg-brand rounded-full"
+                            />
+                          </div>
+                          <p className="text-[9px] font-bold text-brand text-right uppercase tracking-widest">
+                            {Math.round((goal.currentAmount / goal.targetAmount) * 100)}% concluído
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {goals.length === 0 && (
+                      <div className="col-span-full py-10 text-center">
+                        <Target className="w-10 h-10 text-neutral-200 mx-auto mb-3" />
+                        <p className="text-xs text-neutral-400">Nenhuma meta criada. Peça para a Aimee ajudar!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Benchmarking Alert */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 p-4 rounded-3xl flex items-start gap-4">
+                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-2xl flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h5 className="text-sm font-black text-amber-900 dark:text-amber-100 mb-1">Benchmarking Familiar</h5>
+                  <p className="text-xs text-amber-800/70 dark:text-amber-200/60 leading-relaxed">
+                    Notei que seus gastos com **Delivery** estão 15% acima da média regional para famílias do seu perfil em {profile?.location?.city || 'sua cidade'}. 
+                    Que tal um desafio de cozinhar em casa este final de semana?
+                  </p>
                 </div>
               </div>
 
@@ -1174,6 +1516,9 @@ export default function App() {
                           {item.urgency === 'high' && !item.isStock && (
                             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
                           )}
+                          {item.isEcoFriendly && (
+                            <Leaf className="w-3.5 h-3.5 text-emerald-500" />
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
@@ -1229,7 +1574,13 @@ export default function App() {
               </div>
 
               <div className="bg-brand p-6 rounded-3xl text-brand-foreground shadow-xl">
-                <h4 className="text-xs font-bold uppercase tracking-widest mb-4 opacity-60">Sugestões da Aimee</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xs font-bold uppercase tracking-widest opacity-60">Sugestões da Aimee</h4>
+                  <div className="flex items-center gap-2 px-2 py-1 bg-white/10 rounded-lg">
+                    <Apple className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase">{profile?.healthGoals?.dietType === 'balanced' ? 'Dieta Balanceada' : 'Foco em Saúde'}</span>
+                  </div>
+                </div>
                 <div className="space-y-3">
                   {shoppingList
                     .filter(i => i.frequency && i.frequency > 3 && i.isStock)
@@ -1238,7 +1589,7 @@ export default function App() {
                       <div key={i} className="flex items-center justify-between p-3 bg-brand-foreground/10 rounded-xl">
                         <div>
                           <p className="text-sm font-bold">{item.name}</p>
-                          <p className="text-[10px] opacity-60">Acabando? Você compra sempre.</p>
+                          <p className="text-[10px] opacity-60">Previsão: Acaba em 2 dias.</p>
                         </div>
                         <button 
                           onClick={() => handleMoveToList(item)}
@@ -1249,8 +1600,161 @@ export default function App() {
                       </div>
                     ))}
                   {shoppingList.filter(i => i.frequency && i.frequency > 3 && i.isStock).length === 0 && (
-                    <p className="text-xs opacity-60 italic">Continue usando para receber sugestões personalizadas.</p>
+                    <p className="text-xs opacity-60 italic">Continue usando para receber previsões de consumo e dicas nutricionais.</p>
                   )}
+                </div>
+              </div>
+
+              {profile?.healthGoals && (
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 p-5 rounded-[2rem]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center">
+                      <Apple className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <h5 className="text-sm font-black text-emerald-900 dark:text-emerald-100 uppercase tracking-tight">Foco Nutricional</h5>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.healthGoals.focus.map((f, i) => (
+                      <span key={i} className="px-3 py-1 bg-white dark:bg-neutral-800 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-100 dark:border-emerald-800 shadow-sm">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[10px] text-emerald-800/70 dark:text-emerald-200/60 leading-relaxed">
+                    Aimee está priorizando itens com baixo índice glicêmico e proteínas magras para sua lista.
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === 'routines' && (
+            <motion.div 
+              key="routines"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-24"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h2 className="text-2xl font-black text-neutral-800 dark:text-white tracking-tight">Rotinas Familiares</h2>
+                  <p className="text-xs text-neutral-500 font-medium">Tarefas e agenda da casa</p>
+                </div>
+                <div className="w-12 h-12 bg-brand/10 rounded-2xl flex items-center justify-center">
+                  <Home className="w-6 h-6 text-brand" />
+                </div>
+              </div>
+
+              {/* Family Agenda */}
+              <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Agenda</p>
+                      <p className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Próximos Eventos</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {events.length > 0 ? events.map((event, i) => (
+                    <div key={event.id} className="flex items-center gap-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+                      <div className="w-12 h-12 bg-white dark:bg-neutral-900 rounded-xl flex flex-col items-center justify-center border border-neutral-100 dark:border-neutral-800 shrink-0">
+                        <span className="text-[10px] font-bold text-brand uppercase">{format(new Date(event.date), 'MMM', { locale: ptBR })}</span>
+                        <span className="text-lg font-black text-neutral-800 dark:text-white leading-none">{format(new Date(event.date), 'dd')}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-neutral-800 dark:text-white truncate">{event.title}</p>
+                        <p className="text-[10px] text-neutral-500 truncate">{event.description || 'Sem descrição'}</p>
+                      </div>
+                      <div className={cn(
+                        "px-2 py-1 rounded-full text-[8px] font-bold uppercase",
+                        event.type === 'social' ? "bg-purple-100 text-purple-600" :
+                        event.type === 'holiday' ? "bg-rose-100 text-rose-600" : "bg-blue-100 text-blue-600"
+                      )}>
+                        {event.type}
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-center py-8 text-sm text-neutral-400 italic">Nenhum evento agendado.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Household Tasks */}
+              <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                      <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Tarefas</p>
+                      <p className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Lista de Afazeres</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {tasks.length > 0 ? tasks.map((task, i) => (
+                    <div key={task.id} className="flex items-center gap-4 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800 group">
+                      <button 
+                        onClick={() => updateDoc(doc(db, `users/${activeSpace || user.uid}/tasks/${task.id}`), { status: task.status === 'done' ? 'todo' : 'done' })}
+                        className={cn(
+                          "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all",
+                          task.status === 'done' ? "bg-emerald-500 border-emerald-500 text-white" : "border-neutral-200 dark:border-neutral-700"
+                        )}
+                      >
+                        {task.status === 'done' && <Check className="w-4 h-4" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn(
+                          "text-sm font-bold transition-all",
+                          task.status === 'done' ? "text-neutral-400 line-through" : "text-neutral-800 dark:text-white"
+                        )}>{task.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[9px] font-bold uppercase text-neutral-400">{task.category}</span>
+                          {task.assignedTo && (
+                            <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-brand/10 text-brand rounded-full">@{task.assignedTo}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => deleteDoc(doc(db, `users/${activeSpace || user.uid}/tasks/${task.id}`))}
+                        className="p-2 text-neutral-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )) : (
+                    <p className="text-center py-8 text-sm text-neutral-400 italic">Tudo limpo por aqui!</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Cross-Insights & Contextual Awareness */}
+              <div className="bg-brand/5 p-6 rounded-[2.5rem] border border-brand/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-brand/20 rounded-xl flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-brand" />
+                  </div>
+                  <h3 className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Insights da Aimee</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/10 shadow-sm">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                      <span className="font-bold text-brand">Dica de Contexto:</span> O feriado de Páscoa está chegando! Notei que você ainda não tem itens para o almoço de domingo na lista. Quer que eu sugira um cardápio econômico?
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/10 shadow-sm">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                      <span className="font-bold text-brand">Insight Cruzado:</span> Se reduzirmos a compra de refrigerantes e doces em 20%, você economiza cerca de <span className="font-bold text-emerald-500">R$ 85,00/mês</span> e atinge sua meta de saúde mais rápido!
+                    </p>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -1464,17 +1968,17 @@ export default function App() {
                             </p>
                           </div>
                           {shares.filter(s => s.status === 'pending' && s.sharedWithEmail === user.email).map(s => (
-                            <div key={s.id} className="flex items-center justify-between p-4 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-900 flex items-center justify-center border border-rose-100 dark:border-rose-900/30 text-rose-500">
+                            <div key={s.id} className="flex items-center justify-between gap-4 p-4 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl shadow-sm">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-900 flex items-center justify-center border border-rose-100 dark:border-rose-900/30 text-rose-500 shrink-0">
                                   <Mail className="w-5 h-5" />
                                 </div>
-                                <div>
-                                  <p className="text-sm font-bold text-neutral-800 dark:text-neutral-100">{s.ownerEmail}</p>
-                                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400">Convidou você para o espaço</p>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-neutral-800 dark:text-neutral-100 truncate">{s.ownerEmail}</p>
+                                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate">Convidou você para o espaço</p>
                                 </div>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 shrink-0">
                                 <button 
                                   onClick={() => handleAcceptInvite(s)} 
                                   className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition-all active:scale-90"
@@ -1557,16 +2061,16 @@ export default function App() {
                         
                         {/* Sent Invitations (Pending/Declined) */}
                         {shares.filter(s => s.ownerId === user.uid && s.status !== 'accepted').map(s => (
-                          <div key={s.id} className="flex items-center justify-between p-4 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-900 flex items-center justify-center border border-neutral-100 dark:border-neutral-800">
+                          <div key={s.id} className="flex items-center justify-between gap-4 p-4 bg-neutral-50/50 dark:bg-neutral-800/30 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-900 flex items-center justify-center border border-neutral-100 dark:border-neutral-800 shrink-0">
                                 <Mail className="w-5 h-5 text-neutral-400 dark:text-neutral-600" />
                               </div>
-                              <div>
-                                <p className="text-sm font-bold text-neutral-700 dark:text-neutral-200">{s.sharedWithEmail}</p>
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-neutral-700 dark:text-neutral-200 truncate">{s.sharedWithEmail}</p>
                                 <div className="flex items-center gap-2 mt-1">
                                   <span className={cn(
-                                    "text-[9px] font-bold uppercase px-2 py-0.5 rounded-full",
+                                    "text-[9px] font-bold uppercase px-2 py-0.5 rounded-full whitespace-nowrap",
                                     s.status === 'pending' 
                                       ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" 
                                       : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"
@@ -1574,14 +2078,14 @@ export default function App() {
                                     {s.status === 'pending' ? 'Pendente' : 'Recusado'}
                                   </span>
                                   {(s as any).upgradeRequested && (
-                                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-rose-500 text-white rounded-full animate-pulse">Upgrade Solicitado</span>
+                                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-rose-500 text-white rounded-full animate-pulse whitespace-nowrap">Upgrade Solicitado</span>
                                   )}
                                 </div>
                               </div>
                             </div>
                             <button 
                               onClick={() => deleteDoc(doc(db, 'shares', s.id!))}
-                              className="p-2 text-neutral-300 hover:text-rose-500 dark:text-neutral-700 dark:hover:text-rose-400 transition-colors"
+                              className="p-2 text-neutral-300 hover:text-rose-500 dark:text-neutral-700 dark:hover:text-rose-400 transition-colors shrink-0"
                               title="Remover"
                             >
                               <Trash2 className="w-5 h-5" />
@@ -1591,31 +2095,31 @@ export default function App() {
 
                         {/* Accepted Shares (Where I am the owner) */}
                         {shares.filter(s => s.status === 'accepted' && s.ownerId === user.uid).map(s => (
-                          <div key={s.id} className="flex items-center justify-between p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand dark:text-brand">
+                          <div key={s.id} className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand dark:text-brand shrink-0">
                                 <UserIcon className="w-5 h-5" />
                               </div>
-                              <div>
-                                <p className="text-sm font-bold text-neutral-800 dark:text-neutral-100">{s.sharedWithEmail}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full">
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-neutral-800 dark:text-neutral-100 truncate">{s.sharedWithEmail}</p>
+                                <div className="flex items-center gap-2 mt-1 overflow-x-auto no-scrollbar">
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full shrink-0">
                                     <Wallet className="w-2.5 h-2.5 text-neutral-400" />
                                     <span className="text-[9px] font-bold uppercase text-neutral-500 dark:text-neutral-400">{s.permissions.finance === 'write' ? 'Escrita' : 'Leitura'}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full">
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full shrink-0">
                                     <ShoppingCart className="w-2.5 h-2.5 text-neutral-400" />
                                     <span className="text-[9px] font-bold uppercase text-neutral-500 dark:text-neutral-400">{s.permissions.shopping === 'write' ? 'Escrita' : 'Leitura'}</span>
                                   </div>
                                   {(s as any).upgradeRequested && (
-                                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-rose-500 text-white rounded-full animate-pulse">Upgrade Solicitado</span>
+                                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-rose-500 text-white rounded-full animate-pulse shrink-0 whitespace-nowrap">Upgrade Solicitado</span>
                                   )}
                                 </div>
                               </div>
                             </div>
                             <button 
                               onClick={() => deleteDoc(doc(db, 'shares', s.id!))}
-                              className="p-2 text-neutral-300 hover:text-rose-500 dark:text-neutral-600 dark:hover:text-rose-400 transition-colors"
+                              className="p-2 text-neutral-300 hover:text-rose-500 dark:text-neutral-600 dark:hover:text-rose-400 transition-colors shrink-0"
                               title="Revogar Acesso"
                             >
                               <Trash2 className="w-5 h-5" />
@@ -1670,6 +2174,18 @@ export default function App() {
           </motion.div>
           <span className="text-[9px] font-black uppercase tracking-tighter">Compras</span>
           {activeTab === 'shopping' && (
+            <motion.div layoutId="nav-indicator" className="absolute -bottom-2 w-1 h-1 bg-brand rounded-full" />
+          )}
+        </button>
+        <button 
+          onClick={() => setActiveTab('routines')}
+          className={cn("flex flex-col items-center gap-1.5 transition-all group relative", activeTab === 'routines' ? "text-brand" : "text-neutral-400 dark:text-neutral-500")}
+        >
+          <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.3 }}>
+            <CheckSquare className={cn("w-6 h-6", activeTab === 'routines' && "fill-current")} />
+          </motion.div>
+          <span className="text-[9px] font-black uppercase tracking-tighter">Rotinas</span>
+          {activeTab === 'routines' && (
             <motion.div layoutId="nav-indicator" className="absolute -bottom-2 w-1 h-1 bg-brand rounded-full" />
           )}
         </button>
