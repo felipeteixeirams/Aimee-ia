@@ -90,6 +90,19 @@ npm run dev
 
 O projeto estará disponível em `http://localhost:3000`.
 
+## 🐳 Executando com Docker
+
+Se você prefere usar Docker, pode iniciar a aplicação facilmente:
+
+1. **Certifique-se de ter o Docker e Docker Compose instalados.**
+2. **Configure o arquivo `.env` e `firebase-applet-config.json`** conforme as instruções acima.
+3. **Inicie os containers:**
+   ```bash
+   docker-compose up --build
+   ```
+
+A aplicação estará disponível em `http://localhost:3000`. O volume está configurado para refletir alterações no código em tempo real (Hot Reload).
+
 ## 🏗️ Estrutura do Projeto
 
 - `src/components/`: Componentes reutilizáveis da interface.

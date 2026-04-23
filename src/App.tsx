@@ -6,7 +6,8 @@ import {
   signInWithPopup, 
   signOut, 
   onAuthStateChanged, 
-  User 
+  User,
+  GoogleAuthProvider
 } from './lib/firebase';
 import { 
   collection, 
@@ -23,10 +24,12 @@ import {
   or,
   Timestamp,
   limit,
-  getDocFromServer
+  getDocFromServer,
+  getDocs
 } from 'firebase/firestore';
 import { orchestrator } from './services/aiService';
-import { ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, HouseholdTask, FamilyEvent } from './types';
+import { fetchGoogleCalendarEvents } from './services/calendarService';
+import { ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, HouseholdTask, FamilyEvent, GlobalConfig } from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
 import { Login } from './components/Login';
 import { 
@@ -65,7 +68,10 @@ import {
   Calendar,
   CheckSquare,
   Clock,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -92,12 +98,42 @@ import { ptBR } from 'date-fns/locale';
 type Tab = 'chat' | 'finance' | 'shopping' | 'routines' | 'settings';
 type Period = '7d' | '30d' | 'all';
 
-const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=1000";
+const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=400";
+
+const AimeeAvatar = ({ src, className, size = "md" }: { src: string, className?: string, size?: "sm" | "md" | "lg" }) => {
+  const dimensions = size === "sm" ? "w-8 h-8" : size === "lg" ? "w-16 h-16" : "w-10 h-10";
+  
+  return (
+    <div className={cn("relative overflow-hidden rounded-xl", dimensions, className)}>
+      <motion.img 
+        src={src} 
+        className="w-full h-full object-cover" 
+        alt="Aimee" 
+        referrerPolicy="no-referrer"
+        animate={{
+          scale: [1, 1.08, 1],
+          y: [0, -2, 0],
+          filter: ["brightness(1)", "brightness(1.1)", "brightness(1)"],
+        }}
+        transition={{
+          duration: 5,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-brand/20 to-transparent pointer-events-none mix-blend-overlay" />
+      <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-xl pointer-events-none" />
+    </div>
+  );
+};
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [calendarBlocked, setCalendarBlocked] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -105,6 +141,7 @@ export default function App() {
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [tasks, setTasks] = useState<HouseholdTask[]>([]);
   const [events, setEvents] = useState<FamilyEvent[]>([]);
+  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({ aiProvider: 'gemini', updatedAt: '', updatedBy: '' });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [shares, setShares] = useState<Share[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null); // null means own space
@@ -119,6 +156,8 @@ export default function App() {
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [editValue, setEditValue] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
+  const [showAIDropdown, setShowAIDropdown] = useState(false);
   const [shoppingFilter, setShoppingFilter] = useState<'list' | 'stock'>('list');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -128,6 +167,8 @@ export default function App() {
     return false;
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollPos = useRef<number>(0);
+  const isAtBottomRef = useRef<boolean>(true);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -171,6 +212,7 @@ export default function App() {
                 uid: u.uid,
                 displayName: u.displayName || 'Usuário',
                 email: u.email || '',
+                role: u.email === 'felipeteixeirams@gmail.com' ? 'admin' : 'user',
                 selectedPersona: 'analytical',
                 avatarUrl: 'https://picsum.photos/seed/aimee1/200',
                 preferences: {
@@ -309,6 +351,16 @@ export default function App() {
       handleFirestoreError(error, OperationType.GET, eventsPath);
     });
 
+    // Listen to Global Config
+    const configPath = 'config/global';
+    const unsubConfig = onSnapshot(doc(db, configPath), (snap) => {
+      if (snap.exists()) {
+        setGlobalConfig(snap.data() as GlobalConfig);
+      }
+    }, (error) => {
+      // Config might not exist yet, ignore error
+    });
+
     return () => {
       unsubChat();
       unsubProfile();
@@ -318,6 +370,7 @@ export default function App() {
       unsubGoals();
       unsubTasks();
       unsubEvents();
+      unsubConfig();
     };
   }, [user, activeSpace]);
 
@@ -346,37 +399,115 @@ export default function App() {
     }
   }, [transactions, user, profile?.uid]);
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
         behavior
       });
+      isAtBottomRef.current = true;
     }
   };
 
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setShowScrollButton(!isAtBottom);
+      // Only update if visible and has scroll
+      if (clientHeight > 0) {
+        lastScrollPos.current = scrollTop;
+        const reachedBottom = scrollHeight - scrollTop - clientHeight < 50;
+        isAtBottomRef.current = reachedBottom;
+        setShowScrollButton(!reachedBottom);
+      }
     }
   };
 
+  // Restore scroll position on tab switch
   useEffect(() => {
     if (activeTab === 'chat') {
-      scrollToBottom('auto');
+      const timer = setTimeout(() => {
+        if (scrollRef.current) {
+          if (lastScrollPos.current > 0) {
+            scrollRef.current.scrollTop = lastScrollPos.current;
+          } else if (isAtBottomRef.current) {
+            scrollToBottom('auto');
+          }
+        }
+      }, 50);
+      return () => clearTimeout(timer);
     }
   }, [activeTab]);
 
+  // Keep bottom lock on messages/typing
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping, typingContent]);
+    if (activeTab === 'chat' && isAtBottomRef.current) {
+      // Use requestAnimationFrame for smoother timing with layout updates
+      const rafId = requestAnimationFrame(() => {
+        scrollToBottom('auto');
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [messages, isTyping, typingContent, activeTab]);
+
+  const syncGoogleCalendar = async (token: string, targetUserId: string) => {
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      const googleEvents = await fetchGoogleCalendarEvents(token);
+      
+      if (googleEvents.length === 0) {
+        // Double check if it was an empty calendar or an error that returned []
+        // (Our fetchGoogleCalendarEvents currently catches and returns [] on error)
+      }
+
+      // Get existing events to avoid duplicates
+      const eventsRef = collection(db, `users/${targetUserId}/events`);
+      const existingEventsSnap = await getDocs(eventsRef);
+      const existingGoogleIds = new Set(
+        existingEventsSnap.docs
+          .map(doc => (doc.data() as FamilyEvent).googleEventId)
+          .filter(Boolean)
+      );
+
+      let count = 0;
+      for (const gEvent of googleEvents) {
+        if (gEvent.googleEventId && !existingGoogleIds.has(gEvent.googleEventId)) {
+          await addDoc(eventsRef, {
+            ...gEvent,
+            userId: targetUserId,
+            createdAt: new Date().toISOString()
+          });
+          count++;
+        }
+      }
+      return count;
+    } catch (error: any) {
+      console.error("Sync error:", error);
+      if (error.message?.includes("403")) {
+        setCalendarBlocked(true);
+        setSyncError("Acesso à agenda desativado ou não autorizado.");
+      } else {
+        setSyncError(error.message || "Erro desconhecido na sincronização");
+      }
+      return 0;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
+    setCalendarBlocked(false); // Reset blocked state on new login attempt
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      
+      if (token) {
+        // Store token in session storage temporarily for this session syncs
+        sessionStorage.setItem('google_access_token', token);
+        await syncGoogleCalendar(token, result.user.uid);
+      }
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -505,9 +636,9 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (overrideText?: string, skipAddDoc = false) => {
-    const text = overrideText || inputText;
-    if (!text.trim() || !user) return;
+  const handleSendMessage = async (overrideText?: any, skipAddDoc = false) => {
+    const text = typeof overrideText === 'string' ? overrideText : inputText;
+    if (!text || typeof text !== 'string' || !text.trim() || !user) return;
 
     if (!skipAddDoc) {
       const userMsg: ChatMessage = {
@@ -526,6 +657,9 @@ export default function App() {
 
     if (!overrideText) setInputText('');
     
+    // Force scroll to bottom when sending a message
+    setTimeout(() => scrollToBottom('smooth'), 100);
+    
     setIsTyping(true);
     const response = await orchestrator(
       text, 
@@ -537,6 +671,7 @@ export default function App() {
       tasks,
       events,
       profile?.selectedPersona || 'funny', 
+      globalConfig.aiProvider,
       activeSpace || undefined
     );
     setIsTyping(false);
@@ -551,13 +686,17 @@ export default function App() {
       // Detect if this block is a financial insight
       const isInsight = /notei que|alerta|previsão|economia|média|comparando|insight/i.test(block);
 
-      const aiMsg: ChatMessage = {
+      const aiMsg: any = {
         userId: user.uid,
         role: 'assistant',
         content: block,
         timestamp: new Date().toISOString(),
         isInsight
       };
+
+      if (isInsight) {
+        aiMsg.read = false;
+      }
       
       try {
         await addDoc(collection(db, 'users', user.uid, 'chatHistory'), aiMsg);
@@ -578,7 +717,48 @@ export default function App() {
     }
   };
 
-  const transactionsByPeriod = transactions.filter(t => {
+  const unreadInsights = useMemo(() => 
+    messages.filter(m => m.isInsight && m.read === false), 
+  [messages]);
+
+  const handleGoToInsight = async (msg: ChatMessage) => {
+    if (!msg.id) return;
+    
+    // Mark as read
+    try {
+      await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, msg.id), { read: true });
+    } catch (error) {
+      console.error("Error marking insight as read:", error);
+    }
+
+    // Switch to chat tab if not already there
+    if (activeTab !== 'chat') {
+      setActiveTab('chat');
+      // Wait for tab transition
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    // Scroll to the message-
+    const element = document.getElementById(`msg-${msg.id}`);
+    if (element && scrollRef.current) {
+      const container = scrollRef.current;
+      const elementTop = element.offsetTop;
+      container.scrollTo({
+        top: elementTop - 100, // Offset for header/context
+        behavior: 'smooth'
+      });
+      
+      // Briefly highlight
+      element.classList.add('ring-4', 'ring-brand/40', 'ring-offset-2');
+      setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-brand/40', 'ring-offset-2');
+      }, 2000);
+    }
+    
+    setShowInsightsModal(false);
+  };
+
+  const transactionsByPeriod = transactions.filter((t) => {
     const date = new Date(t.date);
     const now = new Date();
     const diffDays = (now.getTime() - date.getTime()) / (1000 * 3600 * 24);
@@ -730,13 +910,55 @@ export default function App() {
     return <Login onLogin={handleLogin} isLoading={isLoggingIn} />;
   }
 
+  const isSuperAdmin = profile?.role === 'admin' || user?.email === 'felipeteixeirams@gmail.com';
+
+  const updateGlobalAIProvider = async (provider: 'gemini' | 'deepseek') => {
+    if (!isSuperAdmin) return;
+    try {
+      await setDoc(doc(db, 'config', 'global'), {
+        aiProvider: provider,
+        updatedAt: new Date().toISOString(),
+        updatedBy: user?.email
+      });
+    } catch (error) {
+      console.error("Error updating global config:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden">
       {/* Header */}
       <header className="px-6 py-4 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-            <img src={GLOBAL_AIMEE_AVATAR} className="w-full h-full object-cover" alt="Aimee" referrerPolicy="no-referrer" />
+          <div className="relative">
+            <button 
+              onClick={() => unreadInsights.length > 0 && setShowInsightsModal(true)}
+              className={cn(
+                "relative w-10 h-10 rounded-xl flex items-center justify-center shadow-md transition-all active:scale-95",
+                unreadInsights.length > 0 ? "cursor-pointer" : "cursor-default"
+              )}
+            >
+              {unreadInsights.length > 0 && (
+                <div className="absolute inset-0 rounded-xl overflow-hidden z-0">
+                  <motion.div 
+                    className="absolute inset-[ -100%] bg-conic-gradient from-brand via-amber-400 to-brand"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    style={{ 
+                      background: `conic-gradient(from 0deg, var(--color-brand), #fbbf24, var(--color-brand))` 
+                    }}
+                  />
+                </div>
+              )}
+              <div className="absolute inset-[2px] bg-white dark:bg-neutral-900 rounded-[10px] z-10 overflow-hidden">
+                <AimeeAvatar src={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR} className="w-full h-full" />
+              </div>
+            </button>
+            {unreadInsights.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center z-30 border-2 border-white dark:border-neutral-900 shadow-sm animate-bounce pointer-events-none">
+                {unreadInsights.length}
+              </span>
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -768,7 +990,7 @@ export default function App() {
               <div 
                 ref={scrollRef} 
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth"
+                className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-4"
               >
                 {messages.length === 0 && (
                   <div className="text-center py-20">
@@ -795,13 +1017,14 @@ export default function App() {
                   acc.push(
                     <motion.div 
                       key={msg.id || i} 
+                      id={`msg-${msg.id}`}
                       layout
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       className={cn("flex group", msg.role === 'user' ? "justify-end" : "justify-start")}
                     >
                       <div className={cn(
-                        "relative max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all",
+                        "relative max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all break-words whitespace-pre-wrap",
                         msg.role === 'user' 
                           ? "bg-brand text-brand-foreground rounded-tr-none shadow-md" 
                           : msg.isInsight
@@ -836,7 +1059,7 @@ export default function App() {
                           <>
                             {msg.content}
                             <div className={cn(
-                              "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1",
+                              "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex gap-1",
                               msg.role === 'user' ? "right-full mr-2" : "left-full ml-2"
                             )}>
                               <button 
@@ -889,7 +1112,7 @@ export default function App() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     className="flex justify-start"
                   >
-                    <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-none bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 shadow-sm text-sm leading-relaxed">
+                    <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-none bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 shadow-sm text-sm leading-relaxed break-words whitespace-pre-wrap">
                       {typingContent}
                     </div>
                   </motion.div>
@@ -919,7 +1142,7 @@ export default function App() {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
-                    onClick={() => scrollToBottom()}
+                    onClick={() => scrollToBottom('smooth')}
                     className="absolute bottom-24 right-6 p-3 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-full shadow-lg text-neutral-500 hover:text-brand transition-all z-20"
                   >
                     <ChevronDown className="w-5 h-5" />
@@ -940,7 +1163,7 @@ export default function App() {
                     <div className="absolute inset-0 rounded-2xl border border-brand/0 group-focus-within:border-brand/20 transition-all pointer-events-none" />
                   </div>
                   <button 
-                    onClick={handleSendMessage}
+                    onClick={() => handleSendMessage()}
                     disabled={!inputText.trim()}
                     className="w-14 h-14 bg-brand text-brand-foreground rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all disabled:opacity-50 disabled:scale-100 group"
                   >
@@ -1658,7 +1881,55 @@ export default function App() {
                       <p className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Próximos Eventos</p>
                     </div>
                   </div>
+                  
+                  <button 
+                    onClick={async () => {
+                      const token = sessionStorage.getItem('google_access_token');
+                      if (token && user) {
+                         await syncGoogleCalendar(token, activeSpace || user.uid);
+                      } else {
+                         // Force re-login if no token in session (safety)
+                         handleLogin();
+                      }
+                    }}
+                    disabled={isSyncing || calendarBlocked}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all border border-neutral-100 dark:border-neutral-800 text-[10px] font-bold uppercase tracking-wider",
+                      (isSyncing || calendarBlocked) && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5 text-brand", isSyncing && "animate-spin")} />
+                    {calendarBlocked ? 'Agenda Bloqueada' : (isSyncing ? 'Sincronizando...' : 'Sincronizar')}
+                  </button>
                 </div>
+
+                {syncError && (
+                  <div className="mb-4 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-[2rem] flex flex-col gap-3">
+                    <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{syncError}</span>
+                    </div>
+                    {calendarBlocked && (
+                      <div className="space-y-3">
+                        <p className="text-[11px] text-rose-800/70 dark:text-rose-200/60 leading-relaxed font-medium">
+                          A API do Google Agenda precisa ser ativada manualmente no console do projeto para que esta integração funcione.
+                        </p>
+                        <a 
+                          href="https://console.cloud.google.com/apis/library/calendar.googleapis.com?project=gen-lang-client-0588616761"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-rose-700 transition-colors shadow-sm shadow-rose-200 dark:shadow-none"
+                        >
+                          <LinkIcon className="w-3.5 h-3.5" />
+                          Ativar API no Console
+                        </a>
+                        <p className="text-[9px] text-rose-600/50 dark:text-rose-400/40 italic">
+                          Após clicar em "ATIVAR", aguarde 30 segundos e tente sincronizar novamente.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   {events.length > 0 ? events.map((event, i) => (
@@ -1671,12 +1942,21 @@ export default function App() {
                         <p className="text-sm font-bold text-neutral-800 dark:text-white truncate">{event.title}</p>
                         <p className="text-[10px] text-neutral-500 truncate">{event.description || 'Sem descrição'}</p>
                       </div>
-                      <div className={cn(
-                        "px-2 py-1 rounded-full text-[8px] font-bold uppercase",
-                        event.type === 'social' ? "bg-purple-100 text-purple-600" :
-                        event.type === 'holiday' ? "bg-rose-100 text-rose-600" : "bg-blue-100 text-blue-600"
-                      )}>
-                        {event.type}
+                      <div className="flex flex-col items-end gap-2">
+                        <div className={cn(
+                          "px-2 py-1 rounded-full text-[8px] font-bold uppercase",
+                          event.type === 'social' ? "bg-purple-100 text-purple-600" :
+                          event.type === 'holiday' ? "bg-rose-100 text-rose-600" : "bg-blue-100 text-blue-600"
+                        )}>
+                          {event.type}
+                        </div>
+                        <button 
+                          onClick={() => event.id && deleteDoc(doc(db, `users/${activeSpace || user.uid}/events/${event.id}`))}
+                          className="p-1.5 text-neutral-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all"
+                          title="Remover evento"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   )) : (
@@ -1784,48 +2064,230 @@ export default function App() {
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-4 border-white dark:border-neutral-900 rounded-full shadow-sm" />
                     </div>
                     <div>
-                      <p className="text-xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight">{user.displayName}</p>
-                      <p className="text-xs text-neutral-500 font-bold uppercase tracking-wider opacity-70">{user.email}</p>
+                      <p className="text-xl font-black text-neutral-800 dark:text-neutral-100 tracking-tight truncate max-w-[200px]" title={user.displayName || ''}>
+                        {(() => {
+                          const name = user.displayName || 'Usuário';
+                          const words = name.trim().split(/\s+/);
+                          if (words.length <= 1) return name;
+                          
+                          // Custom logic: only show whole words, and if the last word is <= 3 chars, remove it.
+                          // We use a safe max length for the container.
+                          const MAX_LEN = 20;
+                          if (name.length <= MAX_LEN) return name;
+
+                          let current = words[0];
+                          let lastValid = words[0];
+                          
+                          for (let i = 1; i < words.length; i++) {
+                            const next = words[i];
+                            const temp = `${current} ${next}`;
+                            if (temp.length > MAX_LEN) break;
+                            current = temp;
+                            if (next.length > 3) {
+                              lastValid = current;
+                            }
+                          }
+                          return lastValid;
+                        })()}
+                      </p>
+                      <p className="text-[11px] text-neutral-500 font-medium tracking-wide opacity-80 truncate max-w-[200px]" title={user.email || ''}>
+                        {(user.email || '').toLowerCase()}
+                      </p>
+                      {isSuperAdmin && (
+                        <span className="inline-block mt-2 px-2 py-0.5 bg-brand/10 text-brand text-[8px] font-black uppercase rounded-full">Super Admin</span>
+                      )}
                     </div>
                   </div>
                 </div>
 
+                {isSuperAdmin && (
+                  <div className="bg-brand/5 dark:bg-brand/10 p-6 rounded-[2.5rem] border border-brand/20 shadow-sm md:col-span-2">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-brand/20 rounded-xl flex items-center justify-center">
+                        <ShieldAlert className="w-5 h-5 text-brand" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-brand uppercase tracking-widest">Painel do Administrador</p>
+                        <h4 className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Configuração Global de IA</h4>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowAIDropdown(!showAIDropdown)}
+                        className="w-full p-4 bg-white dark:bg-neutral-800 rounded-3xl border-2 border-neutral-200 dark:border-neutral-700 flex items-center justify-between transition-all hover:border-brand shadow-sm"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-brand/10 rounded-2xl flex items-center justify-center">
+                            {globalConfig.aiProvider === 'gemini' ? (
+                              <Sparkles className="w-6 h-6 text-brand" />
+                            ) : (
+                              <Zap className="w-6 h-6 text-brand" />
+                            )}
+                          </div>
+                          <div className="text-left">
+                            <p className="font-black text-neutral-800 dark:text-white">
+                              {globalConfig.aiProvider === 'gemini' ? 'Google Gemini' : 'DeepSeek AI'}
+                            </p>
+                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+                              {globalConfig.aiProvider === 'gemini' ? 'Padrão do Sistema' : 'Alta Performance'}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronDown className={cn("w-5 h-5 text-neutral-400 transition-transform", showAIDropdown && "rotate-180")} />
+                      </button>
+
+                      <AnimatePresence>
+                        {showAIDropdown && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowAIDropdown(false)} />
+                            <motion.div 
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                              className="absolute top-full left-0 right-0 mt-3 p-3 bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-[2.5rem] shadow-2xl z-50 overflow-hidden"
+                            >
+                              <div className="space-y-2">
+                                {[
+                                  { id: 'gemini' as const, label: 'Google Gemini', icon: Sparkles, desc: 'Padrão do Sistema' },
+                                  { id: 'deepseek' as const, label: 'DeepSeek AI', icon: Zap, desc: 'Alta Performance' }
+                                ].map((option) => (
+                                  <button
+                                    key={option.id}
+                                    onClick={() => {
+                                      updateGlobalAIProvider(option.id);
+                                      setShowAIDropdown(false);
+                                    }}
+                                    className={cn(
+                                      "w-full p-4 rounded-2xl flex items-center gap-4 transition-all group",
+                                      globalConfig.aiProvider === option.id 
+                                        ? "bg-brand/5 dark:bg-brand/10 border-brand/20 border" 
+                                        : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
+                                    )}
+                                  >
+                                    <div className={cn(
+                                      "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                                      globalConfig.aiProvider === option.id 
+                                        ? "bg-brand/20 scale-110" 
+                                        : "bg-neutral-100 dark:bg-neutral-700 group-hover:scale-110"
+                                    )}>
+                                      <option.icon className={cn("w-5 h-5", globalConfig.aiProvider === option.id ? "text-brand" : "text-neutral-400")} />
+                                    </div>
+                                    <div className="text-left flex-1 min-w-0">
+                                      <p className={cn("text-sm font-black", globalConfig.aiProvider === option.id ? "text-brand" : "text-neutral-800 dark:text-white")}>
+                                        {option.label}
+                                      </p>
+                                      <p className="text-[9px] text-neutral-500 font-bold uppercase">{option.desc}</p>
+                                    </div>
+                                    {globalConfig.aiProvider === option.id && (
+                                      <div className="w-6 h-6 bg-brand rounded-full flex items-center justify-center shadow-lg shadow-brand/20">
+                                        <Check className="w-3.5 h-3.5 text-white" />
+                                      </div>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    
+                    <p className="mt-4 text-[10px] text-neutral-500 italic">
+                      * Esta alteração afeta todos os usuários do sistema instantaneamente. Certifique-se de que a chave DEEPSEEK_API_KEY está configurada.
+                    </p>
+                  </div>
+                )}
+
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Tema e Aparência</p>
-                    <button 
-                      onClick={() => setIsDarkMode(!isDarkMode)}
-                      className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-2xl text-[10px] font-black uppercase transition-all hover:scale-105 shadow-sm active:scale-95"
-                    >
-                      {isDarkMode ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-                      {isDarkMode ? 'Escuro' : 'Claro'}
-                    </button>
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest leading-none">Aparência do Sistema</p>
                   </div>
                   
-                  <div className="flex flex-wrap gap-4">
-                    {[
-                      { id: 'default', color: isDarkMode ? '#fafafa' : '#171717', label: 'Padrão' },
-                      { id: 'blue', color: isDarkMode ? '#60a5fa' : '#2563eb', label: 'Azul' },
-                      { id: 'rose', color: isDarkMode ? '#fb7185' : '#e11d48', label: 'Rosa' },
-                      { id: 'emerald', color: isDarkMode ? '#34d399' : '#059669', label: 'Verde' },
-                      { id: 'violet', color: isDarkMode ? '#a78bfa' : '#7c3aed', label: 'Roxo' },
-                      { id: 'amber', color: isDarkMode ? '#fbbf24' : '#d97706', label: 'Âmbar' }
-                    ].map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => updateDoc(doc(db, 'users', user.uid), { theme: t.id })}
-                        title={t.label}
-                        className={cn(
-                          "w-11 h-11 rounded-2xl border-2 transition-all flex items-center justify-center shadow-sm relative",
-                          (profile?.theme || 'default') === t.id ? "border-brand scale-110 ring-4 ring-brand/10 z-10" : "border-transparent hover:scale-110"
-                        )}
-                        style={{ backgroundColor: t.color }}
-                      >
-                        {(profile?.theme || 'default') === t.id && (
-                          <motion.div layoutId="theme-active" className={cn("w-2 h-2 rounded-full", isDarkMode ? "bg-black" : "bg-white")} />
-                        )}
-                      </button>
-                    ))}
+                  <div className="flex flex-col gap-6">
+                    {/* Theme Toggle (Light/Dark) */}
+                    <div className="grid grid-cols-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-[1.5rem] relative isolate">
+                      <motion.div 
+                        className="absolute inset-y-1 bg-white dark:bg-neutral-700 rounded-2xl shadow-md z-0"
+                        initial={false}
+                        animate={{ 
+                          x: isDarkMode ? '100%' : '0%',
+                          width: 'calc(50% - 4px)'
+                        }}
+                        transition={{ 
+                          type: "tween", 
+                          ease: "easeInOut",
+                          duration: 0.3
+                        }}
+                        style={{ left: 4 }}
+                      />
+                      {[
+                        { id: 'light', label: 'Claro', icon: Sun, value: false },
+                        { id: 'dark', label: 'Escuro', icon: Moon, value: true }
+                      ].map((mode) => (
+                        <button
+                          key={mode.id}
+                          onClick={() => setIsDarkMode(mode.value)}
+                          className={cn(
+                            "relative flex items-center justify-center gap-2 py-3 z-10 text-[10px] font-black uppercase transition-colors duration-300",
+                            isDarkMode === mode.value ? "text-brand" : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                          )}
+                        >
+                          <motion.div
+                            animate={{ 
+                              scale: isDarkMode === mode.value ? 1.1 : 1,
+                              rotate: isDarkMode === mode.value ? (mode.value ? 10 : -10) : 0
+                            }}
+                            transition={{ type: "tween", ease: "easeInOut", duration: 0.2 }}
+                          >
+                            <mode.icon className="w-3.5 h-3.5" />
+                          </motion.div>
+                          <span className="relative">
+                            {mode.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Accent Color Selection */}
+                    <div className="flex items-center justify-between gap-2 px-1">
+                      <div className="flex items-center gap-3">
+                        {[
+                          { id: 'default', color: isDarkMode ? '#fafafa' : '#171717', label: 'Padrão' },
+                          { id: 'blue', color: isDarkMode ? '#60a5fa' : '#2563eb', label: 'Azul' },
+                          { id: 'rose', color: isDarkMode ? '#fb7185' : '#e11d48', label: 'Rosa' },
+                          { id: 'emerald', color: isDarkMode ? '#34d399' : '#059669', label: 'Verde' },
+                          { id: 'violet', color: isDarkMode ? '#a78bfa' : '#7c3aed', label: 'Roxo' },
+                          { id: 'amber', color: isDarkMode ? '#fbbf24' : '#d97706', label: 'Âmbar' }
+                        ].map((t) => (
+                          <button
+                            key={t.id}
+                            onClick={() => updateDoc(doc(db, 'users', user.uid), { theme: t.id })}
+                            title={t.label}
+                            className="relative w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-125 hover:z-10 group"
+                            style={{ backgroundColor: t.color }}
+                          >
+                            {(profile?.theme || 'default') === t.id && (
+                              <motion.div 
+                                layoutId="color-accent-active"
+                                className="absolute -inset-1.5 border-2 border-brand/20 dark:border-brand/40 rounded-full"
+                              />
+                            )}
+                            {(profile?.theme || 'default') === t.id && (
+                              <Check className={cn("w-3 h-3 z-10", isDarkMode && t.id === 'default' ? "text-black" : "text-white")} />
+                            )}
+                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-neutral-800 text-white text-[8px] font-black uppercase rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">
+                              {t.label}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="h-6 w-[1px] bg-neutral-100 dark:bg-neutral-800 mx-1" />
+                      <div className="flex flex-col items-end">
+                        <span className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Sotaque</span>
+                        <span className="text-[10px] font-bold text-brand uppercase">{profile?.theme === 'default' || !profile?.theme ? 'Padrão' : profile.theme}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1855,35 +2317,71 @@ export default function App() {
                 </div>
 
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Avatar da Aimee</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest leading-none">Avatar da Aimee</p>
+                    <span className="text-[8px] font-black bg-brand/10 text-brand px-2 py-0.5 rounded-full uppercase">Digital Art & Cinematic</span>
+                  </div>
+
                   <div className="grid grid-cols-4 gap-3">
                     {[
-                      'https://picsum.photos/seed/aimee1/200',
-                      'https://picsum.photos/seed/aimee2/200',
-                      'https://picsum.photos/seed/aimee3/200',
-                      'https://picsum.photos/seed/aimee4/200'
-                    ].map((url, idx) => (
-                      <button
-                        key={url}
-                        onClick={() => updateDoc(doc(db, 'users', user.uid), { avatarUrl: url })}
-                        className={cn(
-                          "aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:scale-105",
-                          profile?.avatarUrl === url ? "border-brand ring-4 ring-brand/10" : "border-transparent"
-                        )}
-                      >
-                        <img src={url} className="w-full h-full object-cover" alt={`Avatar ${idx}`} referrerPolicy="no-referrer" />
-                      </button>
-                    ))}
+                      { id: '1', url: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=400' },
+                      { id: '2', url: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=400' },
+                      { id: '3', url: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=400' },
+                      { id: '4', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
+                      { id: '5', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400' },
+                      { id: '6', url: 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&q=80&w=400' },
+                      { id: '7', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400' },
+                      { id: '8', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400' }
+                    ].map((avatar) => {
+                      const isSelected = (profile?.avatarUrl || GLOBAL_AIMEE_AVATAR) === avatar.url;
+                      
+                      return (
+                        <button
+                          key={avatar.id}
+                          onClick={() => updateDoc(doc(db, 'users', user.uid), { avatarUrl: avatar.url })}
+                          className={cn(
+                            "group relative aspect-square rounded-[2rem] overflow-hidden border-2 transition-all p-1",
+                            isSelected 
+                              ? "border-brand bg-brand/5 shadow-lg shadow-brand/10 scale-110 z-10" 
+                              : "border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 hover:scale-110 hover:border-neutral-300 dark:hover:border-neutral-600"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-full h-full rounded-[1.6rem] overflow-hidden bg-white dark:bg-neutral-900 transition-all",
+                            isSelected ? "scale-95 shadow-inner" : ""
+                          )}>
+                            <AimeeAvatar src={avatar.url} className="w-full h-full rounded-none" />
+                          </div>
+                          {isSelected && (
+                            <motion.div 
+                              layoutId="avatar-check"
+                              className="absolute top-0 right-0 w-6 h-6 bg-brand text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900 z-20"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </motion.div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="relative">
-                    <p className="text-[10px] font-bold text-neutral-400 uppercase mb-2 ml-1">URL Personalizada</p>
-                    <div className="relative">
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+                  
+                  <div className="pt-2">
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase mb-3 ml-1 tracking-wider opacity-70">URL Personalizada</p>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-neutral-100 dark:bg-neutral-700/50 rounded-lg group-focus-within:bg-brand/10 transition-colors">
+                        <LinkIcon className="w-3.5 h-3.5 text-neutral-400 group-focus-within:text-brand transition-colors" />
+                      </div>
                       <input 
                         type="text" 
                         placeholder="https://exemplo.com/imagem.jpg"
-                        onBlur={(e) => e.target.value && updateDoc(doc(db, 'users', user.uid), { avatarUrl: e.target.value })}
-                        className="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl pl-10 pr-4 py-3 text-xs outline-none focus:ring-2 focus:ring-brand/20 transition-all dark:text-white"
+                        defaultValue={profile?.avatarUrl || ''}
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val && val !== profile?.avatarUrl) {
+                            updateDoc(doc(db, 'users', user.uid), { avatarUrl: val });
+                          }
+                        }}
+                        className="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-[1.8rem] pl-14 pr-6 py-4 text-xs outline-none focus:ring-2 focus:ring-brand/20 transition-all dark:text-white font-medium placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                       />
                     </div>
                   </div>
@@ -2202,6 +2700,82 @@ export default function App() {
           )}
         </button>
       </nav>
+
+      {/* Insights Modal */}
+      <AnimatePresence>
+        {showInsightsModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowInsightsModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-[3rem] shadow-2xl border border-neutral-100 dark:border-neutral-800 overflow-hidden"
+            >
+              <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-800/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-brand/10 rounded-2xl flex items-center justify-center text-brand">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Insights de IA</h3>
+                    <p className="text-xs text-neutral-500 font-medium">{unreadInsights.length} novos insights da Aimee</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowInsightsModal(false)}
+                  className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-neutral-900 transition-all shadow-sm"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="max-h-[60vh] overflow-y-auto p-6 space-y-4 no-scrollbar">
+                {unreadInsights.map((insight) => (
+                  <button
+                    key={insight.id}
+                    onClick={() => handleGoToInsight(insight)}
+                    className="w-full text-left p-5 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-brand/5 dark:hover:bg-brand/10 border border-neutral-100 dark:border-neutral-800 rounded-[2rem] transition-all group relative overflow-hidden"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0 mt-1">
+                        <TrendingUp className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-neutral-800 dark:text-neutral-200 leading-relaxed line-clamp-3">
+                          {insight.content}
+                        </p>
+                        <div className="flex items-center gap-2 mt-3">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                            {format(new Date(insight.timestamp), "HH:mm '•' d 'de' MMMM", { locale: ptBR })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ChevronDown className="w-5 h-5 text-brand -rotate-90" />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="p-6 bg-neutral-50/50 dark:bg-neutral-800/50 text-center">
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                  Clique em um insight para ler o contexto completo no chat
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

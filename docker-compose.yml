@@ -1,0 +1,27 @@
+services:
+  aimee-app:
+    container_name: aimee-assistant
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
+      - VITE_PORT=3000
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    networks:
+      - aimee-network
+
+networks:
+  aimee-network:
+    driver: bridge

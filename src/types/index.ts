@@ -13,6 +13,7 @@ export interface UserProfile {
   uid: string;
   displayName: string;
   email: string;
+  role?: 'admin' | 'user';
   selectedPersona?: 'funny' | 'analytical' | 'frugal';
   avatarUrl?: string;
   preferences: {
@@ -70,6 +71,7 @@ export interface ChatMessage {
   timestamp: string;
   agentType?: string;
   isInsight?: boolean;
+  read?: boolean;
 }
 
 export interface Share {
@@ -106,5 +108,12 @@ export interface FamilyEvent {
   description?: string;
   date: string;
   type: 'social' | 'holiday' | 'appointment';
+  googleEventId?: string;
   createdAt: string;
+}
+
+export interface GlobalConfig {
+  aiProvider: 'gemini' | 'deepseek';
+  updatedAt: string;
+  updatedBy: string;
 }

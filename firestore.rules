@@ -6,6 +6,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || 
+         (request.auth.token.email == 'felipeteixeirams@gmail.com' && request.auth.token.email_verified == true));
+    }
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -144,6 +150,11 @@ service cloud.firestore {
         allow create, update: if (isOwner(userId) || hasSharedWriteAccess(userId, 'routines')) && isValidFamilyEvent(request.resource.data);
         allow delete: if isOwner(userId) || hasSharedWriteAccess(userId, 'routines');
       }
+    }
+
+    match /config/global {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }
