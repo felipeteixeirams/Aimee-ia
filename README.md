@@ -111,6 +111,13 @@ A aplicação estará disponível em `http://localhost:3000`. O volume está con
 - `src/lib/`: Configurações de bibliotecas (Firebase, Utils).
 - `firestore.rules`: Regras de segurança do banco de dados.
 
+## 📜 Versão e Histórico
+
+A Aimee segue o projeto de versionamento semântico. 
+
+- **Versão Atual**: 1.0.0
+- **Histórico de Mudanças**: Veja o arquivo [CHANGELOG.md](./CHANGELOG.md) para detalhes de todas as atualizações.
+
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
