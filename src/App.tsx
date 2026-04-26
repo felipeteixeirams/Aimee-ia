@@ -1024,7 +1024,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden">
       <Header 
         unreadInsightsCount={unreadInsights.length}
         setShowInsightsModal={setShowInsightsModal}
