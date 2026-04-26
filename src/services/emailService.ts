@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { logger } from '../lib/logger.js';
 
 dotenv.config();
 
@@ -12,6 +13,25 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
+
+async function sendEmail(mailOptions: nodemailer.SendMailOptions) {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    logger.info('Email sent successfully', { 
+      messageId: info.messageId, 
+      recipient: mailOptions.to,
+      subject: mailOptions.subject
+    });
+    return info;
+  } catch (error: any) {
+    logger.error('Failed to send email', { 
+      error: error.message, 
+      recipient: mailOptions.to,
+      subject: mailOptions.subject
+    });
+    throw error;
+  }
+}
 
 const APP_URL = process.env.APP_URL || 'https://aimee.vercel.app';
 
@@ -59,7 +79,7 @@ export async function sendRegistrationRequestEmail(userEmail: string, userName: 
     `,
   };
 
-  return transporter.sendMail(mailOptions);
+  return sendEmail(mailOptions);
 }
 
 export async function sendApprovalEmail(userEmail: string, userName: string) {
@@ -84,7 +104,7 @@ export async function sendApprovalEmail(userEmail: string, userName: string) {
     `,
   };
 
-  return transporter.sendMail(mailOptions);
+  return sendEmail(mailOptions);
 }
 
 export async function sendRejectionEmail(userEmail: string, userName: string) {
@@ -109,7 +129,7 @@ export async function sendRejectionEmail(userEmail: string, userName: string) {
     `,
   };
 
-  return transporter.sendMail(mailOptions);
+  return sendEmail(mailOptions);
 }
 
 export async function sendBlockedEmail(userEmail: string, userName: string, days: number) {
@@ -131,5 +151,5 @@ export async function sendBlockedEmail(userEmail: string, userName: string, days
     `,
   };
 
-  return transporter.sendMail(mailOptions);
+  return sendEmail(mailOptions);
 }

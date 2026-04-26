@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import { logger } from "../src/lib/logger.js";
 
 dotenv.config();
 
@@ -12,6 +13,22 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+
+// Request logger middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info('HTTP Request', {
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+      ip: req.ip
+    });
+  });
+  next();
+});
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -22,13 +39,15 @@ app.get("/api/health", (req, res) => {
 app.post("/api/notify", async (req, res) => {
   const { type, email, name, days } = req.body;
   
+  logger.info('Email notification requested', { type, recipient: email });
+  
   try {
     const { 
       sendRegistrationRequestEmail, 
       sendApprovalEmail, 
       sendRejectionEmail, 
       sendBlockedEmail 
-    } = await import("./src/services/emailService.ts");
+    } = await import("../src/services/emailService.ts");
 
     switch (type) {
       case 'request':
@@ -98,23 +117,33 @@ async function setupVite() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+    // Only serve static files if NOT on Vercel (Vercel provides its own static serving)
+    if (!process.env.VERCEL) {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        const indexPath = path.join(distPath, "index.html");
+        res.sendFile(indexPath);
+      });
+    }
   }
 }
 
 async function startServer() {
   try {
     await setupVite();
-    const PORT = 3000;
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
+    
+    // In Vercel, we don't need to call listen, it's handled by the serverless wrapper
+    if (!process.env.VERCEL) {
+      const PORT = process.env.PORT || 3000;
+      app.listen(Number(PORT), "0.0.0.0", () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    }
   } catch (error) {
     console.error("Failed to start server:", error);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 }
 

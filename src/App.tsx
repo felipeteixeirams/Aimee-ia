@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import React from 'react';
+import { logger } from './lib/logger';
 import { 
   auth, 
   db, 
@@ -125,24 +126,30 @@ export default function App() {
   }, [profile?.theme]);
 
   useEffect(() => {
-    // Test connection
-    testConnection();
-
     const unsubscribe = onAuthStateChanged(auth, (u) => {
+      logger.info('Auth state changed', { isAuthenticated: !!u, userId: u?.uid });
       setUser(u);
       setLoading(false);
+      
       if (u) {
+        // Test connection only once after login or initial load
+        testConnection();
         // Ensure user profile exists
         const userRef = doc(db, 'users', u.uid);
         getDoc(userRef).then(async (docSnap) => {
           if (!docSnap.exists()) {
+            logger.info('New user detected, showing registration flow', { userId: u.uid });
             // New user, trigger registration flow
             setIsRegistering(true);
           } else {
             const data = docSnap.data() as UserProfile;
+            logger.info('User profile loaded', { userId: u.uid, role: data.role, status: data.status });
             setProfile(data);
           }
-        }).catch(error => handleFirestoreError(error, OperationType.GET, `users/${u.uid}`));
+        }).catch(error => {
+          logger.error('Error loading user profile', { error: error.message, userId: u.uid });
+          handleFirestoreError(error, OperationType.GET, `users/${u.uid}`);
+        });
       } else {
         setProfile(null);
         setIsRegistering(false);
