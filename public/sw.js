@@ -1,30 +1,45 @@
-const CACHE_NAME = 'agente-pessoal-v1';
+const CACHE_NAME = 'aimee-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css'
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
+      .then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  // Simple strategy: Network first, then Cache
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
+    fetch(event.request).catch(() => {
+      return caches.match(event.request).then((response) => {
         if (response) {
           return response;
         }
-        return fetch(event.request);
-      }
-    )
+        // If it's a navigation request and we're offline, return index.html
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      });
+    })
   );
 });
