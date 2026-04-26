@@ -436,7 +436,12 @@ export default function App() {
           await syncGoogleCalendar(token, result.user.uid);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      logger.error('Login failed', { 
+        error: error.message, 
+        code: error.code,
+        details: error.customData 
+      });
       console.error("Login error:", error);
     } finally {
       setIsLoggingIn(false);

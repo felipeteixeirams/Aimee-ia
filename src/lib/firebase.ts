@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { logger } from './logger';
 import localConfig from '../../firebase-applet-config.json';
 
 // Use environment variables if available (Vercel/Vite), otherwise fallback to local config
@@ -14,6 +15,21 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || localConfig.measurementId,
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId
 };
+
+// Validate critical config
+const missingVars = Object.entries(firebaseConfig)
+  .filter(([key, value]) => !value && key !== 'measurementId') // measurementId is optional
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  logger.error('Missing Firebase configuration variables', { missingVars });
+} else {
+  logger.info('Firebase initialized with configuration', { 
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    hasApiKey: !!firebaseConfig.apiKey
+  });
+}
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);

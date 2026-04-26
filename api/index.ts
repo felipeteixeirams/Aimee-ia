@@ -8,6 +8,22 @@ import { logger } from "../src/lib/logger.js";
 
 dotenv.config();
 
+// Validate critical environment variables
+const criticalEnvVars = [
+  'GEMINI_API_KEY',
+  'SMTP_HOST',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'ADMIN_EMAIL'
+];
+
+const missingEnvVars = criticalEnvVars.filter(v => !process.env[v]);
+if (missingEnvVars.length > 0) {
+  logger.warn('Missing server-side environment variables', { missingEnvVars });
+} else {
+  logger.info('Server environment variables validated');
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
