@@ -10,29 +10,63 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+app.use(express.json());
 
-  app.use(express.json());
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "healthy", timestamp: new Date().toISOString() });
+});
 
-  // Health check endpoint
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "healthy", timestamp: new Date().toISOString() });
-  });
+// Email Notification Route
+app.post("/api/notify", async (req, res) => {
+  const { type, email, name, days } = req.body;
+  
+  try {
+    const { 
+      sendRegistrationRequestEmail, 
+      sendApprovalEmail, 
+      sendRejectionEmail, 
+      sendBlockedEmail 
+    } = await import("./src/services/emailService.ts");
 
-  // AI Route
-  app.post("/api/ai", async (req, res) => {
-    const { prompt, history, persona, provider, tools } = req.body;
+    switch (type) {
+      case 'request':
+        await sendRegistrationRequestEmail(email, name);
+        break;
+      case 'approve':
+        await sendApprovalEmail(email, name);
+        break;
+      case 'reject':
+        await sendRejectionEmail(email, name);
+        break;
+      case 'block':
+        await sendBlockedEmail(email, name, days || 5);
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid notification type" });
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Email API Error:", error);
+    // Even if email fails, we don't want to break the app flow
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
-    try {
-      if (provider === "deepseek") {
-        const deepseek = new OpenAI({
-          apiKey: process.env.DEEPSEEK_API_KEY,
-          baseURL: "https://api.deepseek.com",
-        });
+// AI Route
+app.post("/api/ai", async (req, res) => {
+  const { prompt, history, persona, provider, tools } = req.body;
 
-        const response = await deepseek.chat.completions.create({
+  try {
+    if (provider === "deepseek") {
+      const response = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        },
+        body: JSON.stringify({
           model: "deepseek-chat",
           messages: [
             { role: "system", content: persona },
@@ -41,27 +75,21 @@ async function startServer() {
           ],
           tools: tools,
           tool_choice: "auto"
-        });
+        })
+      });
 
-        res.json(response.choices[0].message);
-      } else {
-        res.status(400).json({ error: "Gemini deve ser chamado pelo frontend." });
-      }
-    } catch (error: any) {
-      console.error("Server AI Error:", error);
-      const status = error?.status || 500;
-      const message = error?.message || "Internal AI Error";
-      
-      // If balance is insufficient, return a 402 with the specific message
-      if (status === 402 || message.includes("Insufficient Balance")) {
-        return res.status(402).json({ error: "Insufficient Balance: O provedor está sem créditos." });
-      }
-      
-      res.status(status).json({ error: message });
+      const data = await response.json();
+      res.json(data.choices[0].message);
+    } else {
+      res.status(400).json({ error: "Gemini deve ser chamado pelo frontend." });
     }
-  });
+  } catch (error: any) {
+    console.error("Server AI Error:", error);
+    res.status(500).json({ error: error.message || "Internal AI Error" });
+  }
+});
 
-  // Vite middleware for development
+async function setupVite() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -75,10 +103,21 @@ async function startServer() {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
+}
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+async function startServer() {
+  try {
+    await setupVite();
+    const PORT = 3000;
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
 }
 
 startServer();
+
+export default app;

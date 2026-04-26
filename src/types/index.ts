@@ -1,3 +1,6 @@
+export type Tab = 'chat' | 'finance' | 'shopping' | 'routines' | 'settings';
+export type Period = '7d' | '30d' | 'all';
+
 export interface FinancialGoal {
   id?: string;
   userId: string;
@@ -13,9 +16,14 @@ export interface UserProfile {
   uid: string;
   displayName: string;
   email: string;
+  username?: string;
+  bio?: string;
   role?: 'admin' | 'user';
+  status: 'pending' | 'approved' | 'rejected' | 'blocked';
+  blockedUntil?: string;
   selectedPersona?: 'funny' | 'analytical' | 'frugal';
   avatarUrl?: string;
+  theme?: string;
   preferences: {
     currency: string;
     notificationsEnabled: boolean;
@@ -86,6 +94,7 @@ export interface Share {
     routines: 'none' | 'read' | 'write';
   };
   status: 'pending' | 'accepted' | 'declined';
+  upgradeRequested?: boolean;
   createdAt: string;
 }
 
@@ -114,6 +123,7 @@ export interface FamilyEvent {
 
 export interface GlobalConfig {
   aiProvider: 'gemini' | 'deepseek';
+  calendarIntegrationEnabled?: boolean;
   updatedAt: string;
   updatedBy: string;
 }

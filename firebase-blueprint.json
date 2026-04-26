@@ -2,23 +2,40 @@
   "entities": {
     "UserProfile": {
       "title": "User Profile",
-      "description": "Stores user preferences and settings for the AI agent.",
+      "description": "Stores user preferences, settings, and registration status.",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
         "displayName": { "type": "string" },
         "email": { "type": "string" },
+        "username": { "type": "string" },
+        "bio": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "blocked"] },
+        "blockedUntil": { "type": "string", "format": "date-time" },
         "selectedPersona": { "type": "string", "enum": ["funny", "analytical", "frugal"] },
         "avatarUrl": { "type": "string" },
         "preferences": {
           "type": "object",
           "properties": {
             "currency": { "type": "string", "enum": ["BRL", "USD", "EUR"] },
-            "notificationsEnabled": { "type": "boolean" }
+            "notificationsEnabled": { "type": "boolean" },
+            "theme": { "type": "string" }
           }
         }
       },
-      "required": ["uid", "email"]
+      "required": ["uid", "email", "status"]
+    },
+    "GlobalConfig": {
+      "title": "Global Application Config",
+      "description": "Settings for the entire application, controlled by admin.",
+      "type": "object",
+      "properties": {
+        "aiProvider": { "type": "string", "enum": ["gemini", "deepseek"] },
+        "calendarIntegrationEnabled": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      }
     },
     "Transaction": {
       "title": "Financial Transaction",
@@ -104,6 +121,10 @@
     "/shares/{shareId}": {
       "schema": "Share",
       "description": "Sharing records between users."
+    },
+    "/config/global": {
+      "schema": "GlobalConfig",
+      "description": "Global application settings."
     }
   }
 }

@@ -14,7 +14,7 @@ googleProvider.setCustomParameters({
 });
 
 // Test connection
-async function testConnection() {
+export async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
@@ -23,7 +23,6 @@ async function testConnection() {
     }
   }
 }
-testConnection();
 
 export { signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider };
 export type { User };

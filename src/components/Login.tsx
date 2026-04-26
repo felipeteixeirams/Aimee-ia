@@ -8,34 +8,37 @@ interface LoginProps {
   isLoading?: boolean;
 }
 
-const Spark: React.FC<{ delay: number }> = ({ delay }) => {
-  const size = useMemo(() => Math.random() * 3 + 1, []);
-  const left = useMemo(() => Math.random() * 100, []);
-  const duration = useMemo(() => Math.random() * 3 + 2, []);
+const Spark = ({ delay }: { delay: number }) => {
+  const [randoms] = useState(() => ({
+    size: Math.random() * 3 + 1,
+    left: Math.random() * 100,
+    duration: Math.random() * 3 + 2,
+    xOffset: Math.random() * 10 - 5
+  }));
   
   return (
     <motion.div
-      initial={{ y: '110vh', x: `${left}vw`, opacity: 0, scale: 0 }}
+      initial={{ y: '110vh', x: `${randoms.left}vw`, opacity: 0, scale: 0 }}
       animate={{ 
         y: '-10vh', 
         opacity: [0, 1, 1, 0],
         scale: [0, 1, 1, 0.5],
-        x: [`${left}vw`, `${left + (Math.random() * 10 - 5)}vw`]
+        x: [`${randoms.left}vw`, `${randoms.left + randoms.xOffset}vw`]
       }}
       transition={{ 
-        duration, 
+        duration: randoms.duration, 
         repeat: Infinity, 
         delay,
         ease: "linear"
       }}
       className="absolute rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"
-      style={{ width: size, height: size }}
+      style={{ width: randoms.size, height: randoms.size }}
     />
   );
 };
 
 const FireBackground = () => {
-  const sparks = useMemo(() => Array.from({ length: 40 }), []);
+  const [sparks] = useState(() => Array.from({ length: 40 }));
   
   return (
     <div className="fixed inset-0 bg-black overflow-hidden pointer-events-none">
