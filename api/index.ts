@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import { logger } from "../src/lib/logger.js";
+import { logger } from "../src/lib/logger.ts";
 
 dotenv.config();
 
