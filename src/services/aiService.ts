@@ -5,13 +5,33 @@ import { db } from "../lib/firebase";
 import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import { handleFirestoreError, OperationType } from "../lib/firestoreUtils";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+const getAIClient = () => {
+  if (!aiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY não encontrada nas variáveis de ambiente.");
+    }
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+  return aiClient;
+};
 
-const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || "dummy",
-  baseURL: "https://api.deepseek.com",
-  dangerouslyAllowBrowser: true
-});
+let deepseekClient: OpenAI | null = null;
+const getDeepSeekClient = () => {
+  if (!deepseekClient) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      throw new Error("DEEPSEEK_API_KEY não encontrada nas variáveis de ambiente.");
+    }
+    deepseekClient = new OpenAI({
+      apiKey,
+      baseURL: "https://api.deepseek.com",
+      dangerouslyAllowBrowser: true
+    });
+  }
+  return deepseekClient;
+};
 
 const addTransactionFn: FunctionDeclaration = {
   name: "addTransaction",
@@ -341,15 +361,54 @@ export const orchestrator = async (
     const systemInstruction = getSystemInstruction(persona, currentDate);
 
     if (provider === 'gemini') {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          ...history.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }]
-          })),
-          { role: 'user', parts: [{ text: fullPrompt }] }
-        ],
+      console.log("Aimee: Invocando Gemini...", { prompt: fullPrompt.substring(0, 50) + "...", historySize: history.length });
+      // Clean history for Gemini:
+      // 1. Ensure roles alternate (user, model, user, model)
+      // 2. Remove last message if it's already the current prompt (to avoid duplication if snapshot was fast)
+      let cleanedHistory = [...history];
+      
+      // If messages are too many, truncate to stay within limits
+      if (cleanedHistory.length > 50) {
+        cleanedHistory = cleanedHistory.slice(-50);
+      }
+
+      const contents = [];
+      let lastRole = '';
+
+      for (const msg of cleanedHistory) {
+        const role = msg.role === 'user' ? 'user' : 'model';
+        // Skip consecutive same roles
+        if (role === lastRole) continue;
+        
+        // Skip if this is essentially the current prompt (avoid duplication)
+        if (role === 'user' && msg.content === prompt) continue;
+
+        contents.push({
+          role,
+          parts: [{ text: msg.content }]
+        });
+        lastRole = role;
+      }
+
+      // Finally append the current prompt with context
+      if (lastRole === 'user') {
+        // If the last one was user, we can't add another user. 
+        // We should merge or skip. But usually we want to replace the last user message with the enriched one.
+        contents[contents.length - 1] = {
+          role: 'user',
+          parts: [{ text: fullPrompt }]
+        };
+      } else {
+        contents.push({
+          role: 'user',
+          parts: [{ text: fullPrompt }]
+        });
+      }
+
+      const client = getAIClient();
+      const response = await client.models.generateContent({
+        model: "gemini-flash-latest",
+        contents,
         config: {
           systemInstruction,
           tools: [{ functionDeclarations: tools }]
@@ -565,7 +624,7 @@ export const orchestrator = async (
     
     return finalContent.trim() || "Entendido. Como posso ajudar mais?";
   } catch (error: any) {
-    console.error("AI Error:", error);
+    console.error("Aimee AI Orchestrator Error:", error);
     
     // Check for common connection/auth errors
     const errorMessage = String(error?.message || error);
