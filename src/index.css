@@ -83,12 +83,40 @@
 
 /* No blanket transitions - they cause layout bugs and performance issues */
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+  
   body {
     @apply bg-white text-neutral-900;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   .dark body {
     @apply bg-neutral-950 text-neutral-50;
+  }
+
+  ::selection {
+    @apply bg-brand text-brand-foreground opacity-90;
+  }
+}
+
+/* Premium Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl border border-white/20 dark:border-white/5;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-description {
+    @apply text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 font-medium;
   }
 }
 

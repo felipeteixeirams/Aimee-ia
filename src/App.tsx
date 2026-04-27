@@ -1035,6 +1035,8 @@ export default function App() {
         setShowAdminPanel={setShowAdminPanel}
         onLogout={() => signOut(auth)}
         GLOBAL_AIMEE_AVATAR={GLOBAL_AIMEE_AVATAR}
+        globalConfig={globalConfig}
+        updateGlobalAIProvider={updateGlobalAIProvider}
       />
 
       {showAdminPanel && isSuperAdmin && (
@@ -1068,6 +1070,8 @@ export default function App() {
               handleEditMessage={handleEditMessage}
               copyToClipboard={copyToClipboard}
               copiedId={copiedId}
+              profile={profile}
+              GLOBAL_AIMEE_AVATAR={GLOBAL_AIMEE_AVATAR}
             />
           )}
 
