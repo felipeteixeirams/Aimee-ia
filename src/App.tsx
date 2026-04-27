@@ -484,7 +484,7 @@ export default function App() {
     }
   };
 
-  const handleRegistrationComplete = async (data: { username: string, displayName: string, bio: string, avatarUrl: string }) => {
+  const handleRegistrationComplete = async (data: { username: string, displayName: string, bio: string, photoUrl: string }) => {
     if (!user) return;
     
     try {
@@ -497,7 +497,7 @@ export default function App() {
         email: user.email || '',
         username: data.username,
         bio: data.bio,
-        avatarUrl: data.avatarUrl,
+        photoUrl: data.photoUrl,
         role: isAdmin ? UserRole.ADMIN : UserRole.USER,
         status: status,
         preferences: {
@@ -522,21 +522,22 @@ export default function App() {
       };
 
       await setDoc(doc(db, 'users', user.uid), newProfile);
+      
       // Create first welcome message from Aimee
       const welcomeMsg: ChatMessage = {
-        id: 'welcome-msg',
-        role: 'ai',
-        content: `Olá ${profileData.name}! 🌟 Que alegria ter você aqui. Eu sou a Aimee, sua nova assistente inteligente. Já configurei seu espaço seguindo seu perfil ${profileData.selectedPersona === 'frugal' ? 'frugal' : 'analítico'}. Como posso te ajudar a organizar sua vida hoje?`,
-        timestamp: new Date(),
+        userId: user.uid,
+        role: 'assistant',
+        content: `Olá ${newProfile.displayName}! 🌟 Que alegria ter você aqui. Eu sou a Aimee, sua nova assistente inteligente. Já configurei seu espaço seguindo seu estilo ${newProfile.selectedPersona === 'frugal' ? 'frugal' : 'analítico'}. Como posso te ajudar a organizar sua vida hoje?`,
+        timestamp: new Date().toISOString(),
         read: false
       };
 
       await addDoc(collection(db, 'users', user.uid, 'chatHistory'), welcomeMsg);
 
       // Simulation of a welcome email trigger
-      console.info('Welcome email triggered for:', profileData.email);
+      console.info('Welcome email triggered for:', newProfile.email);
       // In a real scenario with a backend, we would call an API here:
-      // await fetch('/api/send-welcome', { method: 'POST', body: JSON.stringify({ email: profileData.email }) });
+      // await fetch('/api/send-welcome', { method: 'POST', body: JSON.stringify({ email: newProfile.email }) });
 
       setProfile(newProfile);
       setIsRegistering(false);
@@ -1080,14 +1081,14 @@ export default function App() {
     }
   };
 
-  const updateGlobalAIProvider = async (provider: AIProvider) => {
+  const updateGlobalConfig = async (updates: Partial<GlobalConfig>) => {
     if (!isSuperAdmin) return;
     try {
       await setDoc(doc(db, 'config', 'global'), {
-        aiProvider: provider,
+        ...updates,
         updatedAt: new Date().toISOString(),
         updatedBy: user?.email
-      });
+      }, { merge: true });
     } catch (error) {
       console.error("Error updating global config:", error);
     }
@@ -1104,9 +1105,9 @@ export default function App() {
         pendingUsersCount={pendingUsers.length}
         setShowAdminPanel={setShowAdminPanel}
         onLogout={() => signOut(auth)}
-        GLOBAL_AIMEE_AVATAR={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR}
+        GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
         globalConfig={globalConfig}
-        updateGlobalAIProvider={updateGlobalAIProvider}
+        updateGlobalConfig={updateGlobalConfig}
       />
 
       {showAdminPanel && isSuperAdmin && (
@@ -1141,7 +1142,7 @@ export default function App() {
               copyToClipboard={copyToClipboard}
               copiedId={copiedId}
               profile={profile}
-              GLOBAL_AIMEE_AVATAR={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR}
+              GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
             />
           )}
 
@@ -1202,7 +1203,7 @@ export default function App() {
               setIsDarkMode={setIsDarkMode}
               isSuperAdmin={isSuperAdmin}
               globalConfig={globalConfig}
-              updateGlobalAIProvider={updateGlobalAIProvider}
+              updateGlobalConfig={updateGlobalConfig}
               shares={shares}
               activeSpace={activeSpace}
               setActiveSpace={setActiveSpace}

@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 
 interface RegisterProps {
   user: User;
-  onComplete: (data: { username: string; displayName: string; bio: string; avatarUrl: string }) => void;
+  onComplete: (data: { username: string; displayName: string; bio: string; photoUrl: string }) => void;
   onCancel: () => void;
 }
 
@@ -14,7 +14,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
   const [username, setUsername] = useState(user.displayName?.toLowerCase().replace(/\s/g, '') || '');
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [bio, setBio] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState(user.photoURL || `https://picsum.photos/seed/${user.uid}/200`);
+  const [photoUrl, setPhotoUrl] = useState(user.photoURL || `https://picsum.photos/seed/${user.uid}/200`);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,7 +23,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
+        setPhotoUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -34,7 +34,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
     setIsSubmitting(true);
     // Simulate slight delay for polish
     setTimeout(() => {
-      onComplete({ username, displayName, bio, avatarUrl });
+      onComplete({ username, displayName, bio, photoUrl });
     }, 1500);
   };
 
@@ -58,8 +58,8 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
             <div className="flex flex-col items-center gap-4 mb-8">
               <div className="relative group">
                 <div className="w-24 h-24 rounded-[2.5rem] overflow-hidden ring-4 ring-neutral-100 dark:ring-neutral-900 shadow-xl bg-neutral-100 dark:bg-neutral-800">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-brand/10">
                       <UserIcon className="w-8 h-8 text-brand/40" />

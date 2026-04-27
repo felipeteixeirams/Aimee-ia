@@ -16,7 +16,7 @@ interface HeaderProps {
   onLogout: () => void;
   GLOBAL_AIMEE_AVATAR: string;
   globalConfig: GlobalConfig;
-  updateGlobalAIProvider: (provider: AIProvider) => void;
+  updateGlobalConfig: (updates: Partial<GlobalConfig>) => void;
 }
 
 export function Header({
@@ -30,7 +30,7 @@ export function Header({
   onLogout,
   GLOBAL_AIMEE_AVATAR,
   globalConfig,
-  updateGlobalAIProvider
+  updateGlobalConfig
 }: HeaderProps) {
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -117,7 +117,7 @@ export function Header({
                   <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-neutral-100 dark:border-neutral-800 p-2 overflow-hidden min-w-[180px]">
                     <div className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.2em] px-3 py-2 border-b border-neutral-50 dark:border-neutral-800 mb-1">Cérebro da Aimee</div>
                     <button 
-                      onClick={() => { updateGlobalAIProvider(AIProvider.GEMINI); setShowModelDropdown(false); }}
+                      onClick={() => { updateGlobalConfig({ aiProvider: AIProvider.GEMINI }); setShowModelDropdown(false); }}
                       className={cn(
                         "w-full flex items-center justify-between p-3 rounded-xl transition-all mb-1",
                         globalConfig.aiProvider === AIProvider.GEMINI ? "bg-brand/10 text-brand" : "hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500"
@@ -130,7 +130,7 @@ export function Header({
                       {globalConfig.aiProvider === AIProvider.GEMINI && <Check className="w-3 h-3" />}
                     </button>
                     <button 
-                      onClick={() => { updateGlobalAIProvider(AIProvider.DEEPSEEK); setShowModelDropdown(false); }}
+                      onClick={() => { updateGlobalConfig({ aiProvider: AIProvider.DEEPSEEK }); setShowModelDropdown(false); }}
                       className={cn(
                         "w-full flex items-center justify-between p-3 rounded-xl transition-all",
                         globalConfig.aiProvider === AIProvider.DEEPSEEK ? "bg-brand/10 text-brand" : "hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-500"

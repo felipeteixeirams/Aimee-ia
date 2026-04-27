@@ -53,6 +53,7 @@ export interface UserProfile {
   blockedUntil?: string;
   selectedPersona?: AIRecommendedPersona;
   avatarUrl?: string;
+  photoUrl?: string;
   theme?: 'light' | 'dark' | 'system';
   themeColor?: 'blue' | 'rose' | 'emerald' | 'violet' | 'amber' | 'neutral';
   preferences: {
@@ -229,6 +230,7 @@ export interface NotificationPayload {
 
 export interface GlobalConfig {
   aiProvider: AIProvider;
+  aimeeAvatarUrl?: string;
   calendarIntegrationEnabled?: boolean;
   updatedAt: string;
   updatedBy: string;

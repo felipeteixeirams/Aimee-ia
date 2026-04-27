@@ -11,7 +11,7 @@ interface SettingsViewProps {
   setIsDarkMode: (dark: boolean) => void;
   isSuperAdmin: boolean;
   globalConfig: GlobalConfig;
-  updateGlobalAIProvider: (provider: AIProvider) => void;
+  updateGlobalConfig: (updates: Partial<GlobalConfig>) => void;
   shares: Share[];
   activeSpace: string | null;
   setActiveSpace: (space: string | null) => void;
@@ -98,7 +98,7 @@ export const SettingsView = ({
   setIsDarkMode,
   isSuperAdmin,
   globalConfig,
-  updateGlobalAIProvider,
+  updateGlobalConfig,
   shares,
   activeSpace,
   setActiveSpace,
@@ -146,10 +146,20 @@ export const SettingsView = ({
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-brand/10 transition-colors" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
-            <AimeeAvatar src={profile?.avatarUrl || undefined} size="lg" className="ring-8 ring-neutral-50 dark:ring-neutral-800 rounded-[2rem] md:rounded-[2.5rem]" />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden ring-8 ring-neutral-50 dark:ring-neutral-800 shadow-xl bg-neutral-100 dark:bg-neutral-800">
+              {profile?.photoUrl ? (
+                <img src={profile.photoUrl} alt={profile.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-brand/10">
+                  <UserIcon className="w-8 h-8 md:w-12 md:h-12 text-brand/40" />
+                </div>
+              )}
             </div>
+            {isSuperAdmin && (
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900">
+                <Shield className="w-4 h-4" />
+              </div>
+            )}
           </div>
           <div className="text-center md:text-left flex-1 min-w-0">
             <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
@@ -251,65 +261,23 @@ export const SettingsView = ({
               </div>
             </div>
 
-            {/* Assistant Appearance */}
-            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-brand/10 rounded-2xl flex items-center justify-center">
-                  <UserIcon className="w-5 h-5 text-brand" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-[0.2em] mb-0.5">Avatar da Aimee</h4>
-                  <p className="text-[10px] text-neutral-400 font-medium tracking-tight">Escolha a aparência da sua assistente.</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-                  'https://images.unsplash.com/photo-1554151228-14d9def656ec?w=100&h=100&fit=crop'
-                ].map((url) => (
-                  <button
-                    key={url}
-                    onClick={() => updateProfile({ avatarUrl: url })}
-                    className={cn(
-                      "relative aspect-square rounded-xl overflow-hidden border-2 transition-all active:scale-95",
-                      profile?.avatarUrl === url ? "border-brand shadow-lg scale-105 z-10" : "border-transparent opacity-60 hover:opacity-100"
-                    )}
-                  >
-                    <img src={url} className="w-full h-full object-cover" alt="Avatar option" />
-                    {profile?.avatarUrl === url && (
-                      <div className="absolute inset-0 bg-brand/10 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-brand" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Brain Personality Selection */}
-            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8 md:col-span-2">
+            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-brand/10 rounded-2xl flex items-center justify-center">
                   <Brain className="w-5 h-5 text-brand" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-[0.2em] mb-0.5">Brain da Aimee</h4>
-                  <p className="text-[10px] text-neutral-400 font-medium tracking-tight">Escolha como a assistente deve falar com você.</p>
+                  <p className="text-[10px] text-neutral-400 font-medium tracking-tight">Escolha como a assistente deve falar.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-2">
                 <button 
                   onClick={() => updateProfile({ selectedPersona: AIRecommendedPersona.ANALYTICAL })}
                   className={cn(
-                    "w-full flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-[0.98]",
+                    "w-full flex items-center justify-between p-3 rounded-xl border transition-all active:scale-[0.98]",
                     profile?.selectedPersona === 'analytical' 
                       ? "bg-brand border-brand text-brand-foreground shadow-lg shadow-brand/20" 
                       : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-500 hover:border-brand/30"
@@ -317,10 +285,7 @@ export const SettingsView = ({
                 >
                   <div className="flex items-center gap-3">
                     <Zap className="w-4 h-4" />
-                    <div className="text-left">
-                      <span className="text-[10px] font-black uppercase tracking-widest block leading-none mb-1">Analítica</span>
-                      <span className={cn("text-[8px] font-bold block", profile?.selectedPersona === 'analytical' ? "text-white/70" : "text-neutral-400")}>Foco em precisão.</span>
-                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Analítica</span>
                   </div>
                   {profile?.selectedPersona === 'analytical' && <Check className="w-4 h-4" />}
                 </button>
@@ -328,7 +293,7 @@ export const SettingsView = ({
                 <button 
                   onClick={() => updateProfile({ selectedPersona: AIRecommendedPersona.FRUGAL })}
                   className={cn(
-                    "w-full flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-[0.98]",
+                    "w-full flex items-center justify-between p-3 rounded-xl border transition-all active:scale-[0.98]",
                     profile?.selectedPersona === 'frugal' 
                       ? "bg-brand border-brand text-brand-foreground shadow-lg shadow-brand/20" 
                       : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-500 hover:border-brand/30"
@@ -336,10 +301,7 @@ export const SettingsView = ({
                 >
                   <div className="flex items-center gap-3">
                     <Wallet className="w-4 h-4" />
-                    <div className="text-left">
-                      <span className="text-[10px] font-black uppercase tracking-widest block leading-none mb-1">Frugal</span>
-                      <span className={cn("text-[8px] font-bold block", profile?.selectedPersona === 'frugal' ? "text-white/70" : "text-neutral-400")}>Economia severa.</span>
-                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Frugal</span>
                   </div>
                   {profile?.selectedPersona === 'frugal' && <Check className="w-4 h-4" />}
                 </button>
@@ -347,7 +309,7 @@ export const SettingsView = ({
                 <button 
                   onClick={() => updateProfile({ selectedPersona: AIRecommendedPersona.FUNNY })}
                   className={cn(
-                    "w-full flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-[0.98]",
+                    "w-full flex items-center justify-between p-3 rounded-xl border transition-all active:scale-[0.98]",
                     profile?.selectedPersona === 'funny' 
                       ? "bg-brand border-brand text-brand-foreground shadow-lg shadow-brand/20" 
                       : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-500 hover:border-brand/30"
@@ -355,10 +317,7 @@ export const SettingsView = ({
                 >
                   <div className="flex items-center gap-3">
                     <Smile className="w-4 h-4" />
-                    <div className="text-left">
-                      <span className="text-[10px] font-black uppercase tracking-widest block leading-none mb-1">Divertida</span>
-                      <span className={cn("text-[8px] font-bold block", profile?.selectedPersona === 'funny' ? "text-white/70" : "text-neutral-400")}>Bem humorada.</span>
-                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Divertida</span>
                   </div>
                   {profile?.selectedPersona === 'funny' && <Check className="w-4 h-4" />}
                 </button>
@@ -412,7 +371,7 @@ export const SettingsView = ({
                             <button
                               key={provider.id}
                               onClick={() => {
-                                updateGlobalAIProvider(provider.id);
+                                updateGlobalConfig({ aiProvider: provider.id });
                                 setIsDropdownOpen(false);
                               }}
                               className={cn(
@@ -446,6 +405,42 @@ export const SettingsView = ({
                       <p className="mt-2 text-[9px] text-violet-400/70 font-medium italic">
                         Última atualização: {globalConfig.updatedAt ? new Date(globalConfig.updatedAt).toLocaleTimeString() : 'N/A'} por {globalConfig.updatedBy || 'Sistema'}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Assistant Appearance - ADMIN ONLY */}
+                  <div className="space-y-4 pt-4 border-t border-violet-200 dark:border-violet-900/20">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-violet-400 ml-1">Aparência da Aimee (Global)</label>
+                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                      {[
+                        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+                        'https://images.unsplash.com/photo-1554151228-14d9def656ec?w=100&h=100&fit=crop'
+                      ].map((url) => {
+                        const isSelected = (globalConfig.aimeeAvatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop') === url;
+                        return (
+                          <button
+                            key={url}
+                            onClick={() => updateGlobalConfig({ aimeeAvatarUrl: url })}
+                            className={cn(
+                              "relative aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95",
+                              isSelected ? "border-violet-500 shadow-lg scale-105 z-10" : "border-transparent opacity-60 hover:opacity-100"
+                            )}
+                          >
+                            <img src={url} className="w-full h-full object-cover" alt="Avatar option" />
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-violet-500/10 flex items-center justify-center">
+                                <Check className="w-3 h-3 text-violet-600" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
