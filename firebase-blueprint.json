@@ -15,12 +15,21 @@
         "blockedUntil": { "type": "string", "format": "date-time" },
         "selectedPersona": { "type": "string", "enum": ["funny", "analytical", "frugal"] },
         "avatarUrl": { "type": "string" },
+        "theme": { "type": "string", "enum": ["light", "dark", "system"] },
         "preferences": {
           "type": "object",
           "properties": {
-            "currency": { "type": "string", "enum": ["BRL", "USD", "EUR"] },
-            "notificationsEnabled": { "type": "boolean" },
-            "theme": { "type": "string" }
+            "currency": { "type": "string" },
+            "notificationsEnabled": { "type": "boolean" }
+          }
+        },
+        "gamification": {
+          "type": "object",
+          "properties": {
+            "points": { "type": "number" },
+            "level": { "type": "number" },
+            "badges": { "type": "array", "items": { "type": "string" } },
+            "currentWeeklySpending": { "type": "number" }
           }
         }
       },
@@ -62,7 +71,9 @@
         "category": { "type": "string" },
         "purchased": { "type": "boolean" },
         "lastPrice": { "type": "number" },
-        "lastPurchasedAt": { "type": "string", "format": "date-time" }
+        "lastPurchasedAt": { "type": "string", "format": "date-time" },
+        "urgency": { "type": "string", "enum": ["low", "medium", "high"] },
+        "isStock": { "type": "boolean" }
       },
       "required": ["userId", "name"]
     },
@@ -75,7 +86,8 @@
         "role": { "type": "string", "enum": ["user", "assistant"] },
         "content": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
-        "agentType": { "type": "string" }
+        "agentType": { "type": "string" },
+        "isInsight": { "type": "boolean" }
       },
       "required": ["userId", "role", "content", "timestamp"]
     },
@@ -92,13 +104,29 @@
           "type": "object",
           "properties": {
             "finance": { "type": "string", "enum": ["none", "read", "write"] },
-            "shopping": { "type": "string", "enum": ["none", "read", "write"] }
+            "shopping": { "type": "string", "enum": ["none", "read", "write"] },
+            "routines": { "type": "string", "enum": ["none", "read", "write"] }
           }
         },
         "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["ownerId", "ownerEmail", "sharedWithEmail", "permissions", "status"]
+    },
+    "HouseholdTask": {
+      "title": "Household Task",
+      "description": "A routine task or chore.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["cleaning", "maintenance", "errand", "other"] },
+        "status": { "type": "string", "enum": ["todo", "done"] },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "category", "status"]
     }
   },
   "firestore": {
@@ -117,6 +145,10 @@
     "/users/{userId}/chatHistory/{messageId}": {
       "schema": "ChatMessage",
       "description": "Conversation history with the AI agent."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "HouseholdTask",
+      "description": "User tasks and routines."
     },
     "/shares/{shareId}": {
       "schema": "Share",

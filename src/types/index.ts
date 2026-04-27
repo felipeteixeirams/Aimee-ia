@@ -1,6 +1,14 @@
 export type Tab = 'chat' | 'finance' | 'shopping' | 'routines' | 'settings';
 export type Period = '7d' | '30d' | 'all';
 
+export enum FinancialGoalCategory {
+  TRAVEL = 'travel',
+  RENOVATION = 'renovation',
+  EDUCATION = 'education',
+  EMERGENCY = 'emergency',
+  OTHER = 'other'
+}
+
 export interface FinancialGoal {
   id?: string;
   userId: string;
@@ -8,8 +16,26 @@ export interface FinancialGoal {
   targetAmount: number;
   currentAmount: number;
   deadline?: string;
-  category: 'travel' | 'renovation' | 'education' | 'emergency' | 'other';
+  category: FinancialGoalCategory;
   createdAt: string;
+}
+
+export enum UserRole {
+  ADMIN = 'admin',
+  USER = 'user'
+}
+
+export enum UserStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  BLOCKED = 'blocked'
+}
+
+export enum AIRecommendedPersona {
+  FUNNY = 'funny',
+  ANALYTICAL = 'analytical',
+  FRUGAL = 'frugal'
 }
 
 export interface UserProfile {
@@ -18,12 +44,12 @@ export interface UserProfile {
   email: string;
   username?: string;
   bio?: string;
-  role?: 'admin' | 'user';
-  status: 'pending' | 'approved' | 'rejected' | 'blocked';
+  role?: UserRole;
+  status: UserStatus;
   blockedUntil?: string;
-  selectedPersona?: 'funny' | 'analytical' | 'frugal';
+  selectedPersona?: AIRecommendedPersona;
   avatarUrl?: string;
-  theme?: string;
+  theme?: 'light' | 'dark' | 'system';
   preferences: {
     currency: string;
     notificationsEnabled: boolean;
@@ -45,14 +71,25 @@ export interface UserProfile {
   };
 }
 
+export enum TransactionType {
+  INCOME = 'income',
+  EXPENSE = 'expense'
+}
+
 export interface Transaction {
   id?: string;
   userId: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: TransactionType;
   category: string;
   description: string;
   date: string;
+}
+
+export enum ItemUrgency {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high'
 }
 
 export interface ShoppingItem {
@@ -64,22 +101,39 @@ export interface ShoppingItem {
   purchased: boolean;
   lastPrice?: number;
   lastPurchasedAt?: string;
-  lastDepletedAt?: string; // When the item ran out
-  urgency?: 'low' | 'medium' | 'high';
-  isStock?: boolean; // If true, it's in the pantry, not the shopping list
-  frequency?: number; // How many times it was added/bought
+  lastDepletedAt?: string;
+  urgency?: ItemUrgency;
+  isStock?: boolean;
+  frequency?: number;
   isEcoFriendly?: boolean;
+}
+
+export enum ChatRole {
+  USER = 'user',
+  ASSISTANT = 'assistant'
 }
 
 export interface ChatMessage {
   id?: string;
   userId: string;
-  role: 'user' | 'assistant';
+  role: ChatRole;
   content: string;
   timestamp: string;
   agentType?: string;
   isInsight?: boolean;
   read?: boolean;
+}
+
+export enum ShareStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  DECLINED = 'declined'
+}
+
+export enum PermissionLevel {
+  NONE = 'none',
+  READ = 'read',
+  WRITE = 'write'
 }
 
 export interface Share {
@@ -89,13 +143,25 @@ export interface Share {
   sharedWithEmail: string;
   sharedWithId?: string;
   permissions: {
-    finance: 'none' | 'read' | 'write';
-    shopping: 'none' | 'read' | 'write';
-    routines: 'none' | 'read' | 'write';
+    finance: PermissionLevel;
+    shopping: PermissionLevel;
+    routines: PermissionLevel;
   };
-  status: 'pending' | 'accepted' | 'declined';
+  status: ShareStatus;
   upgradeRequested?: boolean;
   createdAt: string;
+}
+
+export enum TaskCategory {
+  CLEANING = 'cleaning',
+  MAINTENANCE = 'maintenance',
+  ERRAND = 'errand',
+  OTHER = 'other'
+}
+
+export enum TaskStatus {
+  TODO = 'todo',
+  DONE = 'done'
 }
 
 export interface HouseholdTask {
@@ -103,11 +169,17 @@ export interface HouseholdTask {
   userId: string;
   title: string;
   description?: string;
-  category: 'cleaning' | 'maintenance' | 'errand' | 'other';
-  status: 'todo' | 'done';
+  category: TaskCategory;
+  status: TaskStatus;
   dueDate?: string;
   assignedTo?: string;
   createdAt: string;
+}
+
+export enum EventType {
+  SOCIAL = 'social',
+  HOLIDAY = 'holiday',
+  APPOINTMENT = 'appointment'
 }
 
 export interface FamilyEvent {
@@ -116,13 +188,32 @@ export interface FamilyEvent {
   title: string;
   description?: string;
   date: string;
-  type: 'social' | 'holiday' | 'appointment';
+  type: EventType;
   googleEventId?: string;
   createdAt: string;
 }
 
+export enum AIProvider {
+  GEMINI = 'gemini',
+  DEEPSEEK = 'deepseek'
+}
+
+export enum NotificationType {
+  REQUEST = 'request',
+  APPROVE = 'approve',
+  REJECT = 'reject',
+  BLOCK = 'block'
+}
+
+export interface NotificationPayload {
+  type: NotificationType;
+  email: string;
+  name: string;
+  days?: number;
+}
+
 export interface GlobalConfig {
-  aiProvider: 'gemini' | 'deepseek';
+  aiProvider: AIProvider;
   calendarIntegrationEnabled?: boolean;
   updatedAt: string;
   updatedBy: string;

@@ -32,7 +32,11 @@ import {
 } from 'firebase/firestore';
 import { orchestrator } from './services/aiService';
 import { fetchGoogleCalendarEvents } from './services/calendarService';
-import { ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, HouseholdTask, FamilyEvent, GlobalConfig, Tab, Period } from './types';
+import { 
+  ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, 
+  HouseholdTask, FamilyEvent, GlobalConfig, Tab, Period,
+  AIProvider, UserRole, UserStatus, ChatRole, PermissionLevel, ShareStatus, TaskStatus
+} from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
@@ -76,7 +80,7 @@ export default function App() {
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [tasks, setTasks] = useState<HouseholdTask[]>([]);
   const [events, setEvents] = useState<FamilyEvent[]>([]);
-  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({ aiProvider: 'gemini', updatedAt: '', updatedBy: '' });
+  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({ aiProvider: AIProvider.GEMINI, updatedAt: '', updatedBy: '' });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
@@ -84,7 +88,7 @@ export default function App() {
   const [shares, setShares] = useState<Share[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null); // null means own space
   const [inviteEmail, setInviteEmail] = useState('');
-  const [invitePerms, setInvitePerms] = useState({ finance: 'read' as const, shopping: 'read' as const, routines: 'none' as const });
+  const [invitePerms, setInvitePerms] = useState({ finance: PermissionLevel.READ, shopping: PermissionLevel.READ, routines: PermissionLevel.NONE });
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingContent, setTypingContent] = useState<string | null>(null);
@@ -453,7 +457,7 @@ export default function App() {
     
     try {
       const isAdmin = user.email === 'felipeteixeirams@gmail.com';
-      const status = isAdmin ? 'approved' : 'pending';
+      const status = isAdmin ? UserStatus.APPROVED : UserStatus.PENDING;
       
       const newProfile: UserProfile = {
         uid: user.uid,
@@ -462,7 +466,7 @@ export default function App() {
         username: data.username,
         bio: data.bio,
         avatarUrl: data.avatarUrl,
-        role: isAdmin ? 'admin' : 'user',
+        role: isAdmin ? UserRole.ADMIN : UserRole.USER,
         status: status,
         preferences: {
           currency: 'BRL',
@@ -545,7 +549,7 @@ export default function App() {
       // Add a hidden message from Aimee to admin as a log
       const logMsg: ChatMessage = {
         userId: profile.uid,
-        role: 'assistant',
+        role: ChatRole.ASSISTANT,
         content: `Administrador, acabei de ${action === 'approve' ? 'aprovar' : action === 'reject' ? 'recusar' : 'bloquear'} o acesso de ${uData.displayName}. Notificação enviada!`,
         timestamp: new Date().toISOString(),
         isInsight: true,
@@ -686,7 +690,7 @@ export default function App() {
     if (!skipAddDoc) {
       const userMsg: ChatMessage = {
         userId: user.uid,
-        role: 'user',
+        role: ChatRole.USER,
         content: text,
         timestamp: new Date().toISOString()
       };
@@ -891,7 +895,7 @@ export default function App() {
       ownerEmail: user.email || '',
       sharedWithEmail: inviteEmail,
       permissions: invitePerms,
-      status: 'pending',
+      status: ShareStatus.PENDING,
       createdAt: new Date().toISOString()
     };
     

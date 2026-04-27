@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import { logger } from "../src/lib/logger.ts";
+import { NotificationType, NotificationPayload } from "../src/types/index.ts";
 
 dotenv.config();
 
@@ -53,8 +54,13 @@ app.get("/api/health", (req, res) => {
 
 // Email Notification Route
 app.post("/api/notify", async (req, res) => {
-  const { type, email, name, days } = req.body;
+  const { type, email, name, days } = req.body as NotificationPayload;
   
+  if (!email || !type || !name) {
+    logger.warn('Invalid notification payload received', { payload: req.body });
+    return res.status(400).json({ error: "Missing required fields: email, type, and name are required." });
+  }
+
   logger.info('Email notification requested', { type, recipient: email });
   
   try {
@@ -66,26 +72,26 @@ app.post("/api/notify", async (req, res) => {
     } = await import("../src/services/emailService.ts");
 
     switch (type) {
-      case 'request':
+      case NotificationType.REQUEST:
         await sendRegistrationRequestEmail(email, name);
         break;
-      case 'approve':
+      case NotificationType.APPROVE:
         await sendApprovalEmail(email, name);
         break;
-      case 'reject':
+      case NotificationType.REJECT:
         await sendRejectionEmail(email, name);
         break;
-      case 'block':
+      case NotificationType.BLOCK:
         await sendBlockedEmail(email, name, days || 5);
         break;
       default:
+        logger.error('Unhandled notification type', { type });
         return res.status(400).json({ error: "Invalid notification type" });
     }
     res.json({ success: true });
   } catch (error: any) {
-    console.error("Email API Error:", error);
-    // Even if email fails, we don't want to break the app flow
-    res.status(500).json({ success: false, error: error.message });
+    logger.error("Email API Error", { error: error.message, recipient: email, type });
+    res.status(500).json({ success: false, error: "Failed to send email notification" });
   }
 });
 
