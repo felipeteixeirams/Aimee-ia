@@ -28,7 +28,7 @@ export function Header({
   GLOBAL_AIMEE_AVATAR
 }: HeaderProps) {
   return (
-    <header className="px-6 py-4 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 z-10">
+    <header className="px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 z-10">
       <div className="flex items-center gap-3">
         <div className="relative">
           <button 
