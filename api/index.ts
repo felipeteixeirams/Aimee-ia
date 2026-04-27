@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import { logger } from "../src/lib/logger.ts";
-import { NotificationType, NotificationPayload } from "../src/types/index.ts";
+import { NotificationType, type NotificationPayload } from "../src/types/index.ts";
 
 dotenv.config();
 

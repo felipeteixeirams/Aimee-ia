@@ -1,13 +1,14 @@
 export type Tab = 'chat' | 'finance' | 'shopping' | 'routines' | 'settings';
 export type Period = '7d' | '30d' | 'all';
 
-export enum FinancialGoalCategory {
-  TRAVEL = 'travel',
-  RENOVATION = 'renovation',
-  EDUCATION = 'education',
-  EMERGENCY = 'emergency',
-  OTHER = 'other'
-}
+export const FinancialGoalCategory = {
+  TRAVEL: 'travel',
+  RENOVATION: 'renovation',
+  EDUCATION: 'education',
+  EMERGENCY: 'emergency',
+  OTHER: 'other'
+} as const;
+export type FinancialGoalCategory = (typeof FinancialGoalCategory)[keyof typeof FinancialGoalCategory];
 
 export interface FinancialGoal {
   id?: string;
@@ -20,23 +21,26 @@ export interface FinancialGoal {
   createdAt: string;
 }
 
-export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user'
-}
+export const UserRole = {
+  ADMIN: 'admin',
+  USER: 'user'
+} as const;
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
-export enum UserStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  BLOCKED = 'blocked'
-}
+export const UserStatus = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  BLOCKED: 'blocked'
+} as const;
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
 
-export enum AIRecommendedPersona {
-  FUNNY = 'funny',
-  ANALYTICAL = 'analytical',
-  FRUGAL = 'frugal'
-}
+export const AIRecommendedPersona = {
+  FUNNY: 'funny',
+  ANALYTICAL: 'analytical',
+  FRUGAL: 'frugal'
+} as const;
+export type AIRecommendedPersona = (typeof AIRecommendedPersona)[keyof typeof AIRecommendedPersona];
 
 export interface UserProfile {
   uid: string;
@@ -71,10 +75,11 @@ export interface UserProfile {
   };
 }
 
-export enum TransactionType {
-  INCOME = 'income',
-  EXPENSE = 'expense'
-}
+export const TransactionType = {
+  INCOME: 'income',
+  EXPENSE: 'expense'
+} as const;
+export type TransactionType = (typeof TransactionType)[keyof typeof TransactionType];
 
 export interface Transaction {
   id?: string;
@@ -86,11 +91,12 @@ export interface Transaction {
   date: string;
 }
 
-export enum ItemUrgency {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high'
-}
+export const ItemUrgency = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high'
+} as const;
+export type ItemUrgency = (typeof ItemUrgency)[keyof typeof ItemUrgency];
 
 export interface ShoppingItem {
   id?: string;
@@ -108,10 +114,11 @@ export interface ShoppingItem {
   isEcoFriendly?: boolean;
 }
 
-export enum ChatRole {
-  USER = 'user',
-  ASSISTANT = 'assistant'
-}
+export const ChatRole = {
+  USER: 'user',
+  ASSISTANT: 'assistant'
+} as const;
+export type ChatRole = (typeof ChatRole)[keyof typeof ChatRole];
 
 export interface ChatMessage {
   id?: string;
@@ -124,17 +131,19 @@ export interface ChatMessage {
   read?: boolean;
 }
 
-export enum ShareStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  DECLINED = 'declined'
-}
+export const ShareStatus = {
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  DECLINED: 'declined'
+} as const;
+export type ShareStatus = (typeof ShareStatus)[keyof typeof ShareStatus];
 
-export enum PermissionLevel {
-  NONE = 'none',
-  READ = 'read',
-  WRITE = 'write'
-}
+export const PermissionLevel = {
+  NONE: 'none',
+  READ: 'read',
+  WRITE: 'write'
+} as const;
+export type PermissionLevel = (typeof PermissionLevel)[keyof typeof PermissionLevel];
 
 export interface Share {
   id?: string;
@@ -152,17 +161,19 @@ export interface Share {
   createdAt: string;
 }
 
-export enum TaskCategory {
-  CLEANING = 'cleaning',
-  MAINTENANCE = 'maintenance',
-  ERRAND = 'errand',
-  OTHER = 'other'
-}
+export const TaskCategory = {
+  CLEANING: 'cleaning',
+  MAINTENANCE: 'maintenance',
+  ERRAND: 'errand',
+  OTHER: 'other'
+} as const;
+export type TaskCategory = (typeof TaskCategory)[keyof typeof TaskCategory];
 
-export enum TaskStatus {
-  TODO = 'todo',
-  DONE = 'done'
-}
+export const TaskStatus = {
+  TODO: 'todo',
+  DONE: 'done'
+} as const;
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 
 export interface HouseholdTask {
   id?: string;
@@ -176,11 +187,12 @@ export interface HouseholdTask {
   createdAt: string;
 }
 
-export enum EventType {
-  SOCIAL = 'social',
-  HOLIDAY = 'holiday',
-  APPOINTMENT = 'appointment'
-}
+export const EventType = {
+  SOCIAL: 'social',
+  HOLIDAY: 'holiday',
+  APPOINTMENT: 'appointment'
+} as const;
+export type EventType = (typeof EventType)[keyof typeof EventType];
 
 export interface FamilyEvent {
   id?: string;
@@ -193,17 +205,19 @@ export interface FamilyEvent {
   createdAt: string;
 }
 
-export enum AIProvider {
-  GEMINI = 'gemini',
-  DEEPSEEK = 'deepseek'
-}
+export const AIProvider = {
+  GEMINI: 'gemini',
+  DEEPSEEK: 'deepseek'
+} as const;
+export type AIProvider = (typeof AIProvider)[keyof typeof AIProvider];
 
-export enum NotificationType {
-  REQUEST = 'request',
-  APPROVE = 'approve',
-  REJECT = 'reject',
-  BLOCK = 'block'
-}
+export const NotificationType = {
+  REQUEST: 'request',
+  APPROVE: 'approve',
+  REJECT: 'reject',
+  BLOCK: 'block'
+} as const;
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 
 export interface NotificationPayload {
   type: NotificationType;
