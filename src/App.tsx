@@ -64,7 +64,7 @@ import { cn } from './lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=400";
+const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -522,6 +522,22 @@ export default function App() {
       };
 
       await setDoc(doc(db, 'users', user.uid), newProfile);
+      // Create first welcome message from Aimee
+      const welcomeMsg: ChatMessage = {
+        id: 'welcome-msg',
+        role: 'ai',
+        content: `Olá ${profileData.name}! 🌟 Que alegria ter você aqui. Eu sou a Aimee, sua nova assistente inteligente. Já configurei seu espaço seguindo seu perfil ${profileData.selectedPersona === 'frugal' ? 'frugal' : 'analítico'}. Como posso te ajudar a organizar sua vida hoje?`,
+        timestamp: new Date(),
+        read: false
+      };
+
+      await addDoc(collection(db, 'users', user.uid, 'chatHistory'), welcomeMsg);
+
+      // Simulation of a welcome email trigger
+      console.info('Welcome email triggered for:', profileData.email);
+      // In a real scenario with a backend, we would call an API here:
+      // await fetch('/api/send-welcome', { method: 'POST', body: JSON.stringify({ email: profileData.email }) });
+
       setProfile(newProfile);
       setIsRegistering(false);
 
