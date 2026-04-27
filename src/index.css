@@ -19,34 +19,34 @@
     --brand-muted: #f5f5f5; /* neutral-100 */
   }
 
-  :root[data-theme='blue'] {
-    --brand: #2563eb;
-    --brand-foreground: #ffffff;
-    --brand-muted: #eff6ff;
+  :root[data-color='blue'] {
+    --brand: #2563eb !important;
+    --brand-foreground: #ffffff !important;
+    --brand-muted: #eff6ff !important;
   }
 
-  :root[data-theme='rose'] {
-    --brand: #e11d48;
-    --brand-foreground: #ffffff;
-    --brand-muted: #fff1f2;
+  :root[data-color='rose'] {
+    --brand: #e11d48 !important;
+    --brand-foreground: #ffffff !important;
+    --brand-muted: #fff1f2 !important;
   }
 
-  :root[data-theme='emerald'] {
-    --brand: #059669;
-    --brand-foreground: #ffffff;
-    --brand-muted: #ecfdf5;
+  :root[data-color='emerald'] {
+    --brand: #059669 !important;
+    --brand-foreground: #ffffff !important;
+    --brand-muted: #ecfdf5 !important;
   }
 
-  :root[data-theme='violet'] {
-    --brand: #7c3aed;
-    --brand-foreground: #ffffff;
-    --brand-muted: #f5f3ff;
+  :root[data-color='violet'] {
+    --brand: #7c3aed !important;
+    --brand-foreground: #ffffff !important;
+    --brand-muted: #f5f3ff !important;
   }
 
-  :root[data-theme='amber'] {
-    --brand: #d97706;
-    --brand-foreground: #ffffff;
-    --brand-muted: #fffbeb;
+  :root[data-color='amber'] {
+    --brand: #d97706 !important;
+    --brand-foreground: #ffffff !important;
+    --brand-muted: #fffbeb !important;
   }
 
   .dark {
@@ -55,11 +55,11 @@
     --brand-muted: #262626;
   }
 
-  .dark[data-theme='blue'] { --brand: #60a5fa; --brand-muted: #1e3a8a; }
-  .dark[data-theme='rose'] { --brand: #fb7185; --brand-muted: #881337; }
-  .dark[data-theme='emerald'] { --brand: #34d399; --brand-muted: #064e3b; }
-  .dark[data-theme='violet'] { --brand: #a78bfa; --brand-muted: #4c1d95; }
-  .dark[data-theme='amber'] { --brand: #fbbf24; --brand-muted: #78350f; }
+  .dark[data-color='blue'] { --brand: #60a5fa !important; --brand-muted: #1e3a8a !important; }
+  .dark[data-color='rose'] { --brand: #fb7185 !important; --brand-muted: #881337 !important; }
+  .dark[data-color='emerald'] { --brand: #34d399 !important; --brand-muted: #064e3b !important; }
+  .dark[data-color='violet'] { --brand: #a78bfa !important; --brand-muted: #4c1d95 !important; }
+  .dark[data-color='amber'] { --brand: #fbbf24 !important; --brand-muted: #78350f !important; }
 
   @keyframes spin-slow {
     from { transform: rotate(0deg); }

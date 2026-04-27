@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 interface LoginProps {
   onLogin: () => void;
   isLoading?: boolean;
+  error?: string | null;
 }
 
 const Spark = ({ delay }: { delay: number }) => {
@@ -94,7 +95,7 @@ const GamifiedLoadingBar = ({ active }: { active: boolean }) => {
   );
 };
 
-export const Login: React.FC<LoginProps> = ({ onLogin, isLoading = false }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, isLoading = false, error = null }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -165,6 +166,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin, isLoading = false }) => {
             <p className="text-neutral-500 mt-6 text-sm leading-relaxed font-medium max-w-[240px] mx-auto">
               Sua central de inteligência pessoal orquestrada por IA.
             </p>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-6 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl"
+                >
+                  <p className="text-[10px] text-rose-400 font-black uppercase tracking-wider text-center">
+                    {error}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           <motion.div

@@ -70,6 +70,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [calendarBlocked, setCalendarBlocked] = useState(false);
@@ -88,7 +89,7 @@ export default function App() {
   const [shares, setShares] = useState<Share[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null); // null means own space
   const [inviteEmail, setInviteEmail] = useState('');
-  const [invitePerms, setInvitePerms] = useState({ finance: PermissionLevel.READ, shopping: PermissionLevel.READ, routines: PermissionLevel.NONE });
+  const [invitePerms, setInvitePerms] = useState<{ finance: PermissionLevel; shopping: PermissionLevel; routines: PermissionLevel }>({ finance: PermissionLevel.READ, shopping: PermissionLevel.READ, routines: PermissionLevel.NONE });
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingContent, setTypingContent] = useState<string | null>(null);
@@ -122,12 +123,12 @@ export default function App() {
   }, [isDarkMode]);
 
   useEffect(() => {
-    if (profile?.theme) {
-      document.documentElement.setAttribute('data-theme', profile.theme);
+    if (profile?.themeColor) {
+      document.documentElement.setAttribute('data-color', profile.themeColor);
     } else {
-      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.removeAttribute('data-color');
     }
-  }, [profile?.theme]);
+  }, [profile?.themeColor]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -140,20 +141,44 @@ export default function App() {
         testConnection();
         // Ensure user profile exists
         const userRef = doc(db, 'users', u.uid);
-        getDoc(userRef).then(async (docSnap) => {
-          if (!docSnap.exists()) {
-            logger.info('New user detected, showing registration flow', { userId: u.uid });
-            // New user, trigger registration flow
-            setIsRegistering(true);
-          } else {
-            const data = docSnap.data() as UserProfile;
-            logger.info('User profile loaded', { userId: u.uid, role: data.role, status: data.status });
-            setProfile(data);
-          }
-        }).catch(error => {
-          logger.error('Error loading user profile', { error: error.message, userId: u.uid });
-          handleFirestoreError(error, OperationType.GET, `users/${u.uid}`);
-        });
+        
+        let unsubscribeProfile: () => void;
+        
+        const setupProfileListener = () => {
+          unsubscribeProfile = onSnapshot(userRef, (docSnap) => {
+            if (!docSnap.exists()) {
+              logger.info('New user detected, showing registration flow', { userId: u.uid });
+              setIsRegistering(true);
+            } else {
+              const data = docSnap.data() as UserProfile;
+              logger.info('User profile updated', { userId: u.uid });
+              setProfile(data);
+              
+              // Apply theme color
+              if (data.themeColor) {
+                document.documentElement.setAttribute('data-color', data.themeColor);
+              } else {
+                document.documentElement.removeAttribute('data-color');
+              }
+
+              // Apply dark mode preference if stored in profile
+              if (data.theme) {
+                setIsDarkMode(data.theme === 'dark');
+              }
+              setIsRegistering(false);
+            }
+          }, (error) => {
+            // Silently handle offline errors for snapshots
+            if (!error.message.includes('offline')) {
+              handleFirestoreError(error, OperationType.GET, `users/${u.uid}`);
+            }
+          });
+        };
+
+        setupProfileListener();
+        return () => {
+          unsubscribeProfile?.();
+        };
       } else {
         setProfile(null);
         setIsRegistering(false);
@@ -424,6 +449,7 @@ export default function App() {
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
+    setAuthError(null);
     setCalendarBlocked(false); // Reset blocked state on new login attempt
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -447,6 +473,12 @@ export default function App() {
         details: error.customData 
       });
       console.error("Login error:", error);
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        setAuthError(`Domínio não autorizado. Adicione "${window.location.hostname}" aos domínios autorizados no Console do Firebase.`);
+      } else {
+        setAuthError(error.message || 'Falha ao entrar com Google');
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -994,7 +1026,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} isLoading={isLoggingIn} />;
+    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={authError} />;
   }
 
   if (isRegistering) {
@@ -1013,8 +1045,26 @@ export default function App() {
   }
 
   const isSuperAdmin = profile?.role === 'admin' || user?.email === 'felipeteixeirams@gmail.com';
+  
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!user || !profile) return;
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, updates);
+      setProfile({ ...profile, ...updates });
+      
+      if (updates.themeColor) {
+        document.documentElement.setAttribute('data-color', updates.themeColor);
+      }
+      if (updates.theme) {
+        setIsDarkMode(updates.theme === 'dark');
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
+    }
+  };
 
-  const updateGlobalAIProvider = async (provider: 'gemini' | 'deepseek') => {
+  const updateGlobalAIProvider = async (provider: AIProvider) => {
     if (!isSuperAdmin) return;
     try {
       await setDoc(doc(db, 'config', 'global'), {
@@ -1038,7 +1088,7 @@ export default function App() {
         pendingUsersCount={pendingUsers.length}
         setShowAdminPanel={setShowAdminPanel}
         onLogout={() => signOut(auth)}
-        GLOBAL_AIMEE_AVATAR={GLOBAL_AIMEE_AVATAR}
+        GLOBAL_AIMEE_AVATAR={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR}
         globalConfig={globalConfig}
         updateGlobalAIProvider={updateGlobalAIProvider}
       />
@@ -1075,7 +1125,7 @@ export default function App() {
               copyToClipboard={copyToClipboard}
               copiedId={copiedId}
               profile={profile}
-              GLOBAL_AIMEE_AVATAR={GLOBAL_AIMEE_AVATAR}
+              GLOBAL_AIMEE_AVATAR={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR}
             />
           )}
 
@@ -1149,6 +1199,7 @@ export default function App() {
               handleDeclineInvite={handleDeclineInvite}
               handleRequestUpgrade={handleRequestUpgrade}
               user={user}
+              updateProfile={updateProfile}
             />
           )}
         </AnimatePresence>

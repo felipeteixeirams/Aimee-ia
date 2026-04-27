@@ -64,8 +64,14 @@ export const AdminPanel = ({ pendingUsers, onAction, onClose }: AdminPanelProps)
                 className="p-6 bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-100 dark:border-neutral-800 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-white dark:ring-neutral-800">
-                    <img src={pUser.avatarUrl} alt={pUser.displayName} className="w-full h-full object-cover" />
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-white dark:ring-neutral-800 bg-neutral-100 dark:bg-neutral-800">
+                    {pUser.avatarUrl ? (
+                      <img src={pUser.avatarUrl} alt={pUser.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-brand/10">
+                        <Users className="w-6 h-6 text-brand/40" />
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-bold text-neutral-900 dark:text-white">{pUser.displayName}</h3>

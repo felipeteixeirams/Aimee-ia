@@ -31,8 +31,11 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const isOffline = errorMessage.toLowerCase().includes('offline');
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -50,7 +53,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   };
   
+  if (isOffline) {
+    logger.warn(`Firestore ${operationType.toUpperCase()} - Client Offline (Transient)`, { path });
+    // Don't throw for offline errors, let Firestore's internal retry handle it
+    return;
+  }
+
   logger.error(`Firestore ${operationType.toUpperCase()} Error`, errInfo, auth.currentUser?.uid);
   
+  // Only throw if it's not a transient offline error
   throw new Error(JSON.stringify(errInfo));
 }

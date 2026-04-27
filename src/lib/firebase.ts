@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { logger } from './logger';
 import localConfig from '../../firebase-applet-config.json';
@@ -37,7 +37,7 @@ if (missingVars.length > 0) {
 }
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
 export const auth = getAuth(app);
 
 // Initialize Analytics
@@ -53,11 +53,14 @@ googleProvider.setCustomParameters({
 // Test connection
 export async function testConnection() {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    const testDoc = doc(db, 'test', 'connection');
+    await getDoc(testDoc);
   } catch (error) {
+    // Silently handle offline errors for the connection test
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
+      return;
     }
+    logger.error('Firebase connection test failed', { error });
   }
 }
 

@@ -57,8 +57,14 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
             {/* Avatar Section */}
             <div className="flex flex-col items-center gap-4 mb-8">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-[2.5rem] overflow-hidden ring-4 ring-neutral-100 dark:ring-neutral-900 shadow-xl">
-                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                <div className="w-24 h-24 rounded-[2.5rem] overflow-hidden ring-4 ring-neutral-100 dark:ring-neutral-900 shadow-xl bg-neutral-100 dark:bg-neutral-800">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-brand/10">
+                      <UserIcon className="w-8 h-8 text-brand/40" />
+                    </div>
+                  )}
                 </div>
                 <button 
                   type="button"

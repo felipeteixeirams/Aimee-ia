@@ -54,6 +54,7 @@ export interface UserProfile {
   selectedPersona?: AIRecommendedPersona;
   avatarUrl?: string;
   theme?: 'light' | 'dark' | 'system';
+  themeColor?: 'blue' | 'rose' | 'emerald' | 'violet' | 'amber' | 'neutral';
   preferences: {
     currency: string;
     notificationsEnabled: boolean;
