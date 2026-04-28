@@ -13,6 +13,7 @@ export type OperationType = (typeof OperationType)[keyof typeof OperationType];
 
 export interface FirestoreErrorInfo {
   error: string;
+  code?: string;
   operationType: OperationType;
   path: string | null;
   authInfo: {
@@ -30,12 +31,39 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function getFriendlyErrorMessage(error: any): string {
+  const code = error?.code || '';
+  const message = error?.message || String(error);
+
+  if (message.toLowerCase().includes('offline')) {
+    return 'Você parece estar offline. Algumas alterações serão sincronizadas quando você voltar.';
+  }
+
+  switch (code) {
+    case 'permission-denied':
+      return 'Você não tem permissão para realizar esta ação.';
+    case 'unauthenticated':
+      return 'Sua sessão expirou. Por favor, entre novamente.';
+    case 'resource-exhausted':
+      return 'Limite de uso atingido. Tente novamente mais tarde.';
+    case 'unavailable':
+      return 'O serviço está temporariamente indisponível. Verifique sua conexão.';
+    case 'not-found':
+      return 'O item solicitado não foi encontrado.';
+    default:
+      if (message.includes('quota')) return 'Limite de quota excedido para hoje.';
+      return 'Ocorreu um erro inesperado. Nossa equipe técnica já foi notificada.';
+  }
+}
+
+export function handleFirestoreError(error: any, operationType: OperationType, path: string | null) {
   const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorCode = error?.code;
   const isOffline = errorMessage.toLowerCase().includes('offline');
 
   const errInfo: FirestoreErrorInfo = {
     error: errorMessage,
+    code: errorCode,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -55,12 +83,15 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   
   if (isOffline) {
     logger.warn(`Firestore ${operationType.toUpperCase()} - Client Offline (Transient)`, { path });
-    // Don't throw for offline errors, let Firestore's internal retry handle it
     return;
   }
 
   logger.error(`Firestore ${operationType.toUpperCase()} Error`, errInfo, auth.currentUser?.uid);
   
-  // Only throw if it's not a transient offline error
-  throw new Error(JSON.stringify(errInfo));
+  // Wrap in a standard error with the friendly message as primary, but JSON encoded for system diagnostics if needed
+  const friendlyMsg = getFriendlyErrorMessage(error);
+  const finalError = new Error(friendlyMsg);
+  (finalError as any).details = errInfo;
+  
+  throw finalError;
 }

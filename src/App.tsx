@@ -63,31 +63,58 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAuth } from './hooks/useAuth';
+import { useAimeeData } from './hooks/useAimeeData';
+import { useAimeeActions } from './hooks/useAimeeActions';
 
 const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop";
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { 
+    user, 
+    profile, 
+    loading, 
+    isRegistering, 
+    setIsRegistering, 
+    isDarkMode, 
+    setIsDarkMode,
+    setProfile
+  } = useAuth();
+
+  const [activeSpace, setActiveSpace] = useState<string | null>(null);
+
+  const aimeeData = useAimeeData(user, activeSpace);
+  const {
+    messages,
+    transactions,
+    shoppingList,
+    goals,
+    tasks,
+    events,
+    shares,
+    globalConfig
+  } = aimeeData;
+
+  const {
+    sendMessage,
+    updateProfile,
+    updateGlobalConfig,
+    syncGoogleCalendar,
+    handleAdminAction,
+    manageShopping,
+    manageTasks
+  } = useAimeeActions(user, profile, aimeeData);
+
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [calendarBlocked, setCalendarBlocked] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('chat');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
-  const [goals, setGoals] = useState<FinancialGoal[]>([]);
-  const [tasks, setTasks] = useState<HouseholdTask[]>([]);
-  const [events, setEvents] = useState<FamilyEvent[]>([]);
-  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({ aiProvider: AIProvider.GEMINI, updatedAt: '', updatedBy: '' });
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isRegistering, setIsRegistering] = useState(false);
+  
   const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [shares, setShares] = useState<Share[]>([]);
-  const [activeSpace, setActiveSpace] = useState<string | null>(null); // null means own space
+  
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePerms, setInvitePerms] = useState<{ finance: PermissionLevel; shopping: PermissionLevel; routines: PermissionLevel }>({ finance: PermissionLevel.READ, shopping: PermissionLevel.READ, routines: PermissionLevel.NONE });
   const [inputText, setInputText] = useState('');
@@ -102,229 +129,24 @@ export default function App() {
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   const [showAIDropdown, setShowAIDropdown] = useState(false);
   const [shoppingFilter, setShoppingFilter] = useState<'list' | 'stock'>('list');
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('darkMode') === 'true' || 
-             (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollPos = useRef<number>(0);
   const isAtBottomRef = useRef<boolean>(true);
 
+  // Admin Listener for pending users
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (!user || profile?.role !== 'admin') {
+      setPendingUsers([]);
+      return;
     }
-    localStorage.setItem('darkMode', isDarkMode.toString());
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    if (profile?.themeColor) {
-      document.documentElement.setAttribute('data-color', profile.themeColor);
-    } else {
-      document.documentElement.removeAttribute('data-color');
-    }
-  }, [profile?.themeColor]);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      logger.info('Auth state changed', { isAuthenticated: !!u, userId: u?.uid });
-      setUser(u);
-      setLoading(false);
-      
-      if (u) {
-        // Test connection only once after login or initial load
-        testConnection();
-        // Ensure user profile exists
-        const userRef = doc(db, 'users', u.uid);
-        
-        let unsubscribeProfile: () => void;
-        
-        const setupProfileListener = () => {
-          unsubscribeProfile = onSnapshot(userRef, (docSnap) => {
-            if (!docSnap.exists()) {
-              logger.info('New user detected, showing registration flow', { userId: u.uid });
-              setIsRegistering(true);
-            } else {
-              const data = docSnap.data() as UserProfile;
-              logger.info('User profile updated', { userId: u.uid });
-              setProfile(data);
-              
-              // Apply theme color
-              if (data.themeColor) {
-                document.documentElement.setAttribute('data-color', data.themeColor);
-              } else {
-                document.documentElement.removeAttribute('data-color');
-              }
-
-              // Apply dark mode preference if stored in profile
-              if (data.theme) {
-                setIsDarkMode(data.theme === 'dark');
-              }
-              setIsRegistering(false);
-            }
-          }, (error) => {
-            // Silently handle offline errors for snapshots
-            if (!error.message.includes('offline')) {
-              handleFirestoreError(error, OperationType.GET, `users/${u.uid}`);
-            }
-          });
-        };
-
-        setupProfileListener();
-        return () => {
-          unsubscribeProfile?.();
-        };
-      } else {
-        setProfile(null);
-        setIsRegistering(false);
-      }
+    const pendingQuery = query(collection(db, 'users'), where('status', '==', 'pending'));
+    const unsubPending = onSnapshot(pendingQuery, (snap) => {
+      setPendingUsers(snap.docs.map(d => ({ ...d.data() } as UserProfile)));
     });
-    return unsubscribe;
-  }, []);
+    return () => unsubPending();
+  }, [user, profile?.role]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    // Listen to Chat History
-    const chatPath = `users/${user.uid}/chatHistory`;
-    const chatQuery = query(
-      collection(db, chatPath),
-      orderBy('timestamp', 'desc'),
-      limit(50)
-    );
-    const unsubChat = onSnapshot(chatQuery, (snap) => {
-      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage));
-      setMessages(msgs.reverse());
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, chatPath);
-    });
-
-    // Listen to Profile
-    const profilePath = `users/${user.uid}`;
-    const unsubProfile = onSnapshot(doc(db, profilePath), (snap) => {
-      if (snap.exists()) {
-        setProfile(snap.data() as UserProfile);
-      }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, profilePath);
-    });
-
-    // Listen to Shares (Sent and Received)
-    const sharesPath = 'shares';
-    const sharesQuery = query(
-      collection(db, sharesPath),
-      or(
-        where('ownerId', '==', user.uid),
-        where('sharedWithEmail', '==', user.email),
-        where('sharedWithId', '==', user.uid)
-      ),
-      limit(50)
-    );
-    const unsubShares = onSnapshot(sharesQuery, (snap) => {
-      const myShares = snap.docs.map(d => ({ id: d.id, ...d.data() } as Share));
-      setShares(myShares);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, sharesPath);
-    });
-
-    // Listen to Transactions
-    const targetId = activeSpace || user.uid;
-    const transPath = `users/${targetId}/transactions`;
-    const transQuery = query(
-      collection(db, transPath),
-      orderBy('date', 'desc')
-    );
-    const unsubTrans = onSnapshot(transQuery, (snap) => {
-      setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, transPath);
-    });
-
-    // Listen to Shopping List
-    const shopPath = `users/${targetId}/shoppingList`;
-    const shopQuery = query(
-      collection(db, shopPath),
-      orderBy('purchased', 'asc')
-    );
-    const unsubShop = onSnapshot(shopQuery, (snap) => {
-      setShoppingList(snap.docs.map(d => ({ id: d.id, ...d.data() } as ShoppingItem)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, shopPath);
-    });
-
-    // Listen to Financial Goals
-    const goalsPath = `users/${targetId}/goals`;
-    const goalsQuery = query(
-      collection(db, goalsPath),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubGoals = onSnapshot(goalsQuery, (snap) => {
-      setGoals(snap.docs.map(d => ({ id: d.id, ...d.data() } as FinancialGoal)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, goalsPath);
-    });
-
-    // Listen to Tasks
-    const tasksPath = `users/${targetId}/tasks`;
-    const tasksQuery = query(
-      collection(db, tasksPath),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubTasks = onSnapshot(tasksQuery, (snap) => {
-      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as HouseholdTask)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, tasksPath);
-    });
-
-    // Listen to Events
-    const eventsPath = `users/${targetId}/events`;
-    const eventsQuery = query(
-      collection(db, eventsPath),
-      orderBy('date', 'asc')
-    );
-    const unsubEvents = onSnapshot(eventsQuery, (snap) => {
-      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyEvent)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, eventsPath);
-    });
-
-    // Listen to Global Config
-    const configPath = 'config/global';
-    const unsubConfig = onSnapshot(doc(db, configPath), (snap) => {
-      if (snap.exists()) {
-        setGlobalConfig(snap.data() as GlobalConfig);
-      }
-    }, (error) => {
-      // Config might not exist yet, ignore error
-    });
-
-    // Listen to Pending Users if Admin
-    let unsubPending = () => {};
-    if (profile?.role === 'admin') {
-      const pendingQuery = query(collection(db, 'users'), where('status', '==', 'pending'));
-      unsubPending = onSnapshot(pendingQuery, (snap) => {
-        setPendingUsers(snap.docs.map(d => ({ ...d.data() } as UserProfile)));
-      });
-    }
-
-    return () => {
-      unsubChat();
-      unsubProfile();
-      unsubShares();
-      unsubTrans();
-      unsubShop();
-      unsubGoals();
-      unsubTasks();
-      unsubEvents();
-      unsubConfig();
-      unsubPending();
-    };
-  }, [user, activeSpace, profile?.role]);
 
   useEffect(() => {
     if (!user || !profile || transactions.length === 0) return;
@@ -401,65 +223,33 @@ export default function App() {
     }
   }, [messages, isTyping, typingContent, activeTab]);
 
-  const syncGoogleCalendar = async (token: string, targetUserId: string) => {
-    setIsSyncing(true);
-    setSyncError(null);
-    try {
-      const googleEvents = await fetchGoogleCalendarEvents(token);
-      
-      if (googleEvents.length === 0) {
-        // Double check if it was an empty calendar or an error that returned []
-        // (Our fetchGoogleCalendarEvents currently catches and returns [] on error)
+  const handleSyncCalendar = async () => {
+    const token = sessionStorage.getItem('google_access_token');
+    if (token && user) {
+      setIsSyncing(true);
+      try {
+        await syncGoogleCalendar(token, activeSpace || user.uid);
+      } catch (err) {
+        setSyncError("Erro na sincronização");
+      } finally {
+        setIsSyncing(false);
       }
-
-      // Get existing events to avoid duplicates
-      const eventsRef = collection(db, `users/${targetUserId}/events`);
-      const existingEventsSnap = await getDocs(eventsRef);
-      const existingGoogleIds = new Set(
-        existingEventsSnap.docs
-          .map(doc => (doc.data() as FamilyEvent).googleEventId)
-          .filter(Boolean)
-      );
-
-      let count = 0;
-      for (const gEvent of googleEvents) {
-        if (gEvent.googleEventId && !existingGoogleIds.has(gEvent.googleEventId)) {
-          await addDoc(eventsRef, {
-            ...gEvent,
-            userId: targetUserId,
-            createdAt: new Date().toISOString()
-          });
-          count++;
-        }
-      }
-      return count;
-    } catch (error: any) {
-      console.error("Sync error:", error);
-      if (error.message?.includes("403")) {
-        setCalendarBlocked(true);
-        setSyncError("Acesso à agenda desativado ou não autorizado.");
-      } else {
-        setSyncError(error.message || "Erro desconhecido na sincronização");
-      }
-      return 0;
-    } finally {
-      setIsSyncing(false);
+    } else {
+      handleLogin();
     }
   };
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
     setAuthError(null);
-    setCalendarBlocked(false); // Reset blocked state on new login attempt
+    setCalendarBlocked(false);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential?.accessToken;
       
       if (token) {
-        // Store token in session storage temporarily for this session syncs
         sessionStorage.setItem('google_access_token', token);
-        // We sync only if already approved
         const userRef = doc(db, 'users', result.user.uid);
         const snap = await getDoc(userRef);
         if (snap.exists() && snap.data().status === 'approved') {
@@ -467,18 +257,8 @@ export default function App() {
         }
       }
     } catch (error: any) {
-      logger.error('Login failed', { 
-        error: error.message, 
-        code: error.code,
-        details: error.customData 
-      });
-      console.error("Login error:", error);
-      
-      if (error.code === 'auth/unauthorized-domain') {
-        setAuthError(`Domínio não autorizado. Adicione "${window.location.hostname}" aos domínios autorizados no Console do Firebase.`);
-      } else {
-        setAuthError(error.message || 'Falha ao entrar com Google');
-      }
+      logger.error('Login failed', { error: error.message });
+      setAuthError(error.message || 'Falha ao entrar com Google');
     } finally {
       setIsLoggingIn(false);
     }
@@ -486,7 +266,6 @@ export default function App() {
 
   const handleRegistrationComplete = async (data: { username: string, displayName: string, bio: string, photoUrl: string }) => {
     if (!user) return;
-    
     try {
       const isAdmin = user.email === 'felipeteixeirams@gmail.com';
       const status = isAdmin ? UserStatus.APPROVED : UserStatus.PENDING;
@@ -500,114 +279,17 @@ export default function App() {
         photoUrl: data.photoUrl,
         role: isAdmin ? UserRole.ADMIN : UserRole.USER,
         status: status,
-        preferences: {
-          currency: 'BRL',
-          notificationsEnabled: true
-        },
-        gamification: {
-          points: 0,
-          level: 1,
-          badges: [],
-          weeklyGoal: 500,
-          currentWeeklySpending: 0
-        },
-        location: {
-          city: 'São Paulo',
-          region: 'Sudeste'
-        },
-        healthGoals: {
-          dietType: 'balanced',
-          focus: ['Redução de Açúcar', 'Mais Proteína']
-        }
+        preferences: { currency: 'BRL', notificationsEnabled: true },
+        gamification: { points: 0, level: 1, badges: [], weeklyGoal: 500, currentWeeklySpending: 0 },
+        location: { city: 'São Paulo', region: 'Sudeste' },
+        healthGoals: { dietType: 'balanced', focus: ['Redução de Açúcar'] }
       };
 
       await setDoc(doc(db, 'users', user.uid), newProfile);
-      
-      // Create first welcome message from Aimee
-      const welcomeMsg: ChatMessage = {
-        userId: user.uid,
-        role: 'assistant',
-        content: `Olá ${newProfile.displayName}! 🌟 Que alegria ter você aqui. Eu sou a Aimee, sua nova assistente inteligente. Já configurei seu espaço seguindo seu estilo ${newProfile.selectedPersona === 'frugal' ? 'frugal' : 'analítico'}. Como posso te ajudar a organizar sua vida hoje?`,
-        timestamp: new Date().toISOString(),
-        read: false
-      };
-
-      await addDoc(collection(db, 'users', user.uid, 'chatHistory'), welcomeMsg);
-
-      // Simulation of a welcome email trigger
-      console.info('Welcome email triggered for:', newProfile.email);
-      // In a real scenario with a backend, we would call an API here:
-      // await fetch('/api/send-welcome', { method: 'POST', body: JSON.stringify({ email: newProfile.email }) });
-
       setProfile(newProfile);
       setIsRegistering(false);
-
-      // Notify server to send email
-      if (status === 'pending') {
-        fetch('/api/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'request', email: user.email, name: data.displayName })
-        }).catch(err => console.error("Email notification error:", err));
-
-        // Create insight for admin
-        const adminUid = '7r8P5F7y8oNP8G5f9B0q2H1u3v5w'; // For now, hardcoded or use a better way to find admin
-        // Actually, we'll just let the admin see the "Admin Panel" with the badge
-      }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
-    }
-  };
-
-  const handleAdminAction = async (userId: string, action: 'approve' | 'reject' | 'block') => {
-    if (profile?.role !== 'admin') return;
-
-    try {
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) return;
-      const uData = userSnap.data() as UserProfile;
-
-      let status: 'approved' | 'rejected' | 'blocked' = 'approved';
-      let blockedUntil = null;
-
-      if (action === 'reject') status = 'rejected';
-      if (action === 'block') {
-        status = 'blocked';
-        const d = new Date();
-        d.setDate(d.getDate() + 5);
-        blockedUntil = d.toISOString();
-      }
-
-      await updateDoc(userRef, { 
-        status, 
-        ...(blockedUntil ? { blockedUntil } : { blockedUntil: null }) 
-      });
-
-      // Send Notification Email
-      fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          type: action === 'approve' ? 'approve' : action === 'reject' ? 'reject' : 'block', 
-          email: uData.email, 
-          name: uData.displayName 
-        })
-      }).catch(err => console.error("Admin action email error:", err));
-
-      // Add a hidden message from Aimee to admin as a log
-      const logMsg: ChatMessage = {
-        userId: profile.uid,
-        role: ChatRole.ASSISTANT,
-        content: `Administrador, acabei de ${action === 'approve' ? 'aprovar' : action === 'reject' ? 'recusar' : 'bloquear'} o acesso de ${uData.displayName}. Notificação enviada!`,
-        timestamp: new Date().toISOString(),
-        isInsight: true,
-        read: false
-      };
-      await addDoc(collection(db, 'users', profile.uid, 'chatHistory'), logMsg);
-
-    } catch (error) {
-      console.error("Admin action error:", error);
     }
   };
 
@@ -622,7 +304,6 @@ export default function App() {
           i++;
         } else {
           clearInterval(interval);
-          // Don't set typingContent to null immediately, wait for the message to be added to the list
           resolve();
         }
       }, speed);
@@ -634,183 +315,16 @@ export default function App() {
     const now = new Date();
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
-
     if (date.toDateString() === now.toDateString()) return 'Hoje';
     if (date.toDateString() === yesterday.toDateString()) return 'Ontem';
-    
     const dayOfWeek = format(date, 'EEEE', { locale: ptBR });
-    const formattedDate = format(date, 'dd/MM/yyyy');
-    return `${formattedDate} - ${dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}`;
+    return `${format(date, 'dd/MM/yyyy')} - ${dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}`;
   };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleEditMessage = async (msg: ChatMessage) => {
-    if (!msg.id || !user) return;
-    
-    const newValue = editValue.trim();
-    if (!newValue) {
-      setEditingMessage(null);
-      return;
-    }
-
-    // If content didn't change, just close
-    if (newValue === msg.content) {
-      setEditingMessage(null);
-      return;
-    }
-
-    try {
-      // Update the message in Firestore
-      await updateDoc(doc(db, `users/${user.uid}/chatHistory`, msg.id), {
-        content: newValue,
-        timestamp: new Date().toISOString()
-      });
-      
-      setEditingMessage(null);
-      
-      // Small delay to let the UI update from the snapshot
-      setTimeout(() => {
-        handleSendMessage(newValue, true);
-      }, 300);
-      
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory/${msg.id}`);
-    }
-  };
-
-  const handleToggleShoppingItem = async (item: ShoppingItem) => {
-    if (!item.id || !user) return;
-    const targetId = activeSpace || user.uid;
-    try {
-      await updateDoc(doc(db, `users/${targetId}/shoppingList`, item.id), {
-        purchased: !item.purchased,
-        lastPurchasedAt: !item.purchased ? new Date().toISOString() : item.lastPurchasedAt
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${targetId}/shoppingList/${item.id}`);
-    }
-  };
-
-  const handleMoveToStock = async (item: ShoppingItem) => {
-    if (!item.id || !user) return;
-    const targetId = activeSpace || user.uid;
-    try {
-      await updateDoc(doc(db, `users/${targetId}/shoppingList`, item.id), {
-        isStock: true,
-        purchased: false
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${targetId}/shoppingList/${item.id}`);
-    }
-  };
-
-  const handleMoveToList = async (item: ShoppingItem) => {
-    if (!item.id || !user) return;
-    const targetId = activeSpace || user.uid;
-    try {
-      await updateDoc(doc(db, `users/${targetId}/shoppingList`, item.id), {
-        isStock: false,
-        urgency: 'medium'
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${targetId}/shoppingList/${item.id}`);
-    }
-  };
-
-  const handleDeleteShoppingItem = async (item: ShoppingItem) => {
-    if (!item.id || !user) return;
-    const targetId = activeSpace || user.uid;
-    try {
-      await deleteDoc(doc(db, `users/${targetId}/shoppingList`, item.id));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${targetId}/shoppingList/${item.id}`);
-    }
-  };
-
-  const handleSendMessage = async (overrideText?: any, skipAddDoc = false) => {
-    const text = typeof overrideText === 'string' ? overrideText : inputText;
-    if (!text || typeof text !== 'string' || !text.trim() || !user) return;
-
-    if (!skipAddDoc) {
-      const userMsg: ChatMessage = {
-        userId: user.uid,
-        role: ChatRole.USER,
-        content: text,
-        timestamp: new Date().toISOString()
-      };
-
-      try {
-        await addDoc(collection(db, 'users', user.uid, 'chatHistory'), userMsg);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
-      }
-    }
-
-    if (!overrideText) setInputText('');
-    
-    // Force scroll to bottom when sending a message
-    setTimeout(() => scrollToBottom('smooth'), 100);
-    
-    setIsTyping(true);
-    const response = await orchestrator(
-      text, 
-      messages, 
-      user.uid, 
-      shoppingList, 
-      transactions, 
-      goals,
-      tasks,
-      events,
-      profile?.selectedPersona || 'funny', 
-      globalConfig.aiProvider,
-      activeSpace || undefined
-    );
-    setIsTyping(false);
-
-    // Split response into blocks (paragraphs) for a more natural feel
-    const blocks = response.split('\n\n').filter(b => b.trim());
-
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      await typeText(block, 8); 
-      
-      // Detect if this block is a financial insight
-      const isInsight = /notei que|alerta|previsão|economia|média|comparando|insight/i.test(block);
-
-      const aiMsg: any = {
-        userId: user.uid,
-        role: 'assistant',
-        content: block,
-        timestamp: new Date().toISOString(),
-        isInsight
-      };
-
-      if (isInsight) {
-        aiMsg.read = false;
-      }
-      
-      try {
-        await addDoc(collection(db, 'users', user.uid, 'chatHistory'), aiMsg);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
-      }
-      
-      // Keep the typing content visible for a moment after saving to DB
-      // to allow the Firestore snapshot to update the messages list
-      if (i === blocks.length - 1) {
-        await new Promise(r => setTimeout(r, 600));
-        setTypingContent(null);
-      } else {
-        // Between blocks, wait a bit then clear typing content to start the next block
-        await new Promise(r => setTimeout(r, 400));
-        setTypingContent(null);
-      }
-    }
   };
 
   const unreadInsights = useMemo(() => 
@@ -994,46 +508,6 @@ export default function App() {
     }
   };
 
-  const handleSyncCalendar = async () => {
-    const token = sessionStorage.getItem('google_access_token');
-    if (token && user) {
-      setIsSyncing(true);
-      await syncGoogleCalendar(token, activeSpace || user.uid);
-      setIsSyncing(false);
-    } else {
-      handleLogin();
-    }
-  };
-
-  const handleToggleTask = async (taskId: string, currentStatus: string) => {
-    if (!user) return;
-    try {
-      await updateDoc(doc(db, `users/${activeSpace || user.uid}/tasks/${taskId}`), {
-        status: currentStatus === 'done' ? 'todo' : 'done'
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `tasks/${taskId}`);
-    }
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    if (!user) return;
-    try {
-      await deleteDoc(doc(db, `users/${activeSpace || user.uid}/tasks/${taskId}`));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `tasks/${taskId}`);
-    }
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!user) return;
-    try {
-      await deleteDoc(doc(db, `users/${activeSpace || user.uid}/events/${eventId}`));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `events/${eventId}`);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-neutral-50 dark:bg-neutral-950">
@@ -1063,37 +537,6 @@ export default function App() {
 
   const isSuperAdmin = profile?.role === 'admin' || user?.email === 'felipeteixeirams@gmail.com';
   
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user || !profile) return;
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, updates);
-      setProfile({ ...profile, ...updates });
-      
-      if (updates.themeColor) {
-        document.documentElement.setAttribute('data-color', updates.themeColor);
-      }
-      if (updates.theme) {
-        setIsDarkMode(updates.theme === 'dark');
-      }
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
-    }
-  };
-
-  const updateGlobalConfig = async (updates: Partial<GlobalConfig>) => {
-    if (!isSuperAdmin) return;
-    try {
-      await setDoc(doc(db, 'config', 'global'), {
-        ...updates,
-        updatedAt: new Date().toISOString(),
-        updatedBy: user?.email
-      }, { merge: true });
-    } catch (error) {
-      console.error("Error updating global config:", error);
-    }
-  };
-
   return (
     <div className="flex flex-col h-[100dvh] bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden">
       <Header 
@@ -1130,7 +573,13 @@ export default function App() {
               scrollToBottom={scrollToBottom}
               inputText={inputText}
               setInputText={setInputText}
-              handleSendMessage={handleSendMessage}
+              handleSendMessage={async (t, skip) => {
+                const content = typeof t === 'string' ? t : inputText;
+                if (!content?.trim()) return;
+                if (!t) setInputText('');
+                setTimeout(() => scrollToBottom('smooth'), 100);
+                await sendMessage(content, activeSpace, setIsTyping, (txt) => typeText(txt, 8), setTypingContent, skip);
+              }}
               isTyping={isTyping}
               typingContent={typingContent}
               formatDateSeparator={formatDateSeparator}
@@ -1138,7 +587,12 @@ export default function App() {
               setEditingMessage={setEditingMessage}
               editValue={editValue}
               setEditValue={setEditValue}
-              handleEditMessage={handleEditMessage}
+              handleEditMessage={async (msg) => {
+                const val = editValue.trim();
+                if (!val || val === msg.content) return setEditingMessage(null);
+                await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, msg.id!), { content: val, timestamp: new Date().toISOString() });
+                setEditingMessage(null);
+              }}
               copyToClipboard={copyToClipboard}
               copiedId={copiedId}
               profile={profile}
@@ -1172,10 +626,10 @@ export default function App() {
               shoppingFilter={shoppingFilter}
               setShoppingFilter={setShoppingFilter}
               shoppingList={shoppingList}
-              handleToggleShoppingItem={handleToggleShoppingItem}
-              handleMoveToStock={handleMoveToStock}
-              handleMoveToList={handleMoveToList}
-              handleDeleteShoppingItem={handleDeleteShoppingItem}
+              handleToggleShoppingItem={(item) => manageShopping.toggle(item, activeSpace || user!.uid)}
+              handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
+              handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
+              handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
               profile={profile}
             />
           )}
@@ -1190,9 +644,11 @@ export default function App() {
               syncError={syncError}
               handleSyncCalendar={handleSyncCalendar}
               globalConfig={globalConfig}
-              handleToggleTask={handleToggleTask}
-              handleDeleteTask={handleDeleteTask}
-              handleDeleteEvent={handleDeleteEvent}
+              handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
+              handleDeleteTask={(id) => manageTasks.delete(id, activeSpace || user!.uid)}
+              handleDeleteEvent={async (id) => {
+                await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
+              }}
             />
           )}
 

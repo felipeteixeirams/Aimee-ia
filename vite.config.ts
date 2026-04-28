@@ -26,6 +26,8 @@ export default defineConfig(({mode}) => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts', 'src/**/*.tsx'],
+        exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.test.ts', 'src/**/*.test.tsx', 'src/types/**'],
         thresholds: {
           lines: 80,
           functions: 80,
