@@ -652,3 +652,22 @@ export const orchestrator = async (
     return `Erro ao conectar com o agente de IA: ${errorMessage}`;
   }
 };
+
+export const checkAIHealth = async (provider: 'gemini' | 'deepseek'): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    if (provider === 'gemini') {
+      const key = process.env.GEMINI_API_KEY;
+      if (!key) return { ok: false, error: 'GEMINI_API_KEY ausente' };
+      // Test initialization
+      getAIClient();
+    } else {
+      const key = process.env.DEEPSEEK_API_KEY;
+      if (!key) return { ok: false, error: 'DEEPSEEK_API_KEY ausente' };
+      // Test initialization
+      getDeepSeekClient();
+    }
+    return { ok: true };
+  } catch (error: any) {
+    return { ok: false, error: error.message };
+  }
+};

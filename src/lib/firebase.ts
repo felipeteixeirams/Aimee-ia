@@ -51,16 +51,19 @@ googleProvider.setCustomParameters({
 });
 
 // Test connection
-export async function testConnection() {
+export async function testConnection(): Promise<{ ok: boolean; error?: string }> {
   try {
     const testDoc = doc(db, 'test', 'connection');
     await getDoc(testDoc);
-  } catch (error) {
+    logger.info('Firebase connection verified');
+    return { ok: true };
+  } catch (error: any) {
     // Silently handle offline errors for the connection test
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      return;
+      return { ok: true }; // Consider ok if just offline
     }
     logger.error('Firebase connection test failed', { error });
+    return { ok: false, error: error.message };
   }
 }
 

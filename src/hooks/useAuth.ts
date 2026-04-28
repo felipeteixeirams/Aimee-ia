@@ -10,15 +10,29 @@ import {
   doc, 
   onSnapshot 
 } from 'firebase/firestore';
-import { UserProfile } from '../types';
+import { UserProfile, AIProvider } from '../types';
 import { logger } from '../lib/logger';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import { checkAIHealth } from '../services/aiService';
+
+export interface SystemHealth {
+  firebase: boolean;
+  gemini: boolean;
+  deepseek: boolean;
+  isReady: boolean;
+}
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [health, setHealth] = useState<SystemHealth>({
+    firebase: true,
+    gemini: true,
+    deepseek: true,
+    isReady: false
+  });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true' || 
@@ -26,6 +40,32 @@ export function useAuth() {
     }
     return false;
   });
+
+  // Health Check Effect
+  useEffect(() => {
+    async function performHealthCheck() {
+      const fbStatus = await testConnection();
+      const geminiStatus = await checkAIHealth(AIProvider.GEMINI);
+      const deepseekStatus = await checkAIHealth(AIProvider.DEEPSEEK);
+
+      const newHealth = {
+        firebase: fbStatus.ok,
+        gemini: geminiStatus.ok,
+        deepseek: deepseekStatus.ok,
+        isReady: true
+      };
+
+      setHealth(newHealth);
+      
+      if (!newHealth.firebase || (!newHealth.gemini && !newHealth.deepseek)) {
+        logger.warn('System Health Warning', newHealth);
+      } else {
+        logger.info('System Health OK', newHealth);
+      }
+    }
+
+    performHealthCheck();
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -97,6 +137,7 @@ export function useAuth() {
     setIsRegistering,
     isDarkMode,
     setIsDarkMode,
-    setProfile
+    setProfile,
+    health
   };
 }

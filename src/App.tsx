@@ -78,7 +78,8 @@ export default function App() {
     setIsRegistering, 
     isDarkMode, 
     setIsDarkMode,
-    setProfile
+    setProfile,
+    health
   } = useAuth();
 
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
@@ -517,7 +518,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={authError} />;
+    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={authError} health={health} />;
   }
 
   if (isRegistering) {
