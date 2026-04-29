@@ -1,4 +1,4 @@
-import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile } from 'lucide-react';
+import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Share, GlobalConfig, AIProvider, PermissionLevel, AIRecommendedPersona } from '../types';
 import { cn } from '../lib/utils';
@@ -133,6 +133,44 @@ export const SettingsView = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editNickname, setEditNickname] = useState(profile?.nickname || '');
+  const [editBio, setEditBio] = useState(profile?.bio || '');
+  const [editPhoto, setEditPhoto] = useState(profile?.photoUrl || '');
+  const [editDisplayName, setEditDisplayName] = useState(profile?.displayName || '');
+  const [displayPref, setDisplayPref] = useState(profile?.displayPreference || 'fullName');
+
+  useEffect(() => {
+    if (profile) {
+      setEditNickname(profile.nickname || '');
+      setEditBio(profile.bio || '');
+      setEditPhoto(profile.photoUrl || '');
+      setEditDisplayName(profile.displayName || '');
+      setDisplayPref(profile.displayPreference || 'fullName');
+    }
+  }, [profile]);
+
+  const handleSaveProfile = () => {
+    const updates: Partial<UserProfile> = {
+      nickname: editNickname,
+      bio: editBio,
+      photoUrl: editPhoto,
+      displayPreference: displayPref as any,
+    };
+
+    // If display name changed, request a change instead of direct update
+    if (editDisplayName !== profile?.displayName) {
+      updates.pendingNameChange = {
+        newName: editDisplayName,
+        requestedAt: new Date().toISOString(),
+        status: 'pending'
+      };
+    }
+
+    updateProfile(updates);
+    setIsEditingProfile(false);
+  };
+
   return (
     <motion.div 
       key="settings"
@@ -141,45 +179,194 @@ export const SettingsView = ({
       exit={{ opacity: 0, y: 20 }}
       className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-32"
     >
-      {/* Profile Card */}
-      <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+      {/* Profile Card Refined */}
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-brand/10 transition-colors" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-          <div className="relative">
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden ring-8 ring-neutral-50 dark:ring-neutral-800 shadow-xl bg-neutral-100 dark:bg-neutral-800">
-              {profile?.photoUrl ? (
-                <img src={profile.photoUrl} alt={profile.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-brand/10">
-                  <UserIcon className="w-8 h-8 md:w-12 md:h-12 text-brand/40" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden ring-4 md:ring-8 ring-neutral-50 dark:ring-neutral-800 shadow-xl bg-neutral-100 dark:bg-neutral-800">
+                {profile?.photoUrl ? (
+                  <img src={profile.photoUrl} alt={profile.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-brand/10">
+                    <UserIcon className="w-6 h-6 md:w-8 md:h-8 text-brand/40" />
+                  </div>
+                )}
+              </div>
+              {isSuperAdmin && (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-7 md:h-7 bg-brand text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900">
+                  <Shield className="w-3 md:w-3.5 h-3 md:h-3.5" />
                 </div>
               )}
             </div>
-            {isSuperAdmin && (
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900">
-                <Shield className="w-4 h-4" />
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-lg md:text-xl font-black text-neutral-800 dark:text-white tracking-tight truncate max-w-[150px] sm:max-w-none">
+                    {profile?.displayPreference === 'nickname' && profile?.nickname ? profile.nickname : profile?.displayName}
+                  </h3>
+                  {profile?.nickname && profile?.displayPreference === 'fullName' && (
+                    <span className="text-[10px] font-bold text-neutral-400">({profile.nickname})</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="bg-brand/10 px-2 py-0.5 rounded-lg shrink-0">
+                    <p className="text-[9px] font-black text-brand uppercase tracking-widest">@{profile?.username}</p>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 font-medium truncate max-w-[120px] sm:max-w-none">{profile?.email}</p>
+                </div>
               </div>
-            )}
-          </div>
-          <div className="text-center md:text-left flex-1 min-w-0">
-            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-              <h3 className="text-2xl font-black text-neutral-800 dark:text-white tracking-tight truncate">{profile?.displayName}</h3>
-              <div className="bg-brand/10 px-2 py-0.5 rounded-lg inline-block w-fit mx-auto md:mx-0">
-                <p className="text-[10px] font-black text-brand uppercase tracking-widest">@{profile?.username}</p>
-              </div>
+              <p className="text-[10px] md:text-[11px] text-neutral-500 mt-2 font-medium line-clamp-1 italic">
+                {profile?.bio || 'Personalize seu perfil para uma melhor experiência.'}
+              </p>
             </div>
-            <p className="text-xs text-neutral-400 mt-2 font-medium max-w-sm line-clamp-2 md:line-clamp-none">{profile?.bio || 'Nenhuma bio definida ainda.'}</p>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="w-12 h-12 rounded-2xl bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-brand transition-all border border-neutral-100 dark:border-neutral-700 active:scale-95"
-            >
-              {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
-            </button>
-          </div>
+
+          <button 
+            onClick={() => setIsEditingProfile(true)}
+            className="w-full sm:w-auto px-5 py-3 md:py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-700 active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Palette className="w-3.5 h-3.5" />
+            Editar Perfil
+          </button>
         </div>
+
+        {profile?.pendingNameChange && profile.pendingNameChange.status === 'pending' && (
+          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-2xl flex items-center gap-3">
+            <Brain className="w-4 h-4 text-amber-500" />
+            <p className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest leading-none">
+              Solicitação de alteração de nome em análise pelo administrador: <span className="opacity-60">"{profile.pendingNameChange.newName}"</span>
+            </p>
+          </div>
+        )}
       </div>
+
+      <AnimatePresence>
+        {isEditingProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsEditingProfile(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-[3rem] p-8 md:p-10 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+              
+              <div className="flex items-center justify-between mb-8 relative">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-brand/10 rounded-2xl flex items-center justify-center">
+                    <UserIcon className="w-6 h-6 text-brand" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-neutral-800 dark:text-white tracking-tight">Editar Perfil</h3>
+                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Personalização e identidade</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsEditingProfile(false)}
+                  className="w-10 h-10 flex items-center justify-center bg-neutral-50 dark:bg-neutral-800 rounded-xl text-neutral-400 hover:text-rose-500 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6 relative">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Nickname (Apelido)</label>
+                    <input 
+                      type="text" 
+                      value={editNickname}
+                      onChange={(e) => setEditNickname(e.target.value)}
+                      placeholder="Como quer ser chamado?"
+                      className="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 px-4 py-3 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-brand/10 transition-all outline-none dark:text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Nome Completo</label>
+                    <input 
+                      type="text" 
+                      value={editDisplayName}
+                      onChange={(e) => setEditDisplayName(e.target.value)}
+                      placeholder="Seu nome oficial"
+                      className="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 px-4 py-3 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-brand/10 transition-all outline-none dark:text-white"
+                    />
+                    <p className="text-[8px] text-neutral-400 px-1 font-medium italic">* Alterações de nome completo requerem revisão do administrador.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Sua Bio</label>
+                  <textarea 
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value)}
+                    placeholder="Conte um pouco sobre você..."
+                    rows={3}
+                    className="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 px-4 py-3 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-brand/10 transition-all outline-none dark:text-white resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">URL da Foto</label>
+                  <input 
+                    type="url" 
+                    value={editPhoto}
+                    onChange={(e) => setEditPhoto(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 px-4 py-3 rounded-2xl text-[11px] font-bold focus:ring-4 focus:ring-brand/10 transition-all outline-none dark:text-white"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1 mb-3 block">Preferência de Exibição</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setDisplayPref('fullName')}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all",
+                        displayPref === 'fullName' 
+                          ? "bg-brand/10 border-brand text-brand" 
+                          : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-400"
+                      )}
+                    >
+                      <UserIcon className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Nome Completo</span>
+                    </button>
+                    <button 
+                      onClick={() => setDisplayPref('nickname')}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all",
+                        displayPref === 'nickname' 
+                          ? "bg-brand/10 border-brand text-brand" 
+                          : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-400"
+                      )}
+                    >
+                      <Smile className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Apelido</span>
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleSaveProfile}
+                  className="w-full py-5 bg-brand text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4"
+                >
+                  Salvar Alterações
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12 space-y-8">

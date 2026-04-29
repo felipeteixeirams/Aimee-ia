@@ -110,30 +110,30 @@ export const ShoppingView = ({
               </div>
             </div>
             
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 md:gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
               {shoppingFilter === 'list' ? (
                 <button 
                   onClick={() => handleMoveToStock(item)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl text-neutral-400 hover:text-brand transition-colors"
+                  className="p-1.5 md:p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-neutral-400 hover:text-brand transition-colors"
                   title="Mover para Estoque"
                 >
-                  <Package className="w-4 h-4" />
+                  <Package className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 </button>
               ) : (
                 <button 
                   onClick={() => handleMoveToList(item)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl text-neutral-400 hover:text-brand transition-colors"
+                  className="p-1.5 md:p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-neutral-400 hover:text-brand transition-colors"
                   title="Mover para Lista"
                 >
-                  <ShoppingCart className="w-4 h-4" />
+                  <ShoppingCart className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 </button>
               )}
               <button 
                 onClick={() => handleDeleteShoppingItem(item)}
-                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-neutral-400 hover:text-red-500 transition-colors"
+                className="p-1.5 md:p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-neutral-400 hover:text-red-500 transition-colors"
                 title="Excluir"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
               </button>
             </div>
           </div>

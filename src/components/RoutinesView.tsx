@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info } from 'lucide-react';
-import { FamilyEvent, HouseholdTask, GlobalConfig } from '../types';
+import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage } from '../types';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 interface RoutinesViewProps {
   events: FamilyEvent[];
   tasks: HouseholdTask[];
+  insights: ChatMessage[];
   isSuperAdmin: boolean;
   isSyncing: boolean;
   calendarBlocked: boolean;
@@ -24,6 +25,7 @@ interface RoutinesViewProps {
 export const RoutinesView = ({
   events,
   tasks,
+  insights,
   isSuperAdmin,
   isSyncing,
   calendarBlocked,
@@ -136,26 +138,26 @@ export const RoutinesView = ({
 
         <div className="space-y-4">
           {events.length > 0 ? events.map((event) => (
-            <div key={event.id} className="flex items-center gap-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800">
-              <div className="w-12 h-12 bg-white dark:bg-neutral-900 rounded-xl flex flex-col items-center justify-center border border-neutral-100 dark:border-neutral-800 shrink-0">
-                <span className="text-[10px] font-bold text-brand uppercase">{format(new Date(event.date), 'MMM', { locale: ptBR })}</span>
-                <span className="text-lg font-black text-neutral-800 dark:text-white leading-none">{format(new Date(event.date), 'dd')}</span>
+            <div key={event.id} className="flex items-center gap-3 md:gap-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-neutral-900 rounded-xl flex flex-col items-center justify-center border border-neutral-100 dark:border-neutral-800 shrink-0">
+                <span className="text-[8px] md:text-[10px] font-bold text-brand uppercase leading-none mb-0.5">{format(new Date(event.date), 'MMM', { locale: ptBR })}</span>
+                <span className="text-sm md:text-lg font-black text-neutral-800 dark:text-white leading-none">{format(new Date(event.date), 'dd')}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-neutral-800 dark:text-white truncate">{event.title}</p>
-                <p className="text-[10px] text-neutral-500 truncate">{event.description || 'Sem descrição'}</p>
+                <p className="text-xs md:text-sm font-bold text-neutral-800 dark:text-white truncate">{event.title}</p>
+                <p className="text-[9px] md:text-[10px] text-neutral-500 truncate leading-none mt-0.5">{event.description || 'Sem descrição'}</p>
               </div>
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-end gap-1.5">
                 <div className={cn(
-                  "px-2 py-1 rounded-full text-[8px] font-bold uppercase",
-                  event.type === 'social' ? "bg-purple-100 text-purple-600" :
-                  event.type === 'holiday' ? "bg-rose-100 text-rose-600" : "bg-blue-100 text-blue-600"
+                  "px-2 py-0.5 rounded-full text-[7px] md:text-[8px] font-black uppercase tracking-wider",
+                  event.type === 'social' ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" :
+                  event.type === 'holiday' ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                 )}>
                   {event.type}
                 </div>
                 <button 
                   onClick={() => event.id && handleDeleteEvent(event.id)}
-                  className="p-1.5 text-neutral-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all"
+                  className="p-1.5 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all"
                   title="Remover evento"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -184,21 +186,21 @@ export const RoutinesView = ({
 
         <div className="space-y-3">
           {tasks.length > 0 ? tasks.map((task) => (
-            <div key={task.id} className="flex items-center gap-4 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800 group">
+            <div key={task.id} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800 group transition-all hover:border-brand/20">
               <button 
                 onClick={() => task.id && handleToggleTask(task.id, task.status)}
                 className={cn(
-                  "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all",
-                  task.status === 'done' ? "bg-emerald-500 border-emerald-500 text-white" : "border-neutral-200 dark:border-neutral-700"
+                  "w-5 h-5 md:w-6 md:h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0",
+                  task.status === 'done' ? "bg-emerald-500 border-emerald-500 text-white" : "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
                 )}
               >
-                {task.status === 'done' && <Check className="w-4 h-4" />}
+                {task.status === 'done' && <Check className="w-3 md:w-4 h-3 md:h-4" />}
               </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className={cn(
-                    "text-sm font-bold transition-all",
-                    task.status === 'done' ? "text-neutral-400 line-through" : "text-neutral-800 dark:text-white"
+                    "text-xs md:text-sm font-bold transition-all truncate",
+                    task.status === 'done' ? "text-neutral-400 line-through font-medium" : "text-neutral-800 dark:text-white"
                   )}>{task.title}</p>
                   {isOverdue(task) && (
                     <motion.div
@@ -206,40 +208,42 @@ export const RoutinesView = ({
                       animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
                     >
-                      <AlertCircle className="w-4 h-4 text-rose-500 fill-rose-500/10" />
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-500 fill-rose-500/10" />
                     </motion.div>
-                  )}
-                  {task.description && (
-                    <button 
-                      onClick={() => setSelectedTaskDescription(task.description!)}
-                      className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors text-brand"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                    </button>
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[9px] font-bold uppercase text-neutral-400">{task.category}</span>
+                  <span className="text-[8px] md:text-[9px] font-black uppercase text-neutral-400 tracking-wider shrink-0">{task.category}</span>
                   {task.assignedTo && (
-                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-brand/10 text-brand rounded-full">@{task.assignedTo}</span>
+                    <span className="text-[8px] md:text-[9px] font-black uppercase px-2 py-0.5 bg-brand/10 text-brand rounded-full truncate max-w-[60px] md:max-w-none">@{task.assignedTo}</span>
                   )}
                   {task.dueDate && (
                     <span className={cn(
-                      "text-[9px] font-bold flex items-center gap-1 opacity-70",
+                      "text-[8px] md:text-[9px] font-black flex items-center gap-1 opacity-70 shrink-0",
                       isOverdue(task) ? "text-rose-500" : "text-neutral-400"
                     )}>
-                      <Clock className="w-2.5 h-2.5" />
+                      <Clock className="w-2 md:w-2.5 h-2 md:h-2.5" />
                       {format(new Date(task.dueDate), 'dd/MM')}
                     </span>
                   )}
                 </div>
               </div>
-              <button 
-                onClick={() => task.id && handleDeleteTask(task.id)}
-                className="p-2 text-neutral-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 md:gap-2">
+                {task.description && (
+                  <button 
+                    onClick={() => setSelectedTaskDescription(task.description!)}
+                    className="p-1.5 md:p-2 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-xl transition-colors text-brand"
+                  >
+                    <Info className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                  </button>
+                )}
+                <button 
+                  onClick={() => task.id && handleDeleteTask(task.id)}
+                  className="p-1.5 md:p-2 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                </button>
+              </div>
             </div>
           )) : (
             <p className="text-center py-8 text-sm text-neutral-400 italic">Tudo limpo por aqui!</p>
@@ -248,26 +252,36 @@ export const RoutinesView = ({
       </div>
 
       {/* Cross-Insights & Contextual Awareness */}
-      <div className="bg-brand/5 p-6 rounded-[2.5rem] border border-brand/10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-brand/20 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-brand" />
+      {insights.length > 0 && (
+        <div className="bg-brand/5 p-6 rounded-[2.5rem] border border-brand/10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-brand/20 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-brand" />
+            </div>
+            <h3 className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Insights da Aimee</h3>
           </div>
-          <h3 className="text-lg font-black text-neutral-800 dark:text-white tracking-tight">Insights da Aimee</h3>
+          <div className="space-y-4">
+            {insights.slice(0, 3).map((insight, idx) => (
+              <motion.div 
+                key={insight.id || idx}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/10 shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <Sparkles className="w-3 h-3 text-brand" />
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                    {insight.content}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-4">
-          <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/10 shadow-sm">
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              <span className="font-bold text-brand">Dica de Contexto:</span> O feriado de Páscoa está chegando! Notei que você ainda não tem itens para o almoço de domingo na lista. Quer que eu sugira um cardápio econômico?
-            </p>
-          </div>
-          <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/10 shadow-sm">
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              <span className="font-bold text-brand">Insight Cruzado:</span> Se reduzirmos a compra de refrigerantes e doces em 20%, você economiza cerca de <span className="font-bold text-emerald-500">R$ 85,00/mês</span> e atinge sua meta de saúde mais rápido!
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
     </motion.div>
 
       {/* Floating Action Button */}

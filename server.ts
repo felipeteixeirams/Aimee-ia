@@ -4,8 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import { logger } from "../src/lib/logger.ts";
-import { NotificationType, type NotificationPayload } from "../src/types/index.ts";
+import { logger } from "./src/lib/logger.ts";
+import { NotificationType, type NotificationPayload } from "./src/types/index.ts";
 
 dotenv.config();
 
@@ -69,7 +69,7 @@ app.post("/api/notify", async (req, res) => {
       sendApprovalEmail, 
       sendRejectionEmail, 
       sendBlockedEmail 
-    } = await import("../src/services/emailService.ts");
+    } = await import("./src/services/emailService.ts");
 
     switch (type) {
       case NotificationType.REQUEST:
@@ -139,14 +139,11 @@ async function setupVite() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    // Only serve static files if NOT on Vercel (Vercel provides its own static serving)
-    if (!process.env.VERCEL) {
-      app.use(express.static(distPath));
-      app.get("*", (req, res) => {
-        const indexPath = path.join(distPath, "index.html");
-        res.sendFile(indexPath);
-      });
-    }
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      const indexPath = path.join(distPath, "index.html");
+      res.sendFile(indexPath);
+    });
   }
 }
 
@@ -154,18 +151,13 @@ async function startServer() {
   try {
     await setupVite();
     
-    // In Vercel, we don't need to call listen, it's handled by the serverless wrapper
-    if (!process.env.VERCEL) {
-      const PORT = process.env.PORT || 3000;
-      app.listen(Number(PORT), "0.0.0.0", () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-      });
-    }
+    const PORT = process.env.PORT || 3000;
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
   } catch (error) {
     console.error("Failed to start server:", error);
-    if (!process.env.VERCEL) {
-      process.exit(1);
-    }
+    process.exit(1);
   }
 }
 

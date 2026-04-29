@@ -11,7 +11,7 @@ interface NavigationBarProps {
 
 export function NavigationBar({ activeTab, setActiveTab }: NavigationBarProps) {
   return (
-    <nav className="px-8 py-4 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] z-20">
+    <nav className="px-4 md:px-8 py-3 md:py-4 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))] z-20">
       <button 
         onClick={() => setActiveTab('chat')}
         className={cn("flex flex-col items-center gap-1.5 transition-all group relative", activeTab === 'chat' ? "text-brand" : "text-neutral-400 dark:text-neutral-500")}

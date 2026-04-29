@@ -47,6 +47,13 @@ export interface UserProfile {
   displayName: string;
   email: string;
   username?: string;
+  nickname?: string;
+  displayPreference?: 'fullName' | 'nickname';
+  pendingNameChange?: {
+    newName: string;
+    requestedAt: string;
+    status: 'pending' | 'approved' | 'rejected';
+  } | null;
   bio?: string;
   role?: UserRole;
   status: UserStatus;

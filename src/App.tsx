@@ -143,7 +143,13 @@ export default function App() {
       setPendingUsers([]);
       return;
     }
-    const pendingQuery = query(collection(db, 'users'), where('status', '==', 'pending'));
+    const pendingQuery = query(
+      collection(db, 'users'), 
+      or(
+        where('status', '==', 'pending'),
+        where('pendingNameChange.status', '==', 'pending')
+      )
+    );
     const unsubPending = onSnapshot(pendingQuery, (snap) => {
       setPendingUsers(snap.docs.map(d => ({ ...d.data() } as UserProfile)));
     });
@@ -661,6 +667,7 @@ export default function App() {
             <RoutinesView 
               events={events}
               tasks={tasks}
+              insights={messages.filter(m => m.isInsight)}
               isSuperAdmin={isSuperAdmin}
               isSyncing={isSyncing}
               calendarBlocked={calendarBlocked}

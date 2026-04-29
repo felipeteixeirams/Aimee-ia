@@ -187,7 +187,7 @@ export function useAimeeActions(
     }
   };
 
-  const handleAdminAction = async (userId: string, action: 'approve' | 'reject' | 'block') => {
+  const handleAdminAction = async (userId: string, action: 'approve' | 'reject' | 'block' | 'approveName' | 'rejectName') => {
     if (profile?.role !== 'admin') return;
 
     try {
@@ -195,6 +195,26 @@ export function useAimeeActions(
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) return;
       const uData = userSnap.data() as UserProfile;
+
+      if (action === 'approveName') {
+        const newName = uData.pendingNameChange?.newName;
+        if (newName) {
+          await updateDoc(userRef, {
+            displayName: newName,
+            'pendingNameChange.status': 'approved'
+          });
+          showToast(`Nome de ${uData.username} alterado para ${newName}`, 'success');
+        }
+        return;
+      }
+
+      if (action === 'rejectName') {
+        await updateDoc(userRef, {
+          'pendingNameChange.status': 'rejected'
+        });
+        showToast(`Solicitação de nome de ${uData.username} recusada`, 'info');
+        return;
+      }
 
       let status: UserStatus = UserStatus.APPROVED;
       let blockedUntil = null;
