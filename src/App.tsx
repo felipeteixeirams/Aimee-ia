@@ -122,6 +122,8 @@ export default function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingContent, setTypingContent] = useState<string | null>(null);
   const [financePeriod, setFinancePeriod] = useState<Period>('30d');
+  const [financeStartDate, setFinanceStartDate] = useState<string>('');
+  const [financeEndDate, setFinanceEndDate] = useState<string>('');
   const [financeCategory, setFinanceCategory] = useState<string>('all');
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
@@ -374,6 +376,22 @@ export default function App() {
     const now = new Date();
     const diffDays = (now.getTime() - date.getTime()) / (1000 * 3600 * 24);
     
+    if (financePeriod === 'custom') {
+      const tDate = new Date(t.date);
+      tDate.setHours(0, 0, 0, 0);
+      
+      const start = financeStartDate ? new Date(financeStartDate) : null;
+      const end = financeEndDate ? new Date(financeEndDate) : null;
+      
+      if (start) start.setHours(0, 0, 0, 0);
+      if (end) end.setHours(23, 59, 59, 999);
+
+      if (start && end) return tDate >= start && tDate <= end;
+      if (start) return tDate >= start;
+      if (end) return tDate <= end;
+      return true;
+    }
+
     return financePeriod === 'all' || 
       (financePeriod === '7d' && diffDays <= 7) || 
       (financePeriod === '30d' && diffDays <= 30);
@@ -608,6 +626,10 @@ export default function App() {
               transactionsByPeriod={transactionsByPeriod}
               financePeriod={financePeriod}
               setFinancePeriod={setFinancePeriod}
+              financeStartDate={financeStartDate}
+              setFinanceStartDate={setFinanceStartDate}
+              financeEndDate={financeEndDate}
+              setFinanceEndDate={setFinanceEndDate}
               financeCategory={financeCategory}
               setFinanceCategory={setFinanceCategory}
               totalIncome={totalIncome}
@@ -646,6 +668,7 @@ export default function App() {
               handleSyncCalendar={handleSyncCalendar}
               globalConfig={globalConfig}
               handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
+              handleCreateTask={(title, cat, userTo, dueDate, desc) => manageTasks.create(title, cat, userTo, activeSpace || user!.uid, dueDate, desc)}
               handleDeleteTask={(id) => manageTasks.delete(id, activeSpace || user!.uid)}
               handleDeleteEvent={async (id) => {
                 await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));

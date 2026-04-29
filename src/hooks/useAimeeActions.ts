@@ -294,6 +294,23 @@ export function useAimeeActions(
         showToast('Erro ao atualizar tarefa', 'error');
       }
     },
+    create: async (title: string, category: string, assignedTo: string, targetId: string, dueDate?: string, description?: string) => {
+      try {
+        await addDoc(collection(db, `users/${targetId}/tasks`), {
+          title,
+          category,
+          assignedTo: assignedTo || null,
+          dueDate: dueDate || null,
+          description: description || null,
+          status: 'todo',
+          createdAt: new Date().toISOString()
+        });
+        showToast('Tarefa adicionada com sucesso', 'success', 2000);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `tasks`);
+        showToast('Erro ao adicionar tarefa', 'error');
+      }
+    },
     delete: async (taskId: string, targetId: string) => {
       try {
         await deleteDoc(doc(db, `users/${targetId}/tasks/${taskId}`));

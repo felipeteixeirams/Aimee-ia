@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { TrendingUp, TrendingDown, Shield, Plus, Target, Plane, GraduationCap, Home, AlertCircle, Wallet } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import { format } from 'date-fns';
@@ -24,6 +24,10 @@ interface FinanceViewProps {
   categories: string[];
   isDarkMode: boolean;
   filteredTransactions: Transaction[];
+  financeStartDate: string;
+  setFinanceStartDate: (date: string) => void;
+  financeEndDate: string;
+  setFinanceEndDate: (date: string) => void;
 }
 
 const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
@@ -34,6 +38,10 @@ export const FinanceView = ({
   transactionsByPeriod,
   financePeriod,
   setFinancePeriod,
+  financeStartDate,
+  setFinanceStartDate,
+  financeEndDate,
+  setFinanceEndDate,
   financeCategory,
   setFinanceCategory,
   totalIncome,
@@ -359,33 +367,91 @@ export const FinanceView = ({
         </motion.div>
       </div>
 
-      {/* Category Filter - Horizontal Scroll */}
-      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4">
-        <button
-          onClick={() => setFinanceCategory('all')}
-          className={cn(
-            "px-6 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border shadow-sm",
-            financeCategory === 'all' 
-              ? "bg-brand border-brand text-brand-foreground scale-105" 
-              : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-500 hover:border-brand/30"
-          )}
-        >
-          Todas Categorias
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setFinanceCategory(cat)}
-            className={cn(
-              "px-6 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border shadow-sm",
-              financeCategory === cat 
-                ? "bg-brand border-brand text-brand-foreground scale-105" 
-                : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-500 hover:border-brand/30"
+      {/* Period & Date Selection */}
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider mb-2">Período de Visualização</h3>
+            <div className="flex flex-wrap gap-2">
+              {(['7d', '30d', 'all', 'custom'] as Period[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setFinancePeriod(p)}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm capitalize",
+                    financePeriod === p 
+                      ? "bg-brand border-brand text-brand-foreground" 
+                      : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-500 hover:border-brand/30"
+                  )}
+                >
+                  {p === '7d' ? '7 dias' : p === '30d' ? '30 dias' : p === 'all' ? 'Tudo' : 'Customizado'}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <AnimatePresence>
+            {financePeriod === 'custom' && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="flex flex-col sm:flex-row items-center gap-3"
+              >
+                <div className="flex flex-col gap-1 w-full sm:w-auto">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase px-1">Início</label>
+                  <input 
+                    type="date"
+                    value={financeStartDate}
+                    onChange={(e) => setFinanceStartDate(e.target.value)}
+                    className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 w-full sm:w-auto">
+                  <label className="text-[10px] font-bold text-neutral-400 uppercase px-1">Fim</label>
+                  <input 
+                    type="date"
+                    value={financeEndDate}
+                    onChange={(e) => setFinanceEndDate(e.target.value)}
+                    className="px-4 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                  />
+                </div>
+              </motion.div>
             )}
-          >
-            {cat}
-          </button>
-        ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Category Filter - Horizontal Scroll */}
+        <div>
+          <h3 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider mb-4">Filtrar por Categoria</h3>
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-2 px-2">
+            <button
+              onClick={() => setFinanceCategory('all')}
+              className={cn(
+                "px-6 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border shadow-sm",
+                financeCategory === 'all' 
+                  ? "bg-brand border-brand text-brand-foreground scale-105" 
+                  : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-500 hover:border-brand/30"
+              )}
+            >
+              Todas Categorias
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFinanceCategory(cat)}
+                className={cn(
+                  "px-6 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border shadow-sm",
+                  financeCategory === cat 
+                    ? "bg-brand border-brand text-brand-foreground scale-105" 
+                    : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-500 hover:border-brand/30"
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Transactions List */}

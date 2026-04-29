@@ -1,5 +1,5 @@
 export type Tab = 'chat' | 'finance' | 'shopping' | 'routines' | 'settings';
-export type Period = '7d' | '30d' | 'all';
+export type Period = '7d' | '30d' | 'all' | 'custom';
 
 export const FinancialGoalCategory = {
   TRAVEL: 'travel',
