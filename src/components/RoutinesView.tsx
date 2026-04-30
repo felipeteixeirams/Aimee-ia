@@ -1,15 +1,16 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info } from 'lucide-react';
-import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage } from '../types';
+import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info, Users, RotateCcw } from 'lucide-react';
+import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage, RecurrenceType, Share } from '../types';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 interface RoutinesViewProps {
   events: FamilyEvent[];
   tasks: HouseholdTask[];
   insights: ChatMessage[];
+  shares: Share[];
   isSuperAdmin: boolean;
   isSyncing: boolean;
   calendarBlocked: boolean;
@@ -17,8 +18,9 @@ interface RoutinesViewProps {
   handleSyncCalendar: () => void;
   globalConfig: GlobalConfig;
   handleToggleTask: (taskId: string, currentStatus: string) => void;
-  handleCreateTask: (title: string, category: string, assignedTo: string, dueDate: string, description: string) => void;
-  handleDeleteTask: (taskId: string) => void;
+  handleCreateTask: (task: Partial<HouseholdTask>) => void;
+  handleUpdateTask: (taskId: string, updates: Partial<HouseholdTask>, scope: 'single' | 'following' | 'all') => void;
+  handleDeleteTask: (taskId: string, scope: 'single' | 'following' | 'all') => void;
   handleDeleteEvent: (eventId: string) => void;
 }
 
@@ -26,6 +28,7 @@ export const RoutinesView = ({
   events,
   tasks,
   insights,
+  shares,
   isSuperAdmin,
   isSyncing,
   calendarBlocked,
@@ -34,6 +37,7 @@ export const RoutinesView = ({
   globalConfig,
   handleToggleTask,
   handleCreateTask,
+  handleUpdateTask,
   handleDeleteTask,
   handleDeleteEvent
 }: RoutinesViewProps) => {
@@ -41,19 +45,88 @@ export const RoutinesView = ({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskCategory, setNewTaskCategory] = useState('Limpeza');
   const [newTaskAssigned, setNewTaskAssigned] = useState('');
+  const [newTaskParticipants, setNewTaskParticipants] = useState<string[]>([]);
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  const [newTaskTime, setNewTaskTime] = useState('');
+  const [newTaskIsAllDay, setNewTaskIsAllDay] = useState(true);
   const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskRecurrence, setNewTaskRecurrence] = useState<{
+    enabled: boolean;
+    type: RecurrenceType;
+    daysOfWeek: number[];
+    daysOfMonth: number[];
+    endTime?: string;
+  }>({
+    enabled: false,
+    type: 'daily',
+    daysOfWeek: [],
+    daysOfMonth: []
+  });
+
+  const [scopeModal, setScopeModal] = useState<{
+    show: boolean;
+    type: 'edit' | 'delete';
+    taskId: string;
+    updates?: Partial<HouseholdTask>;
+  }>({ show: false, type: 'delete', taskId: '' });
+
   const [selectedTaskDescription, setSelectedTaskDescription] = useState<string | null>(null);
+
+  const familyMembers = useMemo(() => {
+    const members = new Set<string>();
+    shares.forEach(s => {
+      if (s.status === 'accepted') {
+        members.add(s.sharedWithEmail);
+        members.add(s.ownerEmail);
+      }
+    });
+    return Array.from(members);
+  }, [shares]);
 
   const onCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
-    handleCreateTask(newTaskTitle, newTaskCategory, newTaskAssigned, newTaskDueDate, newTaskDescription);
+    if (newTaskRecurrence.enabled && !newTaskDueDate) {
+      alert('Selecione uma data de início para a recorrência.');
+      return;
+    }
+
+    const task: Partial<HouseholdTask> = {
+      title: newTaskTitle,
+      category: newTaskCategory as any,
+      assignedTo: newTaskAssigned || undefined,
+      participants: newTaskParticipants.length > 0 ? newTaskParticipants : undefined,
+      dueDate: newTaskDueDate || undefined,
+      time: newTaskTime || undefined,
+      isAllDay: newTaskIsAllDay,
+      description: newTaskDescription || undefined,
+      recurrence: newTaskRecurrence.enabled ? {
+        type: newTaskRecurrence.type,
+        daysOfWeek: newTaskRecurrence.daysOfWeek,
+        daysOfMonth: newTaskRecurrence.daysOfMonth,
+        endTime: newTaskRecurrence.endTime
+      } : undefined
+    };
+
+    handleCreateTask(task);
+    resetForm();
+    setIsAddingTask(false);
+  };
+
+  const resetForm = () => {
     setNewTaskTitle('');
     setNewTaskAssigned('');
+    setNewTaskParticipants([]);
     setNewTaskDueDate('');
+    setNewTaskTime('');
+    setNewTaskIsAllDay(true);
     setNewTaskDescription('');
-    setIsAddingTask(false);
+    setNewTaskRecurrence({
+      enabled: false,
+      type: 'daily',
+      daysOfWeek: [],
+      daysOfMonth: []
+    });
   };
 
   const isOverdue = (task: HouseholdTask) => {
@@ -212,11 +285,30 @@ export const RoutinesView = ({
                     </motion.div>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-[8px] md:text-[9px] font-black uppercase text-neutral-400 tracking-wider shrink-0">{task.category}</span>
+                  
                   {task.assignedTo && (
-                    <span className="text-[8px] md:text-[9px] font-black uppercase px-2 py-0.5 bg-brand/10 text-brand rounded-full truncate max-w-[60px] md:max-w-none">@{task.assignedTo}</span>
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-brand/10 text-brand rounded-full truncate max-w-[120px] shrink-0">
+                      <User className="w-2 md:w-2.5 h-2 md:h-2.5" />
+                      <span className="text-[8px] md:text-[9px] font-black uppercase truncate">{task.assignedTo.split('@')[0]}</span>
+                    </div>
                   )}
+
+                  {task.participants && task.participants.length > 0 && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 rounded-full shrink-0">
+                      <Users className="w-2 md:w-2.5 h-2 md:h-2.5" />
+                      <span className="text-[8px] md:text-[9px] font-black uppercase">{task.participants.length}</span>
+                    </div>
+                  )}
+
+                  {task.recurrence && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full shrink-0" title="Tarefa Recorrente">
+                      <RotateCcw className="w-2 md:w-2.5 h-2 md:h-2.5" />
+                      <span className="text-[8px] md:text-[9px] font-black uppercase">{task.recurrence.type}</span>
+                    </div>
+                  )}
+
                   {task.dueDate && (
                     <span className={cn(
                       "text-[8px] md:text-[9px] font-black flex items-center gap-1 opacity-70 shrink-0",
@@ -224,6 +316,12 @@ export const RoutinesView = ({
                     )}>
                       <Clock className="w-2 md:w-2.5 h-2 md:h-2.5" />
                       {format(new Date(task.dueDate), 'dd/MM')}
+                      {task.time && <span className="ml-1 text-brand"> às {task.time}</span>}
+                    </span>
+                  )}
+                  {task.note && (
+                    <span className="text-[7px] md:text-[8px] text-amber-500 font-bold italic shrink-0">
+                      * {task.note}
                     </span>
                   )}
                 </div>
@@ -238,8 +336,14 @@ export const RoutinesView = ({
                   </button>
                 )}
                 <button 
-                  onClick={() => task.id && handleDeleteTask(task.id)}
-                  className="p-1.5 md:p-2 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all"
+                  onClick={() => {
+                    if (task.recurrenceId) {
+                      setScopeModal({ show: true, type: 'delete', taskId: task.id! });
+                    } else {
+                      handleDeleteTask(task.id!, 'single');
+                    }
+                  }}
+                  className="p-1.5 md:p-2 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all font-bold"
                 >
                   <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 </button>
@@ -341,45 +445,170 @@ export const RoutinesView = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Categoria</label>
-                    <select 
-                      value={newTaskCategory}
-                      onChange={(e) => setNewTaskCategory(e.target.value)}
-                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all dark:text-white"
-                    >
-                      <option value="Limpeza">Limpeza</option>
-                      <option value="Cozinha">Cozinha</option>
-                      <option value="Finanças">Finanças</option>
-                      <option value="Compras">Compras</option>
-                      <option value="Manutenção">Manutenção</option>
-                      <option value="Outros">Outros</option>
-                    </select>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Prazo</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+                      <input 
+                        type="date" 
+                        value={newTaskDueDate}
+                        onChange={(e) => setNewTaskDueDate(e.target.value)}
+                        className="w-full pl-10 pr-5 py-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all dark:text-white"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Atribuir a</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Horário (Opcional)</label>
+                    <div className="relative flex items-center gap-2 px-1">
                       <input 
-                        type="text" 
-                        value={newTaskAssigned}
-                        onChange={(e) => setNewTaskAssigned(e.target.value)}
-                        placeholder="Nome"
-                        className="w-full pl-10 pr-5 py-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all placeholder:text-neutral-400 dark:text-white"
+                         type="time"
+                         disabled={newTaskIsAllDay}
+                         value={newTaskTime}
+                         onChange={(e) => setNewTaskTime(e.target.value)}
+                         className="flex-1 px-4 py-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all dark:text-white disabled:opacity-50"
                       />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewTaskIsAllDay(!newTaskIsAllDay);
+                          if (!newTaskIsAllDay) setNewTaskTime('');
+                        }}
+                        className={cn(
+                          "px-3 py-4 rounded-2xl text-[10px] font-bold uppercase border transition-all",
+                          newTaskIsAllDay ? "bg-brand text-white border-brand" : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-400"
+                        )}
+                      >
+                        Dia Todo
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Prazo (Opcional)</label>
-                  <div className="relative">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
-                    <input 
-                      type="date" 
-                      value={newTaskDueDate}
-                      onChange={(e) => setNewTaskDueDate(e.target.value)}
-                      className="w-full pl-10 pr-5 py-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all dark:text-white"
-                    />
+                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl border border-neutral-100 dark:border-neutral-700 space-y-4">
+                   <div className="flex items-center justify-between">
+                     <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Recorrência</label>
+                     <button
+                        type="button"
+                        onClick={() => setNewTaskRecurrence(prev => ({ ...prev, enabled: !prev.enabled }))}
+                        className={cn(
+                          "w-10 h-5 rounded-full relative transition-colors",
+                          newTaskRecurrence.enabled ? "bg-brand" : "bg-neutral-300 dark:bg-neutral-600"
+                        )}
+                     >
+                       <motion.div 
+                          animate={{ x: newTaskRecurrence.enabled ? 22 : 2 }}
+                          className="absolute top-1 left-0 w-3 h-3 bg-white rounded-full"
+                       />
+                     </button>
+                   </div>
+
+                   {newTaskRecurrence.enabled && (
+                     <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2">
+                       <select 
+                          value={newTaskRecurrence.type}
+                          onChange={(e) => setNewTaskRecurrence(prev => ({ ...prev, type: e.target.value as any }))}
+                          className="w-full px-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-xl text-xs font-bold outline-none dark:text-white"
+                       >
+                         <option value="daily">Diária</option>
+                         <option value="weekly">Semanal</option>
+                         <option value="monthly">Mensal</option>
+                         <option value="annual">Anual</option>
+                       </select>
+
+                       {newTaskRecurrence.type === 'weekly' && (
+                         <div className="flex flex-wrap gap-2">
+                           {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, idx) => (
+                             <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  const days = [...newTaskRecurrence.daysOfWeek];
+                                  if (days.includes(idx)) {
+                                    setNewTaskRecurrence(prev => ({ ...prev, daysOfWeek: days.filter(d => d !== idx) }));
+                                  } else {
+                                    setNewTaskRecurrence(prev => ({ ...prev, daysOfWeek: [...days, idx] }));
+                                  }
+                                }}
+                                className={cn(
+                                  "w-8 h-8 rounded-lg text-[10px] font-bold transition-all border",
+                                  newTaskRecurrence.daysOfWeek.includes(idx) ? "bg-brand text-white border-brand" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-400"
+                                )}
+                             >
+                               {day}
+                             </button>
+                           ))}
+                         </div>
+                       )}
+
+                       {newTaskRecurrence.type === 'monthly' && (
+                         <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto p-1 no-scrollbar">
+                           {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                             <button
+                                key={day}
+                                type="button"
+                                onClick={() => {
+                                  const days = [...newTaskRecurrence.daysOfMonth];
+                                  if (days.includes(day)) {
+                                    setNewTaskRecurrence(prev => ({ ...prev, daysOfMonth: days.filter(d => d !== day) }));
+                                  } else {
+                                    setNewTaskRecurrence(prev => ({ ...prev, daysOfMonth: [...days, day] }));
+                                  }
+                                }}
+                                className={cn(
+                                  "w-full aspect-square rounded-lg text-[10px] font-bold transition-all border",
+                                  newTaskRecurrence.daysOfMonth.includes(day) ? "bg-brand text-white border-brand" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-400"
+                                )}
+                             >
+                               {day}
+                             </button>
+                           ))}
+                         </div>
+                       )}
+
+                       <div>
+                         <label className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Repetir até (Opcional)</label>
+                         <input 
+                           type="date"
+                           value={newTaskRecurrence.endTime || ''}
+                           onChange={(e) => setNewTaskRecurrence(prev => ({ ...prev, endTime: e.target.value }))}
+                           className="w-full px-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-xl text-xs font-bold outline-none dark:text-white"
+                         />
+                       </div>
+                     </div>
+                   )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Atribuir a</label>
+                    <select 
+                      value={newTaskAssigned}
+                      onChange={(e) => setNewTaskAssigned(e.target.value)}
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all dark:text-white"
+                    >
+                      <option value="">Ninguém</option>
+                      {familyMembers.map(email => (
+                        <option key={email} value={email}>{email}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2 px-1">Participantes</label>
+                    <div className="max-h-32 overflow-y-auto space-y-1 p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl no-scrollbar">
+                      {familyMembers.map(email => (
+                        <label key={email} className="flex items-center gap-2 cursor-pointer group">
+                          <input 
+                            type="checkbox"
+                            checked={newTaskParticipants.includes(email)}
+                            onChange={(e) => {
+                              if (e.target.checked) setNewTaskParticipants([...newTaskParticipants, email]);
+                              else setNewTaskParticipants(newTaskParticipants.filter(p => p !== email));
+                            }}
+                            className="w-4 h-4 rounded border-neutral-300 text-brand focus:ring-brand"
+                          />
+                          <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 group-hover:text-brand transition-colors">{email.split('@')[0]}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -443,6 +672,76 @@ export const RoutinesView = ({
               >
                 Fechar
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Scope Modal (Recurring Actions) */}
+      <AnimatePresence>
+        {scopeModal.show && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setScopeModal({ ...scopeModal, show: false })}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                  <RotateCcw className="w-5 h-5 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-black text-neutral-800 dark:text-white tracking-tight">Evento Recorrente</h3>
+              </div>
+              
+              <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed mb-8">
+                Esta é uma tarefa recorrente. Como você deseja proceder com a {scopeModal.type === 'delete' ? 'exclusão' : 'edição'}?
+              </p>
+
+              <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    if (scopeModal.type === 'delete') handleDeleteTask(scopeModal.taskId, 'single');
+                    else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'single');
+                    setScopeModal({ ...scopeModal, show: false });
+                  }}
+                  className="w-full py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-800"
+                >
+                  Somente este evento
+                </button>
+                <button 
+                  onClick={() => {
+                    if (scopeModal.type === 'delete') handleDeleteTask(scopeModal.taskId, 'following');
+                    else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'following');
+                    setScopeModal({ ...scopeModal, show: false });
+                  }}
+                  className="w-full py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-800"
+                >
+                  Este e os eventos seguintes
+                </button>
+                <button 
+                  onClick={() => {
+                    if (scopeModal.type === 'delete') handleDeleteTask(scopeModal.taskId, 'all');
+                    else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'all');
+                    setScopeModal({ ...scopeModal, show: false });
+                  }}
+                  className="w-full py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-brand/20"
+                >
+                  Todos os eventos
+                </button>
+                <button 
+                  onClick={() => setScopeModal({ ...scopeModal, show: false })}
+                  className="w-full py-4 text-neutral-400 font-bold text-xs uppercase tracking-widest mt-2"
+                >
+                  Cancelar
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

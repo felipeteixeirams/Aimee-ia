@@ -184,6 +184,24 @@ export const TaskStatus = {
 } as const;
 export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 
+export const RecurrenceType = {
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  MONTHLY: 'monthly',
+  ANNUAL: 'annual'
+} as const;
+export type RecurrenceType = (typeof RecurrenceType)[keyof typeof RecurrenceType];
+
+export interface TaskRecurrence {
+  type: RecurrenceType;
+  interval?: number;
+  daysOfWeek?: number[]; // 0-6 for Sunday-Saturday
+  daysOfMonth?: number[]; // 1-31
+  month?: number; // 0-11 for Annual
+  endTime?: string;
+  isInfinite?: boolean;
+}
+
 export interface HouseholdTask {
   id?: string;
   userId: string;
@@ -191,8 +209,15 @@ export interface HouseholdTask {
   description?: string;
   category: TaskCategory;
   status: TaskStatus;
-  dueDate?: string;
+  dueDate?: string; // Optional Deadline
+  time?: string; // HH:mm
+  isAllDay: boolean;
   assignedTo?: string;
+  participants?: string[];
+  recurrence?: TaskRecurrence;
+  recurrenceId?: string; // Links instances together
+  originalDueDate?: string; // To keep track if it was shifted (e.g. 31 -> 28)
+  note?: string;
   createdAt: string;
 }
 

@@ -314,26 +314,92 @@ export function useAimeeActions(
         showToast('Erro ao atualizar tarefa', 'error');
       }
     },
-    create: async (title: string, category: string, assignedTo: string, targetId: string, dueDate?: string, description?: string) => {
+    create: async (task: Partial<HouseholdTask>, targetId: string) => {
       try {
-        await addDoc(collection(db, `users/${targetId}/tasks`), {
-          title,
-          category,
-          assignedTo: assignedTo || null,
-          dueDate: dueDate || null,
-          description: description || null,
-          status: 'todo',
+        const { generateRecurrenceInstances } = await import('../lib/recurrenceUtils');
+        
+        const baseTask = {
+          ...task,
+          userId: targetId,
+          status: task.status || 'todo',
           createdAt: new Date().toISOString()
-        });
+        };
+
+        if (task.recurrence) {
+          const recurrenceId = crypto.randomUUID();
+          const startDate = task.dueDate || new Date().toISOString();
+          const instances = generateRecurrenceInstances(startDate, task.recurrence);
+          
+          const batch = instances.map(inst => addDoc(collection(db, `users/${targetId}/tasks`), {
+            ...baseTask,
+            dueDate: inst.dueDate,
+            originalDueDate: inst.originalDueDate || null,
+            note: inst.note || null,
+            recurrenceId
+          }));
+          
+          await Promise.all(batch);
+        } else {
+          await addDoc(collection(db, `users/${targetId}/tasks`), baseTask);
+        }
+
         showToast('Tarefa adicionada com sucesso', 'success', 2000);
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `tasks`);
         showToast('Erro ao adicionar tarefa', 'error');
       }
     },
-    delete: async (taskId: string, targetId: string) => {
+    update: async (taskId: string, updates: Partial<HouseholdTask>, targetId: string, scope: 'single' | 'following' | 'all' = 'single') => {
       try {
-        await deleteDoc(doc(db, `users/${targetId}/tasks/${taskId}`));
+        const taskRef = doc(db, `users/${targetId}/tasks/${taskId}`);
+        const taskSnap = await getDoc(taskRef);
+        if (!taskSnap.exists()) return;
+        const taskData = taskSnap.data() as HouseholdTask;
+
+        if (scope === 'single' || !taskData.recurrenceId) {
+          await updateDoc(taskRef, updates);
+        } else {
+          const tasksRef = collection(db, `users/${targetId}/tasks`);
+          const qDocs = await getDocs(tasksRef);
+          const relatedTasks = qDocs.docs.filter(d => {
+            const data = d.data() as HouseholdTask;
+            if (data.recurrenceId !== taskData.recurrenceId) return false;
+            if (scope === 'following') {
+              return new Date(data.dueDate) >= new Date(taskData.dueDate);
+            }
+            return true;
+          });
+
+          await Promise.all(relatedTasks.map(d => updateDoc(d.ref, updates)));
+        }
+        showToast('Tarefa atualizada', 'success', 2000);
+      } catch (err) {
+        showToast('Erro ao atualizar tarefa', 'error');
+      }
+    },
+    delete: async (taskId: string, targetId: string, scope: 'single' | 'following' | 'all' = 'single') => {
+      try {
+        const taskRef = doc(db, `users/${targetId}/tasks/${taskId}`);
+        const taskSnap = await getDoc(taskRef);
+        if (!taskSnap.exists()) return;
+        const taskData = taskSnap.data() as HouseholdTask;
+
+        if (scope === 'single' || !taskData.recurrenceId) {
+          await deleteDoc(taskRef);
+        } else {
+          const tasksRef = collection(db, `users/${targetId}/tasks`);
+          const qDocs = await getDocs(tasksRef);
+          const relatedTasks = qDocs.docs.filter(d => {
+            const data = d.data() as HouseholdTask;
+            if (data.recurrenceId !== taskData.recurrenceId) return false;
+            if (scope === 'following') {
+              return new Date(data.dueDate) >= new Date(taskData.dueDate);
+            }
+            return true;
+          });
+
+          await Promise.all(relatedTasks.map(d => deleteDoc(d.ref)));
+        }
         showToast('Tarefa removida', 'success', 2000);
       } catch (err) {
         showToast('Erro ao remover tarefa', 'error');

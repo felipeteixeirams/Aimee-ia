@@ -668,6 +668,7 @@ export default function App() {
               events={events}
               tasks={tasks}
               insights={messages.filter(m => m.isInsight)}
+              shares={shares}
               isSuperAdmin={isSuperAdmin}
               isSyncing={isSyncing}
               calendarBlocked={calendarBlocked}
@@ -675,8 +676,9 @@ export default function App() {
               handleSyncCalendar={handleSyncCalendar}
               globalConfig={globalConfig}
               handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
-              handleCreateTask={(title, cat, userTo, dueDate, desc) => manageTasks.create(title, cat, userTo, activeSpace || user!.uid, dueDate, desc)}
-              handleDeleteTask={(id) => manageTasks.delete(id, activeSpace || user!.uid)}
+              handleCreateTask={(task) => manageTasks.create(task, activeSpace || user!.uid)}
+              handleUpdateTask={(id, updates, scope) => manageTasks.update(id, updates, activeSpace || user!.uid, scope)}
+              handleDeleteTask={(id, scope) => manageTasks.delete(id, activeSpace || user!.uid, scope)}
               handleDeleteEvent={async (id) => {
                 await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
               }}

@@ -121,9 +121,28 @@
         "userId": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "category": { "type": "string", "enum": ["cleaning", "maintenance", "errand", "other"] },
+        "category": { "type": "string" },
         "status": { "type": "string", "enum": ["todo", "done"] },
         "dueDate": { "type": "string", "format": "date-time" },
+        "time": { "type": "string" },
+        "isAllDay": { "type": "boolean" },
+        "assignedTo": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "recurrence": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["daily", "weekly", "monthly", "annual"] },
+            "interval": { "type": "number" },
+            "daysOfWeek": { "type": "array", "items": { "type": "number" } },
+            "daysOfMonth": { "type": "array", "items": { "type": "number" } },
+            "month": { "type": "number" },
+            "endTime": { "type": "string", "format": "date-time" },
+            "isInfinite": { "type": "boolean" }
+          }
+        },
+        "recurrenceId": { "type": "string" },
+        "originalDueDate": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "title", "category", "status"]
