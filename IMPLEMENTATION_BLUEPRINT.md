@@ -42,14 +42,18 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - [x] **Tarefa D.3 (6h)**: Implementar captura de geolocalização e persistência de coordenadas por item de compra.
 - [x] **Tarefa D.4 (4h)**: Lógica de atualização automática de estoque ao finalizar "Modo Compra".
 
-### 💡 Entregável E: Sistema de Insights & Feedback (Etapa 5 e 7)
-*Objetivo: IA proativa que aprende com o usuário.*
-- [ ] **Tarefa E.1 (8h)**: Implementar agente de `FinancialInsights` cruzando dados de gastos com metas.
-- [ ] **Tarefa E.2 (6h)**: Sistema de Feedback (estrelas/correção) no chat e ajuste dinâmico da `systemInstruction` baseado no histórico.
+### 🧪 Entregável F: Qualidade e Cobertura de Testes (Etapa 6)
+*Objetivo: Garantir estabilidade e atingir 80% de cobertura de código.*
+- [x] **Tarefa F.1 (2h)**: Configurar infraestrutura de testes (`vitest`, `jsdom`) e filtros de cobertura (ignorar config/deps).
+- [ ] **Tarefa F.2 (8h)**: Implementar Testes Unitários para Regras de Negócio (`domain/services`).
+- [ ] **Tarefa F.3 (6h)**: Implementar Testes de Integração para Repositórios e Orquestradores.
+- [ ] **Tarefa F.4 (4h)**: Automatizar geração de relatório de cobertura e garantir threshold de 80%.
 
 ---
 
 ## 🚀 Log de Progresso Detalhado
+
+- **2026-05-02**: Configuração da infraestrutura de testes e refinamento do ignore list em `vite.config.ts` (Tarefa F.1).
 
 - **2026-05-02**: Implementação das Tarefas D.3 e D.4: Captura de geolocalização por item no checkout e atualização automática de estoque em batch.
 - **2026-05-02**: Implementação da Tarefa D.2: Interface de "Modo Compra" com registro tátil de preços e somatório de carrinho em tempo real.

@@ -608,6 +608,11 @@ export default function App() {
               scrollToBottom={scrollToBottom}
               inputText={inputText}
               setInputText={setInputText}
+              unreadInsights={unreadInsights}
+              handleGoToInsight={handleGoToInsight}
+              handleDismissInsight={async (id) => {
+                await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, id), { read: true });
+              }}
               handleSendMessage={async (t, skip) => {
                 const content = typeof t === 'string' ? t : inputText;
                 if (!content?.trim()) return;

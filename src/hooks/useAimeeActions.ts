@@ -83,7 +83,20 @@ export function useAimeeActions(
       const blocks = response.split('\n\n').filter(b => b.trim());
 
       for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
+        let block = blocks[i];
+        
+        // Extract actions if present
+        let actions: any[] = [];
+        const actionMatch = block.match(/\[ACTIONS: (.*?)\]/s);
+        if (actionMatch) {
+          try {
+            actions = JSON.parse(actionMatch[1]);
+            block = block.replace(/\[ACTIONS: .*?\]/s, '').trim();
+          } catch (e) {
+            logger.error('Error parsing AI actions', { error: e });
+          }
+        }
+
         await typeText(block); 
         
         const isInsight = /notei que|alerta|previsão|economia|média|comparando|insight/i.test(block);
@@ -94,17 +107,12 @@ export function useAimeeActions(
           content: block,
           timestamp: new Date().toISOString(),
           isInsight,
-          read: isInsight ? false : undefined
+          read: isInsight ? false : undefined,
+          actions: actions.length > 0 ? actions : undefined
         };
         
         try {
-          await chatRepository.create({
-            role: ChatRole.ASSISTANT,
-            content: block,
-            timestamp: new Date().toISOString(),
-            isInsight,
-            read: isInsight ? false : undefined
-          }, user.uid);
+          await chatRepository.create(aiMsg, user.uid);
         } catch (error) {
           logger.error('Error saving AI message', { error });
         }
@@ -333,10 +341,75 @@ export function useAimeeActions(
           }, targetId)
         ));
         showToast(`${itemsToMove.length} itens movidos para o estoque`, 'success', 2000);
+        
+        // E.1: Trigger insight after shopping
+        triggerInsightSweep(targetId, 'shopping_finish');
       } catch (err) {
         logger.error('Error finishing shopping', { error: err });
         showToast('Erro ao finalizar compras', 'error');
       }
+    }
+  };
+
+  const triggerInsightSweep = async (targetId: string, trigger: string) => {
+    logger.info('Triggering insight sweep', { targetId, trigger });
+    
+    // Check for recent insights to avoid spam
+    const lastInsight = aimeeData.messages.find(m => m.isInsight);
+    if (lastInsight) {
+      const lastDate = new Date(lastInsight.timestamp);
+      const diffMinutes = (new Date().getTime() - lastDate.getTime()) / (1000 * 60);
+      if (diffMinutes < 30) return; // Wait 30m between proactive insights
+    }
+
+    let prompt = "";
+    if (trigger === 'shopping_finish') {
+      const total = aimeeData.shoppingList.filter(i => i.purchased).length;
+      prompt = `O usuário acabou de finalizar uma compra de ${total} itens. Analise o histórico e dê um insight curto (1 frase) sobre economia ou saúde. Se for algo que exija confirmação (ex: categoria errada), sugira ações.`;
+    } else if (trigger === 'finance_update') {
+      prompt = `O usuário adicionou transações financeiras. Analise o saldo e dê um insight proativo sobre fôlego financeiro ou gastos por categoria.`;
+    }
+
+    if (!prompt) return;
+
+    try {
+      let insight = await orchestrator(
+        `[SISTEMA: GERE UM INSIGHT PROATIVO] ${prompt}`,
+        [], // No context for pure insight
+        targetId,
+        aimeeData.shoppingList,
+        aimeeData.transactions,
+        aimeeData.goals,
+        aimeeData.tasks,
+        aimeeData.events,
+        profile?.selectedPersona || 'analytical',
+        aimeeData.globalConfig.aiProvider
+      );
+
+      // Extract actions if present
+      let actions: any[] = [];
+      const actionMatch = insight.match(/\[ACTIONS: (.*?)\]/s);
+      if (actionMatch) {
+        try {
+          actions = JSON.parse(actionMatch[1]);
+          insight = insight.replace(/\[ACTIONS: .*?\]/s, '').trim();
+        } catch (e) {
+          logger.error('Error parsing AI actions in insight', { error: e });
+        }
+      }
+
+      // Save insight
+      await chatRepository.create({
+          role: ChatRole.ASSISTANT,
+          content: insight,
+          timestamp: new Date().toISOString(),
+          isInsight: true,
+          read: false,
+          actions: actions.length > 0 ? actions : undefined
+      }, targetId);
+
+    } catch (err) {
+      logger.error('Proactive insight failure', { err });
     }
   };
 

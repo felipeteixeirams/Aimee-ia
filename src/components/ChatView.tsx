@@ -6,6 +6,7 @@ import { AimeeAvatar } from './AimeeAvatar';
 import React, { useState } from 'react';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { AudioVisualizer } from './AudioVisualizer';
+import { ReactiveFeed } from './ReactiveFeed';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -15,6 +16,9 @@ interface ChatViewProps {
   scrollToBottom: (behavior?: ScrollBehavior) => void;
   inputText: string;
   setInputText: (text: string) => void;
+  unreadInsights: ChatMessage[];
+  handleGoToInsight: (msg: ChatMessage) => void;
+  handleDismissInsight: (id: string) => void;
   handleSendMessage: (overrideText?: string, skipAddDoc?: boolean) => void;
   handleSendVoiceMessage: (audioBlob: Blob) => Promise<void>;
   isTyping: boolean;
@@ -52,7 +56,10 @@ export const ChatView = ({
   copyToClipboard,
   copiedId,
   profile,
-  GLOBAL_AIMEE_AVATAR
+  GLOBAL_AIMEE_AVATAR,
+  unreadInsights,
+  handleGoToInsight,
+  handleDismissInsight
 }: ChatViewProps) => {
   const { isRecording, startRecording, stopRecording, getFrequencyData } = useVoiceRecorder();
 
@@ -70,6 +77,11 @@ export const ChatView = ({
       exit={{ opacity: 0, x: -20 }}
       className="h-full flex flex-col relative"
     >
+      <ReactiveFeed 
+        insights={unreadInsights} 
+        onDismiss={handleDismissInsight} 
+        onAction={handleGoToInsight} 
+      />
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
@@ -187,6 +199,24 @@ export const ChatView = ({
                       )}
                     </div>
                   </>
+                )}
+                {msg.actions && msg.actions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-brand/10 dark:border-white/10">
+                    {msg.actions.map((action) => (
+                      <button
+                        key={action.id}
+                        onClick={() => handleSendMessage(action.value, true)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                          msg.role === 'user' 
+                            ? "bg-white/20 text-white hover:bg-white/30" 
+                            : "bg-brand/10 text-brand hover:bg-brand/20 dark:bg-brand/20 dark:text-brand-foreground"
+                        )}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             </motion.div>

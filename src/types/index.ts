@@ -144,6 +144,12 @@ export interface ChatMessage {
   agentType?: string;
   isInsight?: boolean;
   read?: boolean;
+  actions?: {
+    id: string;
+    label: string;
+    value: string;
+    type: 'button' | 'link';
+  }[];
 }
 
 export const ShareStatus = {
