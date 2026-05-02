@@ -98,7 +98,13 @@ export function useAuth() {
               logger.info('User profile updated', { userId: u.uid });
               setProfile(data);
               
-              if (data.theme) {
+              if (data.theme && data.theme !== (isDarkMode ? 'dark' : 'light')) {
+                // Remove class directly before updating state to avoid flickers
+                if (data.theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
                 setIsDarkMode(data.theme === 'dark');
               }
               setIsRegistering(false);

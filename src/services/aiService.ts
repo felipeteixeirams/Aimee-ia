@@ -362,8 +362,8 @@ Compras: ${JSON.stringify(shoppingList.slice(0, 10))}
           }]
         }
       });
-      content = response.text || "";
-      functionCalls = response.functionCalls || [];
+      content = response.response.text();
+      functionCalls = response.response.functionCalls() || [];
     } else {
       content = "Provedor não suportado no frontend atualmente. Use Gemini para orquestração completa.";
     }

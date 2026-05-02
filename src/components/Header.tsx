@@ -103,17 +103,24 @@ export function Header({
             )}
           </div>
           
-          <div>
-            <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap flex items-center gap-1.5">
-              {activeSpace ? `Espaço` : 
-               profile?.selectedPersona === 'analytical' ? 'Analítico' : 
-               profile?.selectedPersona === 'frugal' ? 'Frugal' : 'Online'} 
-              <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 2.0' : 'DeepSeek R1'}
-              <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              <span className={cn("transition-colors", isOnline ? "text-green-500" : "text-red-500")}>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div className={cn(
+              "px-1.5 py-0.5 rounded-md flex items-center gap-1 border transition-colors",
+              isOnline 
+                ? "bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30" 
+                : "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30"
+            )}>
+              <div className={cn("w-1 h-1 rounded-full", isOnline ? "bg-green-500" : "bg-red-500 animate-pulse")} />
+              <span className={cn("text-[7px] font-black uppercase tracking-widest", isOnline ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
                 {isOnline ? 'Online' : 'Offline'}
               </span>
+            </div>
+            <p className="text-[9px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap flex items-center gap-1.5">
+              {activeSpace ? `Espaço` : 
+               profile?.selectedPersona === 'analytical' ? 'Analítico' : 
+               profile?.selectedPersona === 'frugal' ? 'Frugal' : 'IA Orquestradora'}
+              <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 2.0' : 'DeepSeek R1'}
             </p>
           </div>
         </div>
