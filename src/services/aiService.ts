@@ -2,11 +2,10 @@ import { FunctionDeclaration, GoogleGenAI, Type } from "@google/genai";
 import OpenAI from "openai";
 import { Transaction, ShoppingItem, ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent } from "../types";
 import { 
-  transactionRepository, 
-  shoppingRepository, 
-  taskRepository,
-  eventRepository 
-} from "../infrastructure/repositories";
+  financeSkill,
+  routineSkill,
+  shoppingSkill
+} from "../domain/skills";
 
 let aiClient: GoogleGenAI | null = null;
 const getAIClient = () => {
@@ -351,46 +350,28 @@ export const orchestrator = async (
     let feedback = "";
     if (functionCalls && functionCalls.length > 0) {
       for (const call of functionCalls) {
-        // ... execution logic remains here because it needs browser-side Firestore context
-        // I will map the new generic names to the execution logic 
-        
-        // Mapping generic 'manageRoutines' or 'manage_task' to specific logic
         const name = call.name;
         const args = call.args;
 
         if (name === 'addTransaction') {
-           await transactionRepository.create({
-             ...args,
-             date: new Date().toISOString(),
-             category: args.category || "Geral"
-           } as any, activeUserId);
+           await financeSkill.recordTransaction(activeUserId, args);
            feedback += `✅ Registrado: ${args.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${args.amount.toFixed(2)}. `;
         }
         
         if (name === 'addShoppingItems') {
-          const items = args.items as any[];
-          for (const item of items) {
-            await shoppingRepository.create({
-              ...item,
-              purchased: false,
-              quantity: item.quantity || 1,
-              category: item.category || "Outros",
-              frequency: 1
-            } as any, activeUserId);
-          }
+          await shoppingSkill.addItems(activeUserId, args.items);
           feedback += `🛒 Itens adicionados à lista. `;
         }
 
         if (name === 'manageRoutines') {
           if (args.routineType === 'task') {
              if (args.action === 'add') {
-               await taskRepository.create({
+               await routineSkill.addTask(activeUserId, {
                  title: args.title,
                  description: args.description,
-                 category: args.categoryOrType || 'other',
-                 status: 'todo' as any,
+                 category: args.categoryOrType as any || 'other',
                  dueDate: args.date,
-               } as any, activeUserId);
+               });
                feedback += `🧹 Tarefa criada: ${args.title}. `;
              }
           }

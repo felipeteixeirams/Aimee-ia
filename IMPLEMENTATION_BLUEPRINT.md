@@ -18,7 +18,7 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 *Objetivo: Migrar lógica dispersa para o padrão Repository e Domain Services.*
 - [x] **Tarefa A.1 (4h)**: Criar `BaseRepository` genérico e repositórios específicos (`TaskRepository`, `TransactionRepository`). 
   - *Critério: Remover todos os `addDoc` e `updateDoc` do front-end e do `aiService.ts`.*
-- [ ] **Tarefa A.2 (4h)**: Implementar Camada de `Skills` (Orquestradores de lógica).
+- [x] **Tarefa A.2 (4h)**: Implementar Camada de `Skills` (Orquestradores de lógica).
   - *Critério: Aimee deve conseguir executar sequências (ex: adicionar gasto -> atualizar meta) em uma única "Skill".*
 - [ ] **Tarefa A.3 (4h)**: Centralizar validações de negócio em `domain/services`.
   - *Critério: Impedir gastos negativos ou tarefas sem título antes de chegar ao Firestore.*
