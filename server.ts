@@ -97,7 +97,7 @@ app.post("/api/notify", async (req, res) => {
 
 // AI Route
 app.post("/api/ai", async (req, res) => {
-  const { prompt, history, persona, context } = req.body;
+  const { prompt, history, persona, context, audio } = req.body;
 
   try {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -118,7 +118,7 @@ Compras: ${JSON.stringify(context.shopping || [])}
     
     const fullPrompt = `${prompt}\n\n${contextString}`;
     
-    const result = await orchestrator.processRequest(fullPrompt, history, persona);
+    const result = await orchestrator.processRequest(fullPrompt, history, persona, audio);
     res.json(result);
   } catch (error: any) {
     logger.error("Server AI Error", { error: error.message });

@@ -1,9 +1,11 @@
 import { ChatMessage, UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp } from 'lucide-react';
+import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { AimeeAvatar } from './AimeeAvatar';
-import React from 'react';
+import React, { useState } from 'react';
+import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { AudioVisualizer } from './AudioVisualizer';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -14,6 +16,7 @@ interface ChatViewProps {
   inputText: string;
   setInputText: (text: string) => void;
   handleSendMessage: (overrideText?: string, skipAddDoc?: boolean) => void;
+  handleSendVoiceMessage: (audioBlob: Blob) => Promise<void>;
   isTyping: boolean;
   typingContent: string | null;
   formatDateSeparator: (dateStr: string) => string;
@@ -37,6 +40,7 @@ export const ChatView = ({
   inputText,
   setInputText,
   handleSendMessage,
+  handleSendVoiceMessage,
   isTyping,
   typingContent,
   formatDateSeparator,
@@ -50,6 +54,14 @@ export const ChatView = ({
   profile,
   GLOBAL_AIMEE_AVATAR
 }: ChatViewProps) => {
+  const { isRecording, startRecording, stopRecording, getFrequencyData } = useVoiceRecorder();
+
+  const onStopRecording = async () => {
+    const blob = await stopRecording();
+    if (blob) {
+      await handleSendVoiceMessage(blob);
+    }
+  };
   return (
     <motion.div 
       key="chat"
@@ -227,27 +239,54 @@ export const ChatView = ({
       </AnimatePresence>
 
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-12 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pointer-events-none z-20">
-        <div className="max-w-4xl mx-auto flex gap-3 pointer-events-auto">
-          <div className="flex-1 relative group">
-            <input 
-              type="text" 
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Fale com sua Aimee..."
-              className="w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-2xl border border-neutral-100 dark:border-neutral-800 rounded-[2rem] px-8 py-5 text-sm focus:ring-8 focus:ring-brand/5 focus:border-brand/30 transition-all outline-none dark:text-white shadow-2xl shadow-black/5 group-hover:shadow-xl group-hover:border-neutral-200 dark:group-hover:border-neutral-700"
-            />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-               {/* Optional voice or attachment buttons can go here */}
+        <div className="max-w-4xl mx-auto flex flex-col gap-3 pointer-events-auto">
+          {isRecording && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between px-6 py-3 bg-brand/10 dark:bg-brand/20 backdrop-blur-xl border border-brand/20 rounded-2xl mb-2"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-brand">Gravando Áudio...</span>
+              </div>
+              <AudioVisualizer isRecording={isRecording} getFrequencyData={getFrequencyData} />
+            </motion.div>
+          )}
+          
+          <div className="flex gap-3">
+            <div className="flex-1 relative group">
+              <input 
+                type="text" 
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder={isRecording ? "Solte o botão para enviar..." : "Fale com sua Aimee..."}
+                disabled={isRecording}
+                className="w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-2xl border border-neutral-100 dark:border-neutral-800 rounded-[2rem] px-8 py-5 text-sm focus:ring-8 focus:ring-brand/5 focus:border-brand/30 transition-all outline-none dark:text-white shadow-2xl shadow-black/5 group-hover:shadow-xl group-hover:border-neutral-200 dark:group-hover:border-neutral-700 disabled:opacity-50"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                 <button
+                  onClick={isRecording ? onStopRecording : startRecording}
+                  className={cn(
+                    "p-2 rounded-full transition-all active:scale-90",
+                    isRecording 
+                      ? "bg-red-500 text-white shadow-lg shadow-red-500/40" 
+                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:text-brand"
+                  )}
+                 >
+                  {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                 </button>
+              </div>
             </div>
+            <button 
+              onClick={() => handleSendMessage()}
+              disabled={!inputText.trim() || isTyping || isRecording}
+              className="w-16 h-16 bg-brand text-brand-foreground rounded-[2rem] flex items-center justify-center shadow-2xl shadow-brand/40 active:scale-90 transition-all disabled:opacity-50 disabled:scale-100 group shrink-0"
+            >
+              <Send className="w-7 h-7 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </button>
           </div>
-          <button 
-            onClick={() => handleSendMessage()}
-            disabled={!inputText.trim() || isTyping}
-            className="w-16 h-16 bg-brand text-brand-foreground rounded-[2rem] flex items-center justify-center shadow-2xl shadow-brand/40 active:scale-90 transition-all disabled:opacity-50 disabled:scale-100 group shrink-0"
-          >
-            <Send className="w-7 h-7 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </button>
         </div>
       </div>
     </motion.div>

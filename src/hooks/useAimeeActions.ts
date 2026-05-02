@@ -43,17 +43,19 @@ export function useAimeeActions(
     setTyping: (typing: boolean) => void,
     typeText: (text: string) => Promise<void>,
     setTypingContent: (content: string | null) => void,
-    skipAddUserDoc = false
+    skipAddUserDoc = false,
+    audio?: { data: string; mimeType: string }
   ) => {
-    if (!text.trim() || !user) return;
+    if (!text.trim() && !audio) return;
+    if (!user) return;
 
-    logger.info('Sending message', { userId: user.uid, activeSpace, textLength: text.length });
+    logger.info('Sending message', { userId: user.uid, activeSpace, textLength: text.length, hasAudio: !!audio });
 
     if (!skipAddUserDoc) {
       try {
         await chatRepository.create({
           role: ChatRole.USER,
-          content: text,
+          content: audio ? "[Mensagem de Áudio]" : text,
           timestamp: new Date().toISOString()
         }, user.uid);
       } catch (error) {
@@ -74,7 +76,8 @@ export function useAimeeActions(
         aimeeData.events,
         profile?.selectedPersona || 'funny', 
         aimeeData.globalConfig.aiProvider,
-        activeSpace || undefined
+        activeSpace || undefined,
+        audio
       );
 
       const blocks = response.split('\n\n').filter(b => b.trim());

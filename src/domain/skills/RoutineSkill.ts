@@ -36,6 +36,26 @@ export class RoutineSkill {
     }
   }
 
+  async updateTask(userId: string, taskId: string, updates: Partial<HouseholdTask>): Promise<void> {
+    logger.info('RoutineSkill: Updating task', { userId, taskId });
+    await taskRepository.update(taskId, updates, userId);
+  }
+
+  async addEvent(userId: string, event: any): Promise<void> {
+    logger.info('RoutineSkill: Adding event', { userId, title: event.title });
+    await eventRepository.create(event, userId);
+  }
+
+  async removeEvent(userId: string, eventId: string): Promise<void> {
+    logger.info('RoutineSkill: Removing event', { userId, eventId });
+    await eventRepository.delete(eventId, userId);
+  }
+
+  async updateEvent(userId: string, eventId: string, updates: any): Promise<void> {
+    logger.info('RoutineSkill: Updating event', { userId, eventId });
+    await eventRepository.update(eventId, updates, userId);
+  }
+
   /**
    * Remove tarefas baseadas no escopo (única, seguintes, todas)
    */

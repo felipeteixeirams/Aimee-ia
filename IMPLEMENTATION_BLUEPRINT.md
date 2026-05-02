@@ -27,8 +27,8 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ### 🎙️ Entregável B: Chat Multimodal & Voice (Etapa 2)
 *Objetivo: Expandir a interação para além do texto.*
-- [ ] **Tarefa B.1 (6h)**: Implementar interface de gravação (`MediaRecorder`) e integração com Gemini para "Audio Understanding".
-- [ ] **Tarefa B.2 (4h)**: Atualizar o ChatView com suporte a áudio visualizer e transcrição em tempo real.
+- [x] **Tarefa B.1 (6h)**: Implementar interface de gravação (`MediaRecorder`) e integração com Gemini para "Audio Understanding".
+- [x] **Tarefa B.2 (4h)**: Atualizar o ChatView com suporte a áudio visualizer e transcrição em tempo real.
 
 ### 📅 Entregável C: Sincronização Google Agenda (Etapa 3)
 *Objetivo: Conectar o calendário familiar ao mundo externo.*
@@ -50,6 +50,9 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-02**: Implementação da Tarefa B.2: Adicionado Audio Visualizer em tempo real e melhorias na UI de gravação no ChatView.
+- **2026-05-02**: Implementação da Tarefa B.1: Interface de voz nativa e compreensão multimodal de áudio via Gemini 2.0.
+- **2026-05-02**: Migração das chamadas de LLM para o servidor via `/api/ai` e limpeza do `aiService.ts`. Sincronização de ferramentas (tools) entre cliente e servidor.
 - **2026-05-02**: Estruturação do Backlog de 8h e alinhamento com Etapas 1-7.
 - **2026-05-01**: Refatoração para Clean Architecture (Orchestrator, Tools, Domain Entities).
 - **2026-04-30**: Motor de Recorrência (Diário/Semanal/Mensal) e Lógica de Ajuste de calendário automática.

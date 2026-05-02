@@ -576,7 +576,10 @@ export default function App() {
         GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
         globalConfig={globalConfig}
         updateGlobalConfig={updateGlobalConfig}
-        health={health}
+        health={{
+          firebase: health.firebase,
+          ai: globalConfig.aiProvider === AIProvider.GEMINI ? health.gemini : health.deepseek
+        }}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
         updateProfile={updateProfile}
@@ -608,6 +611,27 @@ export default function App() {
                 if (!t) setInputText('');
                 setTimeout(() => scrollToBottom('smooth'), 100);
                 await sendMessage(content, activeSpace, setIsTyping, (txt) => typeText(txt, 8), setTypingContent, skip);
+              }}
+              handleSendVoiceMessage={async (blob) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                  const base64data = reader.result as string;
+                  const base64Content = base64data.split(',')[1];
+                  
+                  // Use a default prompt for voice messages
+                  const voicePrompt = "Transcreva e processe este áudio.";
+                  
+                  await sendMessage(
+                    voicePrompt, 
+                    activeSpace, 
+                    setIsTyping, 
+                    (txt) => typeText(txt, 8), 
+                    setTypingContent, 
+                    false, // don't skip doc
+                    { data: base64Content, mimeType: blob.type }
+                  );
+                };
               }}
               isTyping={isTyping}
               typingContent={typingContent}
