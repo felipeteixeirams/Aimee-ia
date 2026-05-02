@@ -1,25 +1,22 @@
-import { auth, db, signOut, googleProvider, signInWithPopup, GoogleAuthProvider } from '../lib/firebase';
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  setDoc,
-  getDoc,
-  getDocs
-} from 'firebase/firestore';
+import { auth, signOut, googleProvider, signInWithPopup } from '../lib/firebase';
 import { 
   ChatMessage, UserProfile, Share, ShoppingItem, 
-  GlobalConfig, ChatRole, ShareStatus, UserStatus, UserRole,
+  GlobalConfig, ChatRole, UserStatus,
   Transaction, FinancialGoal, HouseholdTask, FamilyEvent
 } from '../types';
-import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import { 
+  taskRepository, 
+  transactionRepository, 
+  shoppingRepository, 
+  chatRepository, 
+  profileRepository, 
+  eventRepository,
+  configRepository 
+} from '../infrastructure/repositories';
 import { User } from 'firebase/auth';
 import { orchestrator } from '../services/aiService';
 import { fetchGoogleCalendarEvents } from '../services/calendarService';
 import { logger } from '../lib/logger';
-
 import { useToast } from '../components/ToastProvider';
 
 interface AimeeData {
@@ -53,16 +50,14 @@ export function useAimeeActions(
     logger.info('Sending message', { userId: user.uid, activeSpace, textLength: text.length });
 
     if (!skipAddUserDoc) {
-      const userMsg: ChatMessage = {
-        userId: user.uid,
-        role: ChatRole.USER,
-        content: text,
-        timestamp: new Date().toISOString()
-      };
       try {
-        await addDoc(collection(db, 'users', user.uid, 'chatHistory'), userMsg);
+        await chatRepository.create({
+          role: ChatRole.USER,
+          content: text,
+          timestamp: new Date().toISOString()
+        }, user.uid);
       } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
+        logger.error('Error saving user message', { error });
       }
     }
 
@@ -100,9 +95,15 @@ export function useAimeeActions(
         };
         
         try {
-          await addDoc(collection(db, 'users', user.uid, 'chatHistory'), aiMsg);
+          await chatRepository.create({
+            role: ChatRole.ASSISTANT,
+            content: block,
+            timestamp: new Date().toISOString(),
+            isInsight,
+            read: isInsight ? false : undefined
+          }, user.uid);
         } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/chatHistory`);
+          logger.error('Error saving AI message', { error });
         }
         
         if (i === blocks.length - 1) {
@@ -118,13 +119,11 @@ export function useAimeeActions(
       setTyping(false);
       setTypingContent(null);
       // Fallback message
-      const errorMsg: ChatMessage = {
-        userId: user.uid,
+      await chatRepository.create({
         role: ChatRole.ASSISTANT,
         content: "Desculpe, tive um problema técnico ao processar sua mensagem. Poderia tentar novamente em breve?",
         timestamp: new Date().toISOString()
-      };
-      await addDoc(collection(db, 'users', user.uid, 'chatHistory'), errorMsg);
+      }, user.uid);
     } finally {
       setTyping(false);
     }
@@ -134,9 +133,8 @@ export function useAimeeActions(
     if (!user) return;
     logger.info('Updating profile', { userId: user.uid, updates: Object.keys(updates) });
     try {
-      await updateDoc(doc(db, 'users', user.uid), updates);
+      await profileRepository.updateProfile(user.uid, updates);
     } catch (error: any) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
       showToast('Erro ao atualizar perfil', 'error');
     }
   };
@@ -146,11 +144,7 @@ export function useAimeeActions(
     if (!isSuperAdmin) return;
     logger.info('Updating global config', { userId: user?.uid, updates: Object.keys(updates) });
     try {
-      await setDoc(doc(db, 'config', 'global'), {
-        ...updates,
-        updatedAt: new Date().toISOString(),
-        updatedBy: user?.email
-      }, { merge: true });
+      await configRepository.updateGlobal(updates, user?.email || 'system');
     } catch (error) {
       logger.error('Global config update error', { error });
     }
@@ -160,22 +154,19 @@ export function useAimeeActions(
     logger.info('Starting Google Calendar sync', { targetUserId });
     try {
       const googleEvents = await fetchGoogleCalendarEvents(token);
-      const eventsRef = collection(db, `users/${targetUserId}/events`);
-      const existingEventsSnap = await getDocs(eventsRef);
+      const existingEvents = await eventRepository.list([], targetUserId);
       const existingGoogleIds = new Set(
-        existingEventsSnap.docs
-          .map(doc => (doc.data() as any).googleEventId)
+        existingEvents
+          .map(e => e.googleEventId)
           .filter(Boolean)
       );
 
       let count = 0;
       for (const gEvent of googleEvents) {
         if (gEvent.googleEventId && !existingGoogleIds.has(gEvent.googleEventId)) {
-          await addDoc(eventsRef, {
-            ...gEvent,
-            userId: targetUserId,
-            createdAt: new Date().toISOString()
-          });
+          await eventRepository.create({
+            ...gEvent
+          }, targetUserId);
           count++;
         }
       }
@@ -191,27 +182,25 @@ export function useAimeeActions(
     if (profile?.role !== 'admin') return;
 
     try {
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) return;
-      const uData = userSnap.data() as UserProfile;
+      const uData = await profileRepository.getProfile(userId);
+      if (!uData) return;
 
       if (action === 'approveName') {
         const newName = uData.pendingNameChange?.newName;
         if (newName) {
-          await updateDoc(userRef, {
+          await profileRepository.updateProfile(userId, {
             displayName: newName,
             'pendingNameChange.status': 'approved'
-          });
+          } as any);
           showToast(`Nome de ${uData.username} alterado para ${newName}`, 'success');
         }
         return;
       }
 
       if (action === 'rejectName') {
-        await updateDoc(userRef, {
+        await profileRepository.updateProfile(userId, {
           'pendingNameChange.status': 'rejected'
-        });
+        } as any);
         showToast(`Solicitação de nome de ${uData.username} recusada`, 'info');
         return;
       }
@@ -227,10 +216,10 @@ export function useAimeeActions(
         blockedUntil = d.toISOString();
       }
 
-      await updateDoc(userRef, { 
+      await profileRepository.updateProfile(userId, { 
         status, 
         blockedUntil: blockedUntil || null
-      });
+      } as any);
 
       // Simulation of email notify
       fetch('/api/notify', {
@@ -240,15 +229,13 @@ export function useAimeeActions(
       }).catch(() => {});
 
       // Log to admin
-      const logMsg: ChatMessage = {
-        userId: profile.uid,
+      await chatRepository.create({
         role: ChatRole.ASSISTANT,
         content: `Administrador, acabei de ${action} o acesso de ${uData.displayName}.`,
         timestamp: new Date().toISOString(),
         isInsight: true,
         read: false
-      };
-      await addDoc(collection(db, 'users', profile.uid, 'chatHistory'), logMsg);
+      }, profile.uid);
 
     } catch (error) {
       console.error("Admin action error:", error);
@@ -259,10 +246,10 @@ export function useAimeeActions(
     toggle: async (item: ShoppingItem, targetId: string) => {
       if (!item.id) return;
       try {
-        await updateDoc(doc(db, `users/${targetId}/shoppingList`, item.id), {
+        await shoppingRepository.update(item.id, {
           purchased: !item.purchased,
           lastPurchasedAt: !item.purchased ? new Date().toISOString() : item.lastPurchasedAt
-        });
+        }, targetId);
         showToast(item.purchased ? 'Item marcado como pendente' : 'Item marcado como comprado', 'success', 2000);
       } catch (err) {
         showToast('Erro ao atualizar item', 'error');
@@ -271,10 +258,10 @@ export function useAimeeActions(
     moveToStock: async (item: ShoppingItem, targetId: string) => {
       if (!item.id) return;
       try {
-        await updateDoc(doc(db, `users/${targetId}/shoppingList`, item.id), {
+        await shoppingRepository.update(item.id, {
           isStock: true,
           purchased: false
-        });
+        }, targetId);
         showToast(`${item.name} movido para o estoque`, 'success', 2000);
       } catch (err) {
         showToast('Erro ao mover item', 'error');
@@ -283,10 +270,10 @@ export function useAimeeActions(
     moveToList: async (item: ShoppingItem, targetId: string) => {
       if (!item.id) return;
       try {
-        await updateDoc(doc(db, `users/${targetId}/shoppingList`, item.id), {
+        await shoppingRepository.update(item.id, {
           isStock: false,
           urgency: 'medium'
-        });
+        }, targetId);
         showToast(`${item.name} movido para a lista`, 'success', 2000);
       } catch (err) {
         showToast('Erro ao mover item', 'error');
@@ -295,7 +282,7 @@ export function useAimeeActions(
     delete: async (item: ShoppingItem, targetId: string) => {
       if (!item.id) return;
       try {
-        await deleteDoc(doc(db, `users/${targetId}/shoppingList`, item.id));
+        await shoppingRepository.delete(item.id, targetId);
         showToast('Item removido', 'success', 2000);
       } catch (err) {
         showToast('Erro ao remover item', 'error');
@@ -306,9 +293,9 @@ export function useAimeeActions(
   const manageTasks = {
     toggle: async (taskId: string, currentStatus: string, targetId: string) => {
       try {
-        await updateDoc(doc(db, `users/${targetId}/tasks/${taskId}`), {
-          status: currentStatus === 'done' ? 'todo' : 'done'
-        });
+        await taskRepository.update(taskId, {
+          status: currentStatus === 'done' ? 'todo' : 'done' as any
+        }, targetId);
         showToast(currentStatus === 'done' ? 'Tarefa aberta' : 'Tarefa concluída', 'success', 2000);
       } catch (err) {
         showToast('Erro ao atualizar tarefa', 'error');
@@ -320,9 +307,7 @@ export function useAimeeActions(
         
         const baseTask = {
           ...task,
-          userId: targetId,
-          status: task.status || 'todo',
-          createdAt: new Date().toISOString()
+          status: task.status || 'todo' as any,
         };
 
         if (task.recurrence) {
@@ -330,47 +315,40 @@ export function useAimeeActions(
           const startDate = task.dueDate || new Date().toISOString();
           const instances = generateRecurrenceInstances(startDate, task.recurrence);
           
-          const batch = instances.map(inst => addDoc(collection(db, `users/${targetId}/tasks`), {
-            ...baseTask,
+          await Promise.all(instances.map(inst => taskRepository.create({
+            ...(baseTask as any),
             dueDate: inst.dueDate,
             originalDueDate: inst.originalDueDate || null,
             note: inst.note || null,
             recurrenceId
-          }));
-          
-          await Promise.all(batch);
+          }, targetId)));
         } else {
-          await addDoc(collection(db, `users/${targetId}/tasks`), baseTask);
+          await taskRepository.create(baseTask as any, targetId);
         }
 
         showToast('Tarefa adicionada com sucesso', 'success', 2000);
       } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `tasks`);
         showToast('Erro ao adicionar tarefa', 'error');
       }
     },
     update: async (taskId: string, updates: Partial<HouseholdTask>, targetId: string, scope: 'single' | 'following' | 'all' = 'single') => {
       try {
-        const taskRef = doc(db, `users/${targetId}/tasks/${taskId}`);
-        const taskSnap = await getDoc(taskRef);
-        if (!taskSnap.exists()) return;
-        const taskData = taskSnap.data() as HouseholdTask;
+        const taskData = await taskRepository.getById(taskId, targetId);
+        if (!taskData) return;
 
         if (scope === 'single' || !taskData.recurrenceId) {
-          await updateDoc(taskRef, updates);
+          await taskRepository.update(taskId, updates, targetId);
         } else {
-          const tasksRef = collection(db, `users/${targetId}/tasks`);
-          const qDocs = await getDocs(tasksRef);
-          const relatedTasks = qDocs.docs.filter(d => {
-            const data = d.data() as HouseholdTask;
-            if (data.recurrenceId !== taskData.recurrenceId) return false;
-            if (scope === 'following') {
-              return new Date(data.dueDate) >= new Date(taskData.dueDate);
+          const relatedTasks = await taskRepository.list([], targetId);
+          const filteredTasks = relatedTasks.filter(d => {
+            if (d.recurrenceId !== taskData.recurrenceId) return false;
+            if (scope === 'following' && d.dueDate && taskData.dueDate) {
+              return new Date(d.dueDate) >= new Date(taskData.dueDate);
             }
             return true;
           });
 
-          await Promise.all(relatedTasks.map(d => updateDoc(d.ref, updates)));
+          await Promise.all(filteredTasks.map(d => d.id && taskRepository.update(d.id, updates, targetId)));
         }
         showToast('Tarefa atualizada', 'success', 2000);
       } catch (err) {
@@ -379,26 +357,22 @@ export function useAimeeActions(
     },
     delete: async (taskId: string, targetId: string, scope: 'single' | 'following' | 'all' = 'single') => {
       try {
-        const taskRef = doc(db, `users/${targetId}/tasks/${taskId}`);
-        const taskSnap = await getDoc(taskRef);
-        if (!taskSnap.exists()) return;
-        const taskData = taskSnap.data() as HouseholdTask;
+        const taskData = await taskRepository.getById(taskId, targetId);
+        if (!taskData) return;
 
         if (scope === 'single' || !taskData.recurrenceId) {
-          await deleteDoc(taskRef);
+          await taskRepository.delete(taskId, targetId);
         } else {
-          const tasksRef = collection(db, `users/${targetId}/tasks`);
-          const qDocs = await getDocs(tasksRef);
-          const relatedTasks = qDocs.docs.filter(d => {
-            const data = d.data() as HouseholdTask;
-            if (data.recurrenceId !== taskData.recurrenceId) return false;
-            if (scope === 'following') {
-              return new Date(data.dueDate) >= new Date(taskData.dueDate);
+          const relatedTasks = await taskRepository.list([], targetId);
+          const filteredTasks = relatedTasks.filter(d => {
+            if (d.recurrenceId !== taskData.recurrenceId) return false;
+            if (scope === 'following' && d.dueDate && taskData.dueDate) {
+              return new Date(d.dueDate) >= new Date(taskData.dueDate);
             }
             return true;
           });
 
-          await Promise.all(relatedTasks.map(d => deleteDoc(d.ref)));
+          await Promise.all(filteredTasks.map(d => d.id && taskRepository.delete(d.id, targetId)));
         }
         showToast('Tarefa removida', 'success', 2000);
       } catch (err) {

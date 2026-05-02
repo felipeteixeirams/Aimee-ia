@@ -16,14 +16,17 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ### 📦 Entregável A: Refatoração Arquitetural Profunda (Etapa 1 - Extensão)
 *Objetivo: Migrar lógica dispersa para o padrão Repository e Domain Services.*
-- [ ] **Tarefa A.1 (4h)**: Criar `BaseRepository` genérico e repositórios específicos (`TaskRepository`, `TransactionRepository`) para abstrair o Firebase.
-- [ ] **Tarefa A.2 (4h)**: Implementar Camada de `Skills` (Orquestradores de alto nível para logicamente agrupar ferramentas).
+- [x] **Tarefa A.1 (4h)**: Criar `BaseRepository` genérico e repositórios específicos (`TaskRepository`, `TransactionRepository`). 
+  - *Critério: Remover todos os `addDoc` e `updateDoc` do front-end e do `aiService.ts`.*
+- [ ] **Tarefa A.2 (4h)**: Implementar Camada de `Skills` (Orquestradores de lógica).
+  - *Critério: Aimee deve conseguir executar sequências (ex: adicionar gasto -> atualizar meta) em uma única "Skill".*
 - [ ] **Tarefa A.3 (4h)**: Centralizar validações de negócio em `domain/services`.
+  - *Critério: Impedir gastos negativos ou tarefas sem título antes de chegar ao Firestore.*
 
 ### 🎙️ Entregável B: Chat Multimodal & Voice (Etapa 2)
 *Objetivo: Expandir a interação para além do texto.*
-- [ ] **Tarefa B.1 (6h)**: Implementar interface de gravação de áudio e integração com Speech-to-Text (Web Speech API ou Gemini Audio).
-- [ ] **Tarefa B.2 (4h)**: Atualizar o ChatView para exibir feedbacks visuais de áudio e processamento multimodal.
+- [ ] **Tarefa B.1 (6h)**: Implementar interface de gravação (`MediaRecorder`) e integração com Gemini para "Audio Understanding".
+- [ ] **Tarefa B.2 (4h)**: Atualizar o ChatView com suporte a áudio visualizer e transcrição em tempo real.
 
 ### 📅 Entregável C: Sincronização Google Agenda (Etapa 3)
 *Objetivo: Conectar o calendário familiar ao mundo externo.*

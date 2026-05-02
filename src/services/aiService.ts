@@ -1,9 +1,12 @@
 import { FunctionDeclaration, GoogleGenAI, Type } from "@google/genai";
 import OpenAI from "openai";
 import { Transaction, ShoppingItem, ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent } from "../types";
-import { db } from "../lib/firebase";
-import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { handleFirestoreError, OperationType } from "../lib/firestoreUtils";
+import { 
+  transactionRepository, 
+  shoppingRepository, 
+  taskRepository,
+  eventRepository 
+} from "../infrastructure/repositories";
 
 let aiClient: GoogleGenAI | null = null;
 const getAIClient = () => {
@@ -356,45 +359,38 @@ export const orchestrator = async (
         const args = call.args;
 
         if (name === 'addTransaction') {
-           const transPath = `users/${activeUserId}/transactions`;
-           await addDoc(collection(db, transPath), {
+           await transactionRepository.create({
              ...args,
-             userId: activeUserId,
              date: new Date().toISOString(),
              category: args.category || "Geral"
-           });
+           } as any, activeUserId);
            feedback += `✅ Registrado: ${args.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${args.amount.toFixed(2)}. `;
         }
         
         if (name === 'addShoppingItems') {
           const items = args.items as any[];
-          const shopPath = `users/${activeUserId}/shoppingList`;
           for (const item of items) {
-            await addDoc(collection(db, shopPath), {
+            await shoppingRepository.create({
               ...item,
-              userId: activeUserId,
               purchased: false,
               quantity: item.quantity || 1,
               category: item.category || "Outros",
               frequency: 1
-            });
+            } as any, activeUserId);
           }
           feedback += `🛒 Itens adicionados à lista. `;
         }
 
         if (name === 'manageRoutines') {
           if (args.routineType === 'task') {
-             const taskPath = `users/${activeUserId}/tasks`;
              if (args.action === 'add') {
-               await addDoc(collection(db, taskPath), {
+               await taskRepository.create({
                  title: args.title,
                  description: args.description,
                  category: args.categoryOrType || 'other',
-                 status: 'todo',
+                 status: 'todo' as any,
                  dueDate: args.date,
-                 userId: activeUserId,
-                 createdAt: new Date().toISOString()
-               });
+               } as any, activeUserId);
                feedback += `🧹 Tarefa criada: ${args.title}. `;
              }
           }

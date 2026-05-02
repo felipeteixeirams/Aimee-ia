@@ -1,7 +1,7 @@
 import { FamilyEvent } from "../types";
 import firebaseConfig from '../../firebase-applet-config.json';
 
-export async function fetchGoogleCalendarEvents(accessToken: string): Promise<Partial<FamilyEvent>[]> {
+export async function fetchGoogleCalendarEvents(accessToken: string): Promise<Omit<FamilyEvent, 'id' | 'userId' | 'createdAt' | 'updatedAt'>[]> {
   try {
     const now = new Date().toISOString();
     const apiKey = firebaseConfig.apiKey;
