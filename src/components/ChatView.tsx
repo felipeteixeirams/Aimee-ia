@@ -2,6 +2,7 @@ import { ChatMessage, UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { format } from 'date-fns';
 import { AimeeAvatar } from './AimeeAvatar';
 import React, { useState } from 'react';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
