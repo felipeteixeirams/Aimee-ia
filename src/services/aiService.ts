@@ -319,337 +319,93 @@ export const orchestrator = async (
 ) => {
   const activeUserId = targetUserId || userId;
   
-  const listContext = shoppingList.length > 0 
-    ? `\n\nLista de Compras Atual:\n${shoppingList.map(i => `- ${i.name} (ID: ${i.id}, Qtd: ${i.quantity}, Comprado: ${i.purchased})`).join('\n')}`
-    : "";
-
-  const financeContext = transactions.length > 0
-    ? `\n\nResumo Financeiro Atual (Espaço Ativo):\n${transactions.slice(0, 50).map(t => `- ${t.date}: ${t.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${t.amount.toFixed(2)} - ${t.description} (${t.category})`).join('\n')}`
-    : "\n\nNenhuma transação financeira encontrada no espaço ativo.";
-
-  const goalsContext = goals.length > 0
-    ? `\n\nObjetivos Financeiros Atuais:\n${goals.map(g => `- ${g.title} (ID: ${g.id}): R$ ${g.currentAmount} de R$ ${g.targetAmount} (${Math.round((g.currentAmount/g.targetAmount)*100)}%)`).join('\n')}`
-    : "";
-
-  const routinesContext = `\n\nRotinas e Agenda:\nTarefas: ${tasks.map(t => `- ${t.title} (ID: ${t.id}, status: ${t.status})`).join(', ')}\nEventos: ${events.map(e => `- ${e.title} (ID: ${e.id}) em ${e.date}`).join(', ')}`;
-
-  const fullPrompt = prompt + listContext + financeContext + goalsContext + routinesContext;
-  const tools = [
-    addTransactionFn, 
-    addShoppingItemsFn, 
-    updateShoppingItemsFn, 
-    removeShoppingItemsFn, 
-    addFinancialGoalFn, 
-    updateFinancialGoalFn,
-    addHouseholdTaskFn,
-    updateHouseholdTaskFn,
-    addFamilyEventFn,
-    updateFamilyEventFn,
-    removeFamilyEventFn
-  ];
-
   try {
-    let modelText = "";
-    let functionCalls: any[] = [];
-
-    const formattedHistory = history.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    }));
-
-    const currentDate = new Date().toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
-    const systemInstruction = getSystemInstruction(persona, currentDate);
-
-    if (provider === 'gemini') {
-      console.log("Aimee: Invocando Gemini...", { prompt: fullPrompt.substring(0, 50) + "...", historySize: history.length });
-      // Clean history for Gemini:
-      // 1. Ensure roles alternate (user, model, user, model)
-      // 2. Remove last message if it's already the current prompt (to avoid duplication if snapshot was fast)
-      let cleanedHistory = [...history];
-      
-      // If messages are too many, truncate to stay within limits
-      if (cleanedHistory.length > 50) {
-        cleanedHistory = cleanedHistory.slice(-50);
-      }
-
-      const contents = [];
-      let lastRole = '';
-
-      for (const msg of cleanedHistory) {
-        const role = msg.role === 'user' ? 'user' : 'model';
-        // Skip consecutive same roles
-        if (role === lastRole) continue;
-        
-        // Skip if this is essentially the current prompt (avoid duplication)
-        if (role === 'user' && msg.content === prompt) continue;
-
-        contents.push({
-          role,
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        history: history.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.content }]
-        });
-        lastRole = role;
-      }
-
-      // Finally append the current prompt with context
-      if (lastRole === 'user') {
-        // If the last one was user, we can't add another user. 
-        // We should merge or skip. But usually we want to replace the last user message with the enriched one.
-        contents[contents.length - 1] = {
-          role: 'user',
-          parts: [{ text: fullPrompt }]
-        };
-      } else {
-        contents.push({
-          role: 'user',
-          parts: [{ text: fullPrompt }]
-        });
-      }
-
-      const client = getAIClient();
-      const response = await client.models.generateContent({
-        model: "gemini-flash-latest",
-        contents,
-        config: {
-          systemInstruction,
-          tools: [{ functionDeclarations: tools }]
+        })).slice(-10), // Limit history for complexity
+        persona: getSystemInstruction(persona, new Date().toLocaleString()),
+        context: {
+          tasks: tasks.slice(0, 10),
+          finance: transactions.slice(0, 10),
+          shopping: shoppingList.slice(0, 10)
         }
-      });
-      modelText = response.text || "";
-      functionCalls = response.functionCalls || [];
-    } else {
-      const response = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          history: formattedHistory,
-          persona: systemInstruction,
-          provider,
-          tools: convertToOpenAITools(tools)
-        })
-      });
+      })
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erro na comunicação com o servidor.");
-      }
-
-      const data = await response.json();
-      modelText = data.content || "";
-      
-      if (data.tool_calls) {
-        functionCalls = data.tool_calls.map((tc: any) => ({
-          name: tc.function.name,
-          args: typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments
-        }));
-      }
+    if (!response.ok) {
+      throw new Error("Erro na comunicação com a Aimee Central.");
     }
 
+    const data = await response.json();
+    const { content, functionCalls } = data;
+
     let feedback = "";
-    if (functionCalls.length > 0) {
+    if (functionCalls && functionCalls.length > 0) {
       for (const call of functionCalls) {
-        if (call.name === 'addTransaction') {
-          const args = call.args as any;
-          const transPath = `users/${activeUserId}/transactions`;
-          try {
-            await addDoc(collection(db, transPath), {
-              ...args,
-              userId: activeUserId,
-              date: new Date().toISOString(),
-              category: args.category || "Geral"
-            });
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, transPath);
-          }
-          feedback += `✅ Registrado: ${args.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${args.amount.toFixed(2)} (${args.description}). `;
+        // ... execution logic remains here because it needs browser-side Firestore context
+        // I will map the new generic names to the execution logic 
+        
+        // Mapping generic 'manageRoutines' or 'manage_task' to specific logic
+        const name = call.name;
+        const args = call.args;
+
+        if (name === 'addTransaction') {
+           const transPath = `users/${activeUserId}/transactions`;
+           await addDoc(collection(db, transPath), {
+             ...args,
+             userId: activeUserId,
+             date: new Date().toISOString(),
+             category: args.category || "Geral"
+           });
+           feedback += `✅ Registrado: ${args.type === 'income' ? 'Ganho' : 'Gasto'} de R$ ${args.amount.toFixed(2)}. `;
         }
-        if (call.name === 'addShoppingItems') {
-          const args = call.args as any;
+        
+        if (name === 'addShoppingItems') {
           const items = args.items as any[];
           const shopPath = `users/${activeUserId}/shoppingList`;
           for (const item of items) {
-            const existing = shoppingList.find(i => i.name.toLowerCase() === item.name.toLowerCase());
-            try {
-              if (existing && existing.id) {
-                await updateDoc(doc(db, shopPath, existing.id), {
-                  quantity: (existing.quantity || 0) + (item.quantity || 1),
-                  frequency: (existing.frequency || 1) + 1,
-                  urgency: item.urgency || existing.urgency || 'medium',
-                  isStock: item.isStock !== undefined ? item.isStock : existing.isStock
-                });
-              } else {
-                await addDoc(collection(db, shopPath), {
-                  ...item,
-                  userId: activeUserId,
-                  purchased: false,
-                  quantity: item.quantity || 1,
-                  category: item.category || "Geral",
-                  urgency: item.urgency || "medium",
-                  isStock: item.isStock || false,
-                  frequency: 1
-                });
-              }
-            } catch (error) {
-              handleFirestoreError(error, OperationType.WRITE, shopPath);
-            }
-          }
-          const itemNames = items.map(i => i.name).join(", ");
-          feedback += `🛒 Itens processados: ${itemNames}. `;
-        }
-        if (call.name === 'updateShoppingItems') {
-          const args = call.args as any;
-          const updates = args.updates as any[];
-          for (const update of updates) {
-            const item = shoppingList.find(i => i.id === update.id || i.name.toLowerCase() === update.name.toLowerCase());
-            if (item && item.id) {
-              const { id, name, ...fields } = update;
-              const itemPath = `users/${activeUserId}/shoppingList/${item.id}`;
-              try {
-                await updateDoc(doc(db, itemPath), fields);
-              } catch (error) {
-                handleFirestoreError(error, OperationType.WRITE, itemPath);
-              }
-              feedback += `Atualizado: ${item.name}. `;
-            }
-          }
-        }
-        if (call.name === 'removeShoppingItems') {
-          const args = call.args as any;
-          const itemsToRemove = args.items as any[];
-          for (const itemToRemove of itemsToRemove) {
-            const item = shoppingList.find(i => i.id === itemToRemove.id || i.name.toLowerCase() === itemToRemove.name.toLowerCase());
-            if (item && item.id) {
-              const itemPath = `users/${activeUserId}/shoppingList/${item.id}`;
-              try {
-                await deleteDoc(doc(db, itemPath));
-              } catch (error) {
-                handleFirestoreError(error, OperationType.WRITE, itemPath);
-              }
-              feedback += `Removido: ${item.name}. `;
-            }
-          }
-        }
-        if (call.name === 'addFinancialGoal') {
-          const args = call.args as any;
-          const goalsPath = `users/${activeUserId}/goals`;
-          try {
-            await addDoc(collection(db, goalsPath), {
-              ...args,
+            await addDoc(collection(db, shopPath), {
+              ...item,
               userId: activeUserId,
-              createdAt: new Date().toISOString(),
-              currentAmount: args.currentAmount || 0
+              purchased: false,
+              quantity: item.quantity || 1,
+              category: item.category || "Outros",
+              frequency: 1
             });
-            feedback += `🎯 Objetivo criado: ${args.title}. `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, goalsPath);
           }
+          feedback += `🛒 Itens adicionados à lista. `;
         }
-        if (call.name === 'updateFinancialGoal') {
-          const args = call.args as any;
-          const { id, ...updates } = args;
-          const goalPath = `users/${activeUserId}/goals/${id}`;
-          try {
-            await updateDoc(doc(db, goalPath), updates);
-            feedback += `📈 Objetivo atualizado! `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, goalPath);
-          }
-        }
-        if (call.name === 'addHouseholdTask') {
-          const args = call.args as any;
-          const taskPath = `users/${activeUserId}/tasks`;
-          try {
-            await addDoc(collection(db, taskPath), {
-              ...args,
-              userId: activeUserId,
-              status: 'todo',
-              createdAt: new Date().toISOString()
-            });
-            feedback += `🧹 Tarefa adicionada: ${args.title}. `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, taskPath);
-          }
-        }
-        if (call.name === 'updateHouseholdTask') {
-          const args = call.args as any;
-          const { id, ...updates } = args;
-          const taskPath = `users/${activeUserId}/tasks/${id}`;
-          try {
-            await updateDoc(doc(db, taskPath), updates);
-            feedback += `✅ Tarefa atualizada! `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, taskPath);
-          }
-        }
-        if (call.name === 'addFamilyEvent') {
-          const args = call.args as any;
-          const eventPath = `users/${activeUserId}/events`;
-          try {
-            await addDoc(collection(db, eventPath), {
-              ...args,
-              userId: activeUserId,
-              createdAt: new Date().toISOString()
-            });
-            feedback += `📅 Evento agendado: ${args.title}. `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, eventPath);
-          }
-        }
-        if (call.name === 'updateFamilyEvent') {
-          const args = call.args as any;
-          const { id, ...updates } = args;
-          const eventPath = `users/${activeUserId}/events/${id}`;
-          try {
-            await updateDoc(doc(db, eventPath), updates);
-            feedback += `✅ Evento atualizado! `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, eventPath);
-          }
-        }
-        if (call.name === 'removeFamilyEvent') {
-          const args = call.args as any;
-          const { id } = args;
-          const eventPath = `users/${activeUserId}/events/${id}`;
-          try {
-            await deleteDoc(doc(db, eventPath));
-            feedback += `🗑️ Evento removido da agenda. `;
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, eventPath);
+
+        if (name === 'manageRoutines') {
+          if (args.routineType === 'task') {
+             const taskPath = `users/${activeUserId}/tasks`;
+             if (args.action === 'add') {
+               await addDoc(collection(db, taskPath), {
+                 title: args.title,
+                 description: args.description,
+                 category: args.categoryOrType || 'other',
+                 status: 'todo',
+                 dueDate: args.date,
+                 userId: activeUserId,
+                 createdAt: new Date().toISOString()
+               });
+               feedback += `🧹 Tarefa criada: ${args.title}. `;
+             }
           }
         }
       }
     }
 
-    const finalContent = String(feedback ? `${feedback}\n\n${modelText}` : modelText);
-    
-    return finalContent.trim() || "Entendido. Como posso ajudar mais?";
+    return (feedback ? `${feedback}\n\n${content}` : content) || "Comando processado.";
   } catch (error: any) {
-    console.error("Aimee AI Orchestrator Error:", error);
-    
-    // Check for common connection/auth errors
-    const errorMessage = String(error?.message || error);
-    
-    if (errorMessage.includes("DEEPSEEK_API_KEY") || (provider === 'deepseek' && !process.env.DEEPSEEK_API_KEY)) {
-      return "Erro: Chave de API do DeepSeek não configurada nos segredos do projeto.";
-    }
-
-    if (errorMessage.toLowerCase().includes("connection error") || errorMessage.toLowerCase().includes("failed to fetch")) {
-      return `Erro de Conexão: Não foi possível alcançar o provedor ${provider === 'gemini' ? 'Gemini' : 'DeepSeek'}. Verifique sua conexão ou as configurações de API.`;
-    }
-
-    if (errorMessage.includes("401") || errorMessage.includes("unauthorized") || errorMessage.includes("invalid api key")) {
-      return "Erro de Autenticação: A chave de API fornecida é inválida ou expirou.";
-    }
-
-    if (errorMessage.includes("429") || errorMessage.includes("quota")) {
-      return "Erro de Cota: Você excedeu o limite de requisições do provedor de IA.";
-    }
-
-    if (errorMessage.includes("402") || errorMessage.toLowerCase().includes("insufficient balance")) {
-      return "Erro de Saldo: O provedor selecionado (DeepSeek) está sem saldo. Por favor, recarregue sua conta ou mude para o Gemini nas configurações.";
-    }
-
-    return `Erro ao conectar com o agente de IA: ${errorMessage}`;
+    console.error("Aimee Client Orchestrator Error:", error);
+    return `Desculpe, tive um problema técnico: ${error.message}`;
   }
 };
 

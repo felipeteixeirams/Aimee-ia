@@ -17,24 +17,26 @@ Aimee é uma **Agente Orquestradora de Inteligência Pessoal** projetada para si
 - **Sustentabilidade**: Recomendações de produtos ecológicos e locais.
 
 ### 🏠 Rotinas e Agenda Familiar
-- **Gestão de Tarefas**: Organização de limpeza, manutenção e recados domésticos.
-- **Agenda Compartilhada**: Registro de eventos sociais, feriados e compromissos da família.
-- **Insights Cruzados**: Correlação entre agenda e finanças para prever gastos em semanas movimentadas.
+- **Gestão de Tarefas Advanced**: Organização de limpeza, manutenção e recados com suporte a **recorrências complexas** (diárias, semanais, mensais e anuais).
+- **Ajuste Inteligente de Datas**: Correção automática de tarefas agendadas para dias inexistentes (ex: 31 de fevereiro) com notas explicativas.
+- **Família e Compartilhamento**: Convide membros da família e gerencie o espaço doméstico de forma colaborativa com permissões de SuperAdmin.
+- **Agenda Multimodal**: Registro de eventos sociais sincronizados com as tarefas da casa.
 
-### 🤖 Inteligência Artificial (Aimee)
-- **Personas Customizáveis**: Escolha entre os perfis *Divertida*, *Analítica* ou *Econômica*.
-- **Comandos Naturais**: Processamento de pedidos complexos em uma única frase.
-- **Proatividade**: Alertas baseados em contexto externo (clima, feriados, sazonalidade).
+### 🤖 Inteligência Artificial (Aimee Orchestrator)
+- **Orquestração de Intenção**: Um núcleo inteligente que detecta intenção e seleciona automaticamente a "Skill" necessária.
+- **Comandos Naturais e Tool Calling**: Aimee decide quando invocar ferramentas como `addTransaction` ou `manageRoutines` de forma autônoma.
+- **Context Awareness**: A IA possui visibilidade do estado atual da casa (tarefas pendentes, gastos recentes) para oferecer respostas personalizadas.
+- **Personas Customizáveis**: Perfis que alteram o tom de voz e a prioridade de insights.
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite
+- **Backend/API**: Express (Full-stack mode com `tsx`)
 - **Estilização**: Tailwind CSS 4
-- **Animações**: Motion (Framer Motion)
-- **Gráficos**: Recharts
-- **Backend/Database**: Firebase (Firestore, Auth)
-- **IA**: Google Gemini API (@google/genai)
-- **Ícones**: Lucide React
+- **Animações**: Motion (formely Framer Motion)
+- **IA/Orchestration**: Google GenAI SDK (`gemini-3-flash-preview`)
+- **Persistência**: Firebase Firestore & Auth
+- **Utilidade**: `date-fns` para lógica de recorrência complexa
 
 ## 📋 Pré-requisitos
 
@@ -103,13 +105,15 @@ Se você prefere usar Docker, pode iniciar a aplicação facilmente:
 
 A aplicação estará disponível em `http://localhost:3000`. O volume está configurado para refletir alterações no código em tempo real (Hot Reload).
 
-## 🏗️ Estrutura do Projeto
+## 🏗️ Estrutura do Projeto (Clean Architecture)
 
-- `src/components/`: Componentes reutilizáveis da interface.
-- `src/services/`: Lógica de integração com a IA (Gemini) e Firebase.
-- `src/types/`: Definições de interfaces TypeScript.
-- `src/lib/`: Configurações de bibliotecas (Firebase, Utils).
-- `firestore.rules`: Regras de segurança do banco de dados.
+- `src/domain/`: Entidades básicas e regras de negócio puras (`BaseEntity`, etc.).
+- `src/infrastructure/`: Implementações técnicas e integrações:
+  - `llm/`: Orquestrador Aimee e lógica de seleção de modelos.
+  - `tools/`: Definições de ferramentas disponíveis para a IA (Function Calling).
+- `src/services/`: Serviços de aplicação que coordenam Firebase e UI.
+- `src/components/`: Interface do usuário modularizada e gamificada.
+- `src/lib/`: Utilitários e configurações (recurrence, logger, shadcn).
 
 ## 📜 Versão e Histórico
 

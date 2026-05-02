@@ -97,35 +97,31 @@ app.post("/api/notify", async (req, res) => {
 
 // AI Route
 app.post("/api/ai", async (req, res) => {
-  const { prompt, history, persona, provider, tools } = req.body;
+  const { prompt, history, persona, context } = req.body;
 
   try {
-    if (provider === "deepseek") {
-      const response = await fetch("https://api.deepseek.com/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: persona },
-            ...history,
-            { role: "user", content: prompt }
-          ],
-          tools: tools,
-          tool_choice: "auto"
-        })
-      });
-
-      const data = await response.json();
-      res.json(data.choices[0].message);
-    } else {
-      res.status(400).json({ error: "Gemini deve ser chamado pelo frontend." });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "GEMINI_API_KEY no configured." });
     }
+
+    const { AimeeOrchestrator } = await import("./src/infrastructure/llm/AimeeOrchestrator.ts");
+    const orchestrator = new AimeeOrchestrator(apiKey);
+
+    // Enriquecer o prompt com o contexto recebido
+    const contextString = `
+[CONTEXTO ATUAL]
+Tarefas: ${JSON.stringify(context.tasks || [])}
+Finanças: ${JSON.stringify(context.finance || [])}
+Compras: ${JSON.stringify(context.shopping || [])}
+`;
+    
+    const fullPrompt = `${prompt}\n\n${contextString}`;
+    
+    const result = await orchestrator.processRequest(fullPrompt, history, persona);
+    res.json(result);
   } catch (error: any) {
-    console.error("Server AI Error:", error);
+    logger.error("Server AI Error", { error: error.message });
     res.status(500).json({ error: error.message || "Internal AI Error" });
   }
 });
