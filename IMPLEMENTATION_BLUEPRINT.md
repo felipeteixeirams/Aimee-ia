@@ -22,6 +22,8 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
   - *Critério: Aimee deve conseguir executar sequências (ex: adicionar gasto -> atualizar meta) em uma única "Skill".*
 - [x] **Tarefa A.3 (4h)**: Centralizar validações de negócio em `domain/services`.
   - *Critério: Impedir gastos negativos ou tarefas sem título antes de chegar ao Firestore.*
+- [x] **Tarefa A.4 (2h)**: Configurar Observabilidade e Structured Logging.
+  - *Critério: Logs estruturados (JSON) compatíveis com Cloud Logging e captura de erros globais.*
 
 ### 🎙️ Entregável B: Chat Multimodal & Voice (Etapa 2)
 *Objetivo: Expandir a interação para além do texto.*
