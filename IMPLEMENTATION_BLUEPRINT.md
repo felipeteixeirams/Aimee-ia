@@ -45,13 +45,14 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 ### 🧪 Entregável F: Qualidade e Cobertura de Testes (Etapa 6)
 *Objetivo: Garantir estabilidade e atingir 80% de cobertura de branches (Caminhos de Decisão).*
 *Métricas Atuais (2026-05-02):*
-- **Linhas**: 0.06%
-- **Branches**: 0%
-- **Funções**: 0.21%
-- **Statements**: 0.05%
+- **Linhas**: 4.89%
+- **Branches**: 5.62%
+- **Funções**: 5.11%
+- **Statements**: 4.94%
+- **Domain/Skills Coverage**: >90% (Foco em Regras de Negócio)
 
 - [x] **Tarefa F.1 (2h)**: Configurar infraestrutura de testes (`vitest`, `jsdom`) e filtros de cobertura (ignorar config/deps).
-- [ ] **Tarefa F.2 (8h)**: Implementar Testes Unitários para Regras de Negócio (`domain/services`) com foco em branches lógicas.
+- [x] **Tarefa F.2 (8h)**: Implementar Testes Unitários para Regras de Negócio (`domain/services`) com foco em branches lógicas.
 - [ ] **Tarefa F.3 (6h)**: Implementar Testes de Integração para Repositórios e Orquestradores.
 - [ ] **Tarefa F.4 (4h)**: Automatizar geração de relatório de cobertura e garantir threshold de 80% em branches.
 
@@ -59,6 +60,7 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-02**: Implementação da Tarefa F.2: Cobertura de 100% para `ValidationService` e >90% para as Skills de domínio (Finance, Shopping, Routine).
 - **2026-05-02**: Configuração da infraestrutura de testes e refinamento do ignore list em `vite.config.ts` (Tarefa F.1).
 
 - **2026-05-02**: Implementação das Tarefas D.3 e D.4: Captura de geolocalização por item no checkout e atualização automática de estoque em batch.
