@@ -51,7 +51,7 @@ export function getFriendlyErrorMessage(error: any): string {
     case 'not-found':
       return 'O item solicitado não foi encontrado.';
     default:
-      if (message.includes('quota')) return 'Limite de quota excedido para hoje.';
+      if (message.toLowerCase().includes('quota')) return 'Limite de quota excedido para hoje.';
       return 'Ocorreu um erro inesperado. Nossa equipe técnica já foi notificada.';
   }
 }

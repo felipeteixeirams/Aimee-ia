@@ -81,10 +81,8 @@ export function generateRecurrenceInstances(
     count++;
     
     // Safety break if it's not moving forward
-    if (recurrence.type === 'weekly' && recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
-       // already incremented
-    } else if (recurrence.type === 'daily' || recurrence.type === 'monthly' || recurrence.type === 'annual') {
-       // already incremented
+    if (recurrence.type === 'weekly' || recurrence.type === 'daily' || recurrence.type === 'monthly' || recurrence.type === 'annual') {
+       // already incremented in their blocks
     } else {
        break; 
     }

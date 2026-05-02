@@ -87,11 +87,11 @@ export function useAimeeActions(
         
         // Extract actions if present
         let actions: any[] = [];
-        const actionMatch = block.match(/\[ACTIONS: (.*?)\]/s);
+        const actionMatch = block.match(/\[ACTIONS: ([\s\S]*)\]/);
         if (actionMatch) {
           try {
             actions = JSON.parse(actionMatch[1]);
-            block = block.replace(/\[ACTIONS: .*?\]/s, '').trim();
+            block = block.replace(/\[ACTIONS: [\s\S]*\]/g, '').trim();
           } catch (e) {
             logger.error('Error parsing AI actions', { error: e });
           }
@@ -283,6 +283,14 @@ export function useAimeeActions(
   };
 
   const manageShopping = {
+    addItem: async (item: Partial<ShoppingItem>, targetId: string) => {
+      try {
+        await shoppingRepository.create(item as any, targetId);
+        showToast(`${item.name} adicionado à lista`, 'success', 2000);
+      } catch (err) {
+        showToast('Erro ao adicionar item', 'error');
+      }
+    },
     toggle: async (item: ShoppingItem, targetId: string, extraUpdates?: Partial<ShoppingItem>) => {
       if (!item.id) return;
       try {
@@ -388,11 +396,11 @@ export function useAimeeActions(
 
       // Extract actions if present
       let actions: any[] = [];
-      const actionMatch = insight.match(/\[ACTIONS: (.*?)\]/s);
+      const actionMatch = insight.match(/\[ACTIONS: ([\s\S]*)\]/);
       if (actionMatch) {
         try {
           actions = JSON.parse(actionMatch[1]);
-          insight = insight.replace(/\[ACTIONS: .*?\]/s, '').trim();
+          insight = insight.replace(/\[ACTIONS: [\s\S]*\]/g, '').trim();
         } catch (e) {
           logger.error('Error parsing AI actions in insight', { error: e });
         }

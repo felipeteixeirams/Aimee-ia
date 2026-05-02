@@ -11,6 +11,11 @@ export class AimeeOrchestrator {
 
   async processRequest(prompt: string, history: any[] = [], persona: string = "funny", audio?: { data: string; mimeType: string }): Promise<{ content: string; functionCalls?: any[] }> {
     try {
+      const model = this.genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        systemInstruction: this.getSystemInstruction(persona, new Date().toLocaleString())
+      });
+
       const parts: any[] = [{ text: prompt }];
       
       if (audio) {
@@ -22,21 +27,20 @@ export class AimeeOrchestrator {
         });
       }
 
-      const response = await this.genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const result = await model.generateContent({
         contents: [
           ...history,
           { role: "user", parts }
         ],
-        config: {
-          systemInstruction: this.getSystemInstruction(persona, new Date().toLocaleString()),
-          tools: [{ functionDeclarations: allAimeeTools }]
-        }
+        tools: [{ functionDeclarations: allAimeeTools } as any]
       });
 
+      const response = await result.response;
+      const functionCalls = response.candidates?.[0]?.content?.parts?.filter(p => p.functionCall).map(p => p.functionCall);
+
       return {
-        content: response.text || "",
-        functionCalls: response.functionCalls
+        content: response.text(),
+        functionCalls: functionCalls && functionCalls.length > 0 ? functionCalls : undefined
       };
     } catch (error: any) {
       logger.error("Aimee Orchestrator Error", { error: error.message });
