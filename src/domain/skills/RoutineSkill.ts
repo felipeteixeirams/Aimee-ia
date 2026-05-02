@@ -2,6 +2,7 @@ import { taskRepository, eventRepository } from '../../infrastructure/repositori
 import { HouseholdTask, TaskRecurrence } from '../../types';
 import { generateRecurrenceInstances } from '../../lib/recurrenceUtils';
 import { logger } from '../../lib/logger';
+import { ValidationService } from '../services/ValidationService';
 
 export class RoutineSkill {
   /**
@@ -9,6 +10,10 @@ export class RoutineSkill {
    */
   async addTask(userId: string, task: Partial<HouseholdTask>): Promise<void> {
     logger.info('RoutineSkill: Adding task', { userId, title: task.title });
+
+    // 1. Validação de Negócio
+    const error = ValidationService.validateTask(task);
+    if (error) throw new Error(error);
 
     if (task.recurrence) {
       const recurrenceId = crypto.randomUUID();

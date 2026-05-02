@@ -20,7 +20,7 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
   - *Critério: Remover todos os `addDoc` e `updateDoc` do front-end e do `aiService.ts`.*
 - [x] **Tarefa A.2 (4h)**: Implementar Camada de `Skills` (Orquestradores de lógica).
   - *Critério: Aimee deve conseguir executar sequências (ex: adicionar gasto -> atualizar meta) em uma única "Skill".*
-- [ ] **Tarefa A.3 (4h)**: Centralizar validações de negócio em `domain/services`.
+- [x] **Tarefa A.3 (4h)**: Centralizar validações de negócio em `domain/services`.
   - *Critério: Impedir gastos negativos ou tarefas sem título antes de chegar ao Firestore.*
 
 ### 🎙️ Entregável B: Chat Multimodal & Voice (Etapa 2)

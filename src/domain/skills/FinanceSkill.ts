@@ -1,6 +1,7 @@
-import { transactionRepository, profileRepository } from '../../infrastructure/repositories';
+import { transactionRepository } from '../../infrastructure/repositories';
 import { Transaction } from '../../types';
 import { logger } from '../../lib/logger';
+import { ValidationService } from '../services/ValidationService';
 
 export class FinanceSkill {
   /**
@@ -9,7 +10,11 @@ export class FinanceSkill {
   async recordTransaction(userId: string, data: Partial<Transaction>): Promise<string> {
     logger.info('FinanceSkill: Recording transaction', { userId, amount: data.amount });
 
-    // 1. Persistir a transação
+    // 1. Validação de Negócio
+    const error = ValidationService.validateTransaction(data);
+    if (error) throw new Error(error);
+
+    // 2. Persistir a transação
     const transactionId = await transactionRepository.create({
       amount: data.amount || 0,
       type: data.type || 'expense',

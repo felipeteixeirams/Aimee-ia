@@ -1,6 +1,7 @@
 import { shoppingRepository } from '../../infrastructure/repositories';
 import { ShoppingItem } from '../../types';
 import { logger } from '../../lib/logger';
+import { ValidationService } from '../services/ValidationService';
 
 export class ShoppingSkill {
   /**
@@ -10,6 +11,13 @@ export class ShoppingSkill {
     const existingList = await shoppingRepository.list([], userId);
 
     for (const item of items) {
+      // 1. Validação de Negócio
+      const error = ValidationService.validateShoppingItem(item);
+      if (error) {
+        logger.warn('ShoppingSkill: Skipping invalid item', { item, error });
+        continue;
+      }
+
       const existing = existingList.find(i => i.name.toLowerCase() === item.name?.toLowerCase());
       
       if (existing && existing.id) {
