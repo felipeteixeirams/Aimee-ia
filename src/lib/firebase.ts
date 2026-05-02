@@ -3,41 +3,20 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { logger } from './logger';
-import localConfig from '../../firebase-applet-config.json';
-
-// Use environment variables if available (Vercel/Vite), otherwise fallback to local config
-const getCfg = (key: string, envKey: string) => {
-  const envVal = import.meta.env[envKey];
-  return (envVal && envVal.trim() !== "") ? envVal : (localConfig as any)[key];
-};
+import { config } from './config';
 
 const firebaseConfig = {
-  apiKey: getCfg('apiKey', 'VITE_FIREBASE_API_KEY'),
-  authDomain: getCfg('authDomain', 'VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: getCfg('projectId', 'VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: getCfg('storageBucket', 'VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: getCfg('messagingSenderId', 'VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: getCfg('appId', 'VITE_FIREBASE_APP_ID'),
-  measurementId: getCfg('measurementId', 'VITE_FIREBASE_MEASUREMENT_ID'),
-  firestoreDatabaseId: getCfg('firestoreDatabaseId', 'VITE_FIREBASE_DATABASE_ID')
+  apiKey: config.firebase.apiKey,
+  authDomain: config.firebase.authDomain,
+  projectId: config.firebase.projectId,
+  storageBucket: config.firebase.storageBucket,
+  messagingSenderId: config.firebase.messagingSenderId,
+  appId: config.firebase.appId,
+  measurementId: config.firebase.measurementId,
 };
 
-// Validate critical config
-const missingVars = Object.entries(firebaseConfig)
-  .filter(([key, value]) => !value && key !== 'measurementId' && key !== 'firestoreDatabaseId') 
-  .map(([key]) => key);
-
-if (missingVars.length > 0) {
-  logger.error('Missing Firebase configuration variables', { missingVars });
-} else {
-  logger.info('Firebase initialized', { 
-    projectId: firebaseConfig.projectId,
-    authDomain: firebaseConfig.authDomain
-  });
-}
-
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
+export const db = getFirestore(app, config.firebase.databaseId || undefined);
 export const auth = getAuth(app);
 
 // Initialize Analytics
@@ -58,9 +37,8 @@ export async function testConnection(): Promise<{ ok: boolean; error?: string }>
     logger.info('Firebase connection verified');
     return { ok: true };
   } catch (error: any) {
-    // Silently handle offline errors for the connection test
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      return { ok: true }; // Consider ok if just offline
+      return { ok: true };
     }
     logger.error('Firebase connection test failed', { error });
     return { ok: false, error: error.message };

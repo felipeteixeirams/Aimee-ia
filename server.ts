@@ -5,25 +5,13 @@ import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import { logger } from "./src/lib/logger.ts";
+import { config, validateConfig } from "./src/lib/config.ts";
 import { NotificationType, type NotificationPayload } from "./src/types/index.ts";
 
 dotenv.config();
 
-// Validate critical environment variables
-const criticalEnvVars = [
-  'GEMINI_API_KEY',
-  'SMTP_HOST',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'ADMIN_EMAIL'
-];
-
-const missingEnvVars = criticalEnvVars.filter(v => !process.env[v]);
-if (missingEnvVars.length > 0) {
-  logger.warn('Missing server-side environment variables', { missingEnvVars });
-} else {
-  logger.info('Server environment variables validated');
-}
+// Centralized configuration and validation
+validateConfig();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,9 +23,9 @@ import { google } from "googleapis";
 
 // Google OAuth Configuration
 const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_OAUTH_CLIENT_ID,
-  process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-  process.env.GOOGLE_OAUTH_REDIRECT_URI
+  config.google.clientId,
+  config.google.clientSecret,
+  config.google.redirectUri
 );
 
 // Auth URL Route
@@ -163,9 +151,9 @@ app.post("/api/ai", async (req, res) => {
   const { prompt, history, persona, context, audio } = req.body;
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = config.geminiApiKey;
     if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY no configured." });
+      return res.status(500).json({ error: "GEMINI_API_KEY não configurada." });
     }
 
     const { AimeeOrchestrator } = await import("./src/infrastructure/llm/AimeeOrchestrator.ts");
@@ -192,7 +180,7 @@ Compras: ${JSON.stringify(context.shopping || [])}
 // Google Places Proxy Route
 app.get("/api/location/nearby-markets", async (req, res) => {
   const { lat, lng } = req.query;
-  const apiKey = process.env.VITE_GOOGLE_MAPS_API_KEY;
+  const apiKey = config.google.mapsApiKey;
 
   if (!apiKey) {
     return res.status(500).json({ error: "Chave da API do Google Maps não configurada." });

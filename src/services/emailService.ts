@@ -1,16 +1,14 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
 import { logger } from '../lib/logger.js';
-
-dotenv.config();
+import { config } from '../lib/config';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_PORT === '465',
+  host: config.email.host,
+  port: config.email.port,
+  secure: config.email.port === 465,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: config.email.user,
+    pass: config.email.pass,
   },
 });
 
@@ -33,7 +31,7 @@ async function sendEmail(mailOptions: nodemailer.SendMailOptions) {
   }
 }
 
-const APP_URL = process.env.APP_URL || 'https://aimee.vercel.app';
+const APP_URL = config.appUrl;
 
 const styles = `
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -61,7 +59,7 @@ const footerStyle = `
 
 export async function sendRegistrationRequestEmail(userEmail: string, userName: string) {
   const mailOptions = {
-    from: '"Aimee" <' + process.env.SMTP_USER + '>',
+    from: '"Aimee" <' + config.email.user + '>',
     to: userEmail,
     subject: 'Solicitação de Registro Recebida 💌',
     html: `
@@ -84,7 +82,7 @@ export async function sendRegistrationRequestEmail(userEmail: string, userName: 
 
 export async function sendApprovalEmail(userEmail: string, userName: string) {
   const mailOptions = {
-    from: '"Aimee" <' + process.env.SMTP_USER + '>',
+    from: '"Aimee" <' + config.email.user + '>',
     to: userEmail,
     subject: 'Boas-vindas à Aimee! 🚀',
     html: `
@@ -109,7 +107,7 @@ export async function sendApprovalEmail(userEmail: string, userName: string) {
 
 export async function sendRejectionEmail(userEmail: string, userName: string) {
   const mailOptions = {
-    from: '"Aimee" <' + process.env.SMTP_USER + '>',
+    from: '"Aimee" <' + config.email.user + '>',
     to: userEmail,
     subject: 'Sobre sua solicitação de acesso 📋',
     html: `
@@ -134,7 +132,7 @@ export async function sendRejectionEmail(userEmail: string, userName: string) {
 
 export async function sendBlockedEmail(userEmail: string, userName: string, days: number) {
   const mailOptions = {
-    from: '"Aimee" <' + process.env.SMTP_USER + '>',
+    from: '"Aimee" <' + config.email.user + '>',
     to: userEmail,
     subject: 'Status da sua conta 🔒',
     html: `

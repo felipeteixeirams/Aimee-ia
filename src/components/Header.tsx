@@ -94,25 +94,25 @@ export function Header({
 
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-black tracking-tight text-neutral-800 dark:text-white leading-none">Aimee</h1>
+            <h1 className="text-xl font-display font-black tracking-tight text-neutral-800 dark:text-white leading-none">Aimee</h1>
             {isSuperAdmin && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-brand/10 text-brand rounded-full">
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-brand text-brand-foreground rounded-full">
                 <Shield className="w-2.5 h-2.5" />
-                <span className="text-[8px] font-black uppercase tracking-tighter">Admin</span>
+                <span className="text-[8px] font-black uppercase tracking-widest">Admin</span>
               </div>
             )}
           </div>
           
           <div className="flex items-center gap-1.5 mt-0.5">
             <div className={cn(
-              "px-1.5 py-0.5 rounded-md flex items-center gap-1 border transition-colors",
+              "px-1.5 py-0.5 rounded-md flex items-center gap-1 transition-colors",
               isOnline 
-                ? "bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30" 
-                : "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30"
+                ? "bg-green-500/10" 
+                : "bg-red-500/10"
             )}>
               <div className={cn("w-1 h-1 rounded-full", isOnline ? "bg-green-500" : "bg-red-500 animate-pulse")} />
               <span className={cn("text-[7px] font-black uppercase tracking-widest", isOnline ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-                {isOnline ? 'Online' : 'Offline'}
+                {isOnline ? 'Active' : 'Offline'}
               </span>
             </div>
             <p className="text-[9px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap flex items-center gap-1.5">
@@ -120,7 +120,7 @@ export function Header({
                profile?.selectedPersona === 'analytical' ? 'Analítico' : 
                profile?.selectedPersona === 'frugal' ? 'Frugal' : 'IA Orquestradora'}
               <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 2.0' : 'DeepSeek R1'}
+              {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 3.0' : 'DeepSeek R1'}
             </p>
           </div>
         </div>

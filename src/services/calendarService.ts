@@ -1,5 +1,5 @@
 import { FamilyEvent } from "../types";
-import firebaseConfig from '../../firebase-applet-config.json';
+import { config } from '../lib/config';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logger } from '../lib/logger';
@@ -8,7 +8,7 @@ export const calendarService = {
   async fetchGoogleCalendarEvents(accessToken: string): Promise<Omit<FamilyEvent, 'id' | 'userId' | 'createdAt' | 'updatedAt'>[]> {
     try {
       const now = new Date().toISOString();
-      const apiKey = firebaseConfig.apiKey;
+      const apiKey = config.firebase.apiKey;
       const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(now)}&maxResults=10&singleEvents=true&orderBy=startTime&key=${apiKey}`;
       
       const response = await fetch(url, {
@@ -28,9 +28,9 @@ export const calendarService = {
         }
         
         const serverMsg = parsedError.error?.message || errorBody;
-        console.error('Google Calendar API Error Full Detail:', response.status, errorBody);
+        logger.error('Google Calendar API Error', { status: response.status, serverMsg, details: parsedError });
         
-        throw new Error(`Erro ${response.status}: ${serverMsg}`);
+        throw new Error(`Erro do Google Calendar (${response.status}): ${serverMsg}`);
       }
 
       const data = await response.json();
@@ -42,7 +42,7 @@ export const calendarService = {
         googleEventId: item.id
       }));
     } catch (error: any) {
-      console.error('Calendar Service Error:', error);
+      logger.error('Calendar Service Fetch Error', { error: error.message });
       throw error;
     }
   },

@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import { logger } from "../../lib/logger.ts";
 import { allAimeeTools } from "../tools/AimeeTools.ts";
 
@@ -11,11 +11,6 @@ export class AimeeOrchestrator {
 
   async processRequest(prompt: string, history: any[] = [], persona: string = "funny", audio?: { data: string; mimeType: string }): Promise<{ content: string; functionCalls?: any[] }> {
     try {
-      const model = this.genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        systemInstruction: this.getSystemInstruction(persona, new Date().toLocaleString())
-      });
-
       const parts: any[] = [{ text: prompt }];
       
       if (audio) {
@@ -27,23 +22,30 @@ export class AimeeOrchestrator {
         });
       }
 
-      const result = await model.generateContent({
+      const response: GenerateContentResponse = await this.genAI.models.generateContent({
+        model: "gemini-3-flash-preview",
         contents: [
           ...history,
           { role: "user", parts }
         ],
-        tools: [{ functionDeclarations: allAimeeTools } as any]
+        config: {
+          systemInstruction: this.getSystemInstruction(persona, new Date().toLocaleString()),
+          tools: [{ functionDeclarations: allAimeeTools } as any]
+        }
       });
 
-      const response = await result.response;
-      const functionCalls = response.candidates?.[0]?.content?.parts?.filter(p => p.functionCall).map(p => p.functionCall);
+      const functionCalls = response.functionCalls;
 
       return {
-        content: response.text(),
+        content: response.text || "Comando processado.",
         functionCalls: functionCalls && functionCalls.length > 0 ? functionCalls : undefined
       };
     } catch (error: any) {
-      logger.error("Aimee Orchestrator Error", { error: error.message });
+      logger.error("Aimee Orchestrator Error", { 
+        error: error.message,
+        details: error.details,
+        stack: error.stack
+      });
       throw error;
     }
   }

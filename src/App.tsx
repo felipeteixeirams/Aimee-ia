@@ -597,7 +597,7 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 overflow-hidden relative pb-32">
         <AnimatePresence mode="wait">
           {activeTab === 'chat' && (
             <ChatView 

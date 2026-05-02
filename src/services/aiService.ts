@@ -5,6 +5,8 @@ import {
   shoppingSkill
 } from "../domain/skills";
 
+import { withRetry } from "../lib/retryUtils";
+
 export const orchestrator = async (
   prompt: string, 
   history: ChatMessage[], 
@@ -21,7 +23,7 @@ export const orchestrator = async (
 ) => {
   const activeUserId = targetUserId || userId;
   
-  try {
+  const callAI = async () => {
     const response = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -42,10 +44,15 @@ export const orchestrator = async (
     });
 
     if (!response.ok) {
-      throw new Error("Erro na comunicação com a Aimee Central.");
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Erro na comunicação com a Aimee Central.");
     }
 
-    const { content, functionCalls } = await response.json();
+    return response.json();
+  };
+
+  try {
+    const { content, functionCalls } = await withRetry(callAI, { maxAttempts: 2 });
 
     let feedback = "";
     if (functionCalls && functionCalls.length > 0) {

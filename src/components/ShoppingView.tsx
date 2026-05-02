@@ -193,7 +193,7 @@ export const ShoppingView = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6"
+      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-32"
     >
       <div className="flex items-center justify-between">
         <div>

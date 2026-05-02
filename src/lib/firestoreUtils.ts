@@ -83,15 +83,14 @@ export function handleFirestoreError(error: any, operationType: OperationType, p
   
   if (isOffline) {
     logger.warn(`Firestore ${operationType.toUpperCase()} - Client Offline (Transient)`, { path });
+    // Don't throw for offline errors if you want silent background sync to continue
     return;
   }
 
+  // CRITICAL: The error message MUST be a JSON string as per instructions
+  const jsonErrorString = JSON.stringify(errInfo);
   logger.error(`Firestore ${operationType.toUpperCase()} Error`, errInfo, auth.currentUser?.uid);
   
-  // Wrap in a standard error with the friendly message as primary, but JSON encoded for system diagnostics if needed
-  const friendlyMsg = getFriendlyErrorMessage(error);
-  const finalError = new Error(friendlyMsg);
-  (finalError as any).details = errInfo;
-  
-  throw finalError;
+  // Throw the JSON string so the system can parse it
+  throw new Error(jsonErrorString);
 }

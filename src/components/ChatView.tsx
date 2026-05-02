@@ -101,8 +101,8 @@ export const ChatView = ({
           
           if (dateStr !== prevDateStr) {
             acc.push(
-              <div key={`sep-${dateStr}`} className="flex justify-center my-6">
-                <span className="px-3 py-1 bg-neutral-50 dark:bg-neutral-900/50 text-[10px] text-neutral-400 font-medium rounded-full uppercase tracking-widest">
+              <div key={`sep-${dateStr}`} className="flex justify-center my-8">
+                <span className="px-4 py-1.5 bg-neutral-100/50 dark:bg-neutral-900/50 text-[10px] text-neutral-400 font-bold rounded-full uppercase tracking-[0.2em] border border-neutral-200/50 dark:border-neutral-800/50">
                   {formatDateSeparator(msg.timestamp)}
                 </span>
               </div>
@@ -114,110 +114,124 @@ export const ChatView = ({
               key={msg.id || i} 
               id={`msg-${msg.id}`}
               layout
-              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={cn("flex group items-end gap-3", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}
-            >
-              {msg.role === 'assistant' && (
-                <div className="shrink-0 mb-1">
-                  <AimeeAvatar src={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR} size="sm" className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" />
-                </div>
+              className={cn(
+                "flex group gap-4 max-w-4xl mx-auto w-full", 
+                msg.role === 'user' ? "flex-row-reverse" : "flex-row"
               )}
+            >
               <div className={cn(
-                "relative max-w-[85%] px-5 py-4 rounded-[1.75rem] text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap shadow-xl shadow-black/5",
-                msg.role === 'user' 
-                  ? "bg-brand text-white rounded-br-sm shadow-brand/10 font-medium" 
-                  : msg.isInsight
-                    ? "bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 text-amber-900 dark:text-amber-100 rounded-bl-sm ring-1 ring-amber-500/10"
-                    : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-bl-sm"
+                "shrink-0 flex flex-col justify-end pb-1",
+                msg.role === 'user' ? "items-end" : "items-start"
               )}>
-                {msg.isInsight && (
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-amber-200/50 dark:border-amber-800/50">
-                    <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Insight Financeiro</span>
-                  </div>
-                )}
-                {editingMessage?.id === msg.id ? (
-                  <div className="flex flex-col gap-2 min-w-[200px]">
-                    <textarea
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      className="w-full bg-transparent border-none focus:ring-0 resize-none text-sm p-0 text-brand-foreground placeholder:text-brand-foreground/50"
-                      autoFocus
-                      rows={3}
-                    />
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => setEditingMessage(null)} className="p-1 hover:bg-black/10 rounded transition-colors">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => handleEditMessage(msg)} className="p-1 hover:bg-black/10 rounded transition-colors">
-                        <Check className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
+                {msg.role === 'assistant' ? (
+                  <AimeeAvatar 
+                    src={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR} 
+                    size="sm" 
+                    className="w-10 h-10 rounded-2xl shadow-xl border-2 border-white dark:border-neutral-800 ring-4 ring-brand/5" 
+                  />
                 ) : (
-                  <>
-                    {msg.content}
-                    <div className={cn(
-                      "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex gap-1",
-                      msg.role === 'user' ? "right-full mr-2" : "left-full ml-2"
-                    )}>
-                      <button 
-                        onClick={() => copyToClipboard(msg.content, msg.id || i.toString())}
-                        className="p-1.5 bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-lg shadow-sm text-neutral-400 hover:text-brand transition-colors relative"
-                        title="Copiar"
-                      >
-                        {copiedId === (msg.id || i.toString()) ? (
-                          <Check className="w-3.5 h-3.5 text-green-500" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                        <AnimatePresence>
-                          {copiedId === (msg.id || i.toString()) && (
-                            <motion.span 
-                              initial={{ opacity: 0, y: 10, x: '-50%' }}
-                              animate={{ opacity: 1, y: 0, x: '-50%' }}
-                              exit={{ opacity: 0, y: -10, x: '-50%' }}
-                              className="absolute bottom-full mb-2 left-1/2 px-3 py-1.5 bg-neutral-900 dark:bg-neutral-800 text-white text-[11px] font-medium rounded-lg whitespace-nowrap pointer-events-none shadow-xl border border-neutral-700/50 z-50"
-                            >
-                              Copiado para a área de transferência!
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </button>
-                      {msg.role === 'user' && (
-                        <button 
-                          onClick={() => {
-                            setEditingMessage(msg);
-                            setEditValue(msg.content);
-                          }}
-                          className="p-1.5 bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-lg shadow-sm text-neutral-400 hover:text-brand transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
-                {msg.actions && msg.actions.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-brand/10 dark:border-white/10">
-                    {msg.actions.map((action) => (
-                      <button
-                        key={action.id}
-                        onClick={() => handleSendMessage(action.value, true)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
-                          msg.role === 'user' 
-                            ? "bg-white/20 text-white hover:bg-white/30" 
-                            : "bg-brand/10 text-brand hover:bg-brand/20 dark:bg-brand/20 dark:text-brand-foreground"
-                        )}
-                      >
-                        {action.label}
-                      </button>
-                    ))}
+                  <div className="w-10 h-10 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
+                     <span className="text-xs font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || 'U'}</span>
                   </div>
                 )}
+              </div>
+
+              <div className={cn(
+                "relative flex flex-col gap-1 max-w-[80%] md:max-w-[70%]",
+                msg.role === 'user' ? "items-end" : "items-start"
+              )}>
+                <div className={cn(
+                  "relative px-6 py-4 rounded-[2rem] text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap shadow-sm",
+                  msg.role === 'user' 
+                    ? "bg-brand text-white rounded-tr-none font-medium selection:bg-white/30 selection:text-white" 
+                    : msg.isInsight
+                      ? "bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 text-amber-900 dark:text-amber-100 rounded-tl-none ring-1 ring-amber-500/10 ai-bubble"
+                      : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-tl-none ai-bubble"
+                )}>
+                  {msg.isInsight && (
+                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
+                      <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Insight Premium</span>
+                    </div>
+                  )}
+                  {editingMessage?.id === msg.id ? (
+                    <div className="flex flex-col gap-3 min-w-[200px]">
+                      <textarea
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full bg-transparent border-none focus:ring-0 resize-none text-[15px] p-0 text-white placeholder:text-white/50"
+                        autoFocus
+                        rows={3}
+                      />
+                      <div className="flex justify-end gap-2 border-t border-white/20 pt-2">
+                        <button onClick={() => setEditingMessage(null)} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-xs font-bold">
+                          Cancelar
+                        </button>
+                        <button onClick={() => handleEditMessage(msg)} className="px-3 py-1 bg-white text-brand rounded-lg transition-colors text-xs font-bold">
+                          Salvar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="block">{msg.content}</span>
+                      <div className={cn(
+                        "absolute top-4 opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-1",
+                        msg.role === 'user' ? "right-full mr-3" : "left-full ml-3"
+                      )}>
+                        <button 
+                          onClick={() => copyToClipboard(msg.content, msg.id || i.toString())}
+                          className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors relative"
+                          title="Copiar"
+                        >
+                          {copiedId === (msg.id || i.toString()) ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                        {msg.role === 'user' && (
+                          <button 
+                            onClick={() => {
+                              setEditingMessage(msg);
+                              setEditValue(msg.content);
+                            }}
+                            className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {msg.actions && msg.actions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-brand/5 dark:border-white/5">
+                      {msg.actions.map((action) => (
+                        <button
+                          key={action.id}
+                          onClick={() => handleSendMessage(action.value, true)}
+                          className={cn(
+                            "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] transition-all active:scale-95 border",
+                            msg.role === 'user' 
+                              ? "bg-white/10 text-white border-white/20 hover:bg-white/20" 
+                              : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10 dark:bg-brand/20 dark:text-brand-foreground"
+                          )}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2",
+                  msg.role === 'user' ? "text-right" : "text-left"
+                )}>
+                  {format(new Date(msg.timestamp), 'HH:mm')}
+                </span>
               </div>
             </motion.div>
           );

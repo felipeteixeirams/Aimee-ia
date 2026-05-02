@@ -56,10 +56,28 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - [x] **Tarefa F.3 (6h)**: Implementar Testes de Integração para Repositórios e Orquestradores.
 - [x] **Tarefa F.4 (4h)**: Automatizar geração de relatório de cobertura e garantir threshold de 80% em branches.
 
+### 🛡️ Entregável G: Resiliência e Recuperação de Falhas (Concluido)
+*Objetivo: Garantir que a Aimee opere de forma ininterrupta e recupere-se de erros de API/Rede de forma graciosa.*
+- [x] **Tarefa G.1 (4h)**: Centralizar Configurações e Validar Variáveis de Ambiente no boot (Server/Client).
+- [x] **Tarefa G.2 (4h)**: Auditar e Padronizar Tratamento de Erros em todas as integrações externas (Firebase, Gemini, Google Maps).
+- [x] **Tarefa G.3 (4h)**: Implementar Circuit Breaker ou mecanismos de Retry exponencial para falhas de rede em APIs críticas.
+- [x] **Tarefa G.4 (2h)**: Padronizar logs de erro para diagnóstico via sistema AI (JSON Error Pattern).
+
+### 💎 Entregável H: Refino UI/UX Premium & Estética AI Player (Concluido)
+*Objetivo: Elevar o visual da Aimee para o nível das principais IAs do mercado (ChatGPT, Gemini, Copilot).*
+- [x] **Tarefa H.1 (6h)**: Refatoração Visual Mobile-First: Garantir que 100% dos componentes sejam adaptativos e táteis.
+- [x] **Tarefa H.2 (4h)**: Tipografia e Iconografia: Migrar para fontes de alta legibilidade (Inter/Outfit) e set de ícones consistentes (Lucide).
+- [x] **Tarefa H.3 (6h)**: Micro-animações e Feedback: Adicionar transições fluidas no chat, estados de "typing" sofisticados e toasts não intrusivos.
+- [x] **Tarefa H.4 (4h)**: Design de Componentes Avançados: Cards de insight, visualizadores de orçamento e listas de tarefas inspirados em apps de produtividade premium.
+
 ---
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-02**: Finalização da Etapa 8 (Premium UI/UX). Aimee agora possui uma estética moderna inspirada nos principais players de IA, com navegação flutuante, fontes premium (Outfit) e micro-interações fluidas.
+- **2026-05-02**: Finalização da Etapa 7 (Resiliência). Implementação de Retry com backoff exponencial, Global Error Boundary e validação rigorosa de variáveis de ambiente no boot.
+- **2026-05-02**: Início da Etapa 7. Centralização de configurações em `src/lib/config.ts` e padronização de erros no `FirestoreUtils` (Tarefa G.1/G.4).
+- **2026-05-02**: Ajuste no build e deploy para suportar servidor Express compilado no `dist/server.js`.
 - **2026-05-02**: Finalização da Etapa 6 (Qualidade). Cobertura de branches atingiu **84.8%** no Core da aplicação.
 - **2026-05-02**: Implementação da Tarefa F.3: Testes de integração para `BaseRepository` (CRUD) e `AimeeOrchestrator` (LLM Integration Mocked).
 - **2026-05-02**: Implementação da Tarefa F.2: Cobertura de 100% para `ValidationService` e >90% para as Skills de domínio (Finance, Shopping, Routine).
@@ -80,5 +98,5 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 ---
 
 ## 🎯 Atividade Iniciada agora
-**Entregável A - Tarefa A.1**: Refatoração do `aiService.ts` e criação da infraestrutura de Repositórios para limpar o código do frontend de chamadas diretas ao `addDoc`/`updateDoc`.
+**Entregável G - Tarefa G.2**: Auditoria de tratamento de erros e implementação de resiliência em chamadas externas.
 

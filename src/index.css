@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
@@ -9,7 +9,15 @@
   --color-brand-muted: var(--brand-muted);
   
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-shimmer: shimmer 2s linear infinite;
+  
+  @keyframes shimmer {
+    from { background-position: 0 0; }
+    to { background-position: -200% 0; }
+  }
 }
 
 @layer base {
@@ -117,6 +125,19 @@
   
   .text-description {
     @apply text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 font-medium;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-linear-to-r from-brand to-brand-muted;
+  }
+
+  .ai-bubble {
+    @apply relative overflow-hidden;
+  }
+
+  .ai-bubble::before {
+    content: '';
+    @apply absolute inset-0 bg-linear-to-r from-brand/5 via-transparent to-brand/5 pointer-events-none;
   }
 }
 

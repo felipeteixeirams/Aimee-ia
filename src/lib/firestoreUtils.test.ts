@@ -55,11 +55,17 @@ describe('firestoreUtils', () => {
       expect(logger.warn).toHaveBeenCalled();
     });
 
-    it('should log error and throw friendly error otherwise', () => {
+    it('should log error and throw JSON error otherwise', () => {
       const error = { code: 'permission-denied', message: 'Denied' };
       
-      expect(() => handleFirestoreError(error, OperationType.WRITE, 'users/1'))
-        .toThrow('Você não tem permissão para realizar esta ação.');
+      try {
+        handleFirestoreError(error, OperationType.WRITE, 'users/1');
+      } catch (err: any) {
+        const parsed = JSON.parse(err.message);
+        expect(parsed.code).toBe('permission-denied');
+        expect(parsed.operationType).toBe('write');
+        expect(parsed.path).toBe('users/1');
+      }
       
       expect(logger.error).toHaveBeenCalled();
     });
