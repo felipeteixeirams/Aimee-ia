@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { LogOut, Users, ChevronDown, Sparkles, Zap, Shield, Check } from 'lucide-react';
+import { LogOut, Users, ChevronDown, Sparkles, Zap, Shield, Check, Moon, Sun } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { AimeeAvatar } from './AimeeAvatar';
 import { UserProfile, GlobalConfig, AIProvider } from '../types';
@@ -17,6 +17,10 @@ interface HeaderProps {
   GLOBAL_AIMEE_AVATAR: string;
   globalConfig: GlobalConfig;
   updateGlobalConfig: (updates: Partial<GlobalConfig>) => void;
+  health: { firebase: boolean; ai: boolean };
+  isDarkMode: boolean;
+  setIsDarkMode: (val: boolean) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
 }
 
 export function Header({
@@ -30,21 +34,20 @@ export function Header({
   onLogout,
   GLOBAL_AIMEE_AVATAR,
   globalConfig,
-  updateGlobalConfig
+  updateGlobalConfig,
+  health,
+  isDarkMode,
+  setIsDarkMode,
+  updateProfile
 }: HeaderProps) {
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const isOnline = health.firebase && health.ai;
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowModelDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
+  const toggleTheme = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+    updateProfile({ theme: next ? 'dark' : 'light' });
+  };
+  
   return (
     <header className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 sm:pb-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 z-40 sticky top-0">
       <div className="flex items-center gap-3 sm:gap-4">
@@ -71,6 +74,16 @@ export function Header({
             <div className="absolute inset-[2px] bg-white dark:bg-neutral-900 rounded-[14px] z-10 overflow-hidden border border-neutral-100 dark:border-neutral-800 shadow-sm">
               <AimeeAvatar src={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR} className="w-full h-full scale-110" />
             </div>
+            {/* Health Dot */}
+            <motion.div 
+              initial={false}
+              animate={{ 
+                scale: isOnline ? [1, 1.2, 1] : 1,
+                backgroundColor: isOnline ? '#22c55e' : '#ef4444' 
+              }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-neutral-900 shadow-sm z-20" 
+            />
           </button>
           {unreadInsightsCount > 0 && (
             <span className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center z-30 border-2 border-white dark:border-neutral-900 shadow-lg animate-bounce pointer-events-none">
@@ -91,16 +104,30 @@ export function Header({
           </div>
           
           <div>
-            <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap">
+            <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap flex items-center gap-1.5">
               {activeSpace ? `Espaço` : 
                profile?.selectedPersona === 'analytical' ? 'Analítico' : 
-               profile?.selectedPersona === 'frugal' ? 'Frugal' : 'Online'} • {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 2.0' : 'DeepSeek R1'}
+               profile?.selectedPersona === 'frugal' ? 'Frugal' : 'Online'} 
+              <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 2.0' : 'DeepSeek R1'}
+              <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              <span className={cn("transition-colors", isOnline ? "text-green-500" : "text-red-500")}>
+                {isOnline ? 'Online' : 'Offline'}
+              </span>
             </p>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
+        <button 
+          onClick={toggleTheme}
+          className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-brand transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-2xl active:scale-95"
+          title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+        >
+          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+
         {isSuperAdmin && pendingUsersCount > 0 && (
           <button 
             onClick={() => setShowAdminPanel(true)}
@@ -114,10 +141,10 @@ export function Header({
         )}
         <button 
           onClick={onLogout} 
-          className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-2xl active:scale-95"
+          className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-rose-500 transition-all hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-2xl active:scale-95 group"
           title="Sair"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
     </header>

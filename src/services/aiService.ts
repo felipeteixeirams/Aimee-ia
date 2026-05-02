@@ -322,30 +322,51 @@ export const orchestrator = async (
   const activeUserId = targetUserId || userId;
   
   try {
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt,
-        history: history.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }]
-        })).slice(-10), // Limit history for complexity
-        persona: getSystemInstruction(persona, new Date().toLocaleString()),
-        context: {
-          tasks: tasks.slice(0, 10),
-          finance: transactions.slice(0, 10),
-          shopping: shoppingList.slice(0, 10)
+    let content = "";
+    let functionCalls: any[] = [];
+
+    const contextString = `
+[CONTEXTO ATUAL]
+Tarefas: ${JSON.stringify(tasks.slice(0, 10))}
+Finanças: ${JSON.stringify(transactions.slice(0, 10))}
+Compras: ${JSON.stringify(shoppingList.slice(0, 10))}
+`;
+    
+    const fullPrompt = `${prompt}\n\n${contextString}`;
+
+    if (provider === 'gemini') {
+      const ai = getAIClient();
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          ...history.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }]
+          })).slice(-10),
+          { role: "user", parts: [{ text: fullPrompt }] }
+        ],
+        config: {
+          systemInstruction: getSystemInstruction(persona, new Date().toLocaleString()),
+          tools: [{ 
+            functionDeclarations: [
+              addTransactionFn, 
+              addShoppingItemsFn, 
+              updateShoppingItemsFn, 
+              removeShoppingItemsFn,
+              addHouseholdTaskFn,
+              updateHouseholdTaskFn,
+              addFamilyEventFn,
+              removeFamilyEventFn,
+              updateFamilyEventFn
+            ] 
+          }]
         }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Erro na comunicação com a Aimee Central.");
+      });
+      content = response.text || "";
+      functionCalls = response.functionCalls || [];
+    } else {
+      content = "Provedor não suportado no frontend atualmente. Use Gemini para orquestração completa.";
     }
-
-    const data = await response.json();
-    const { content, functionCalls } = data;
 
     let feedback = "";
     if (functionCalls && functionCalls.length > 0) {
@@ -363,18 +384,9 @@ export const orchestrator = async (
           feedback += `🛒 Itens adicionados à lista. `;
         }
 
-        if (name === 'manageRoutines') {
-          if (args.routineType === 'task') {
-             if (args.action === 'add') {
-               await routineSkill.addTask(activeUserId, {
-                 title: args.title,
-                 description: args.description,
-                 category: args.categoryOrType as any || 'other',
-                 dueDate: args.date,
-               });
-               feedback += `🧹 Tarefa criada: ${args.title}. `;
-             }
-          }
+        if (name === 'addHouseholdTask') {
+          await routineSkill.addTask(activeUserId, args);
+          feedback += `🧹 Tarefa criada: ${args.title}. `;
         }
       }
     }
@@ -388,18 +400,16 @@ export const orchestrator = async (
 
 export const checkAIHealth = async (provider: 'gemini' | 'deepseek'): Promise<{ ok: boolean; error?: string }> => {
   try {
+    const geminiKey = process.env.GEMINI_API_KEY;
     if (provider === 'gemini') {
-      const key = process.env.GEMINI_API_KEY;
-      if (!key) return { ok: false, error: 'GEMINI_API_KEY ausente' };
-      // Test initialization
-      getAIClient();
+      if (!geminiKey) return { ok: false, error: 'GEMINI_API_KEY ausente' };
     } else {
-      const key = process.env.DEEPSEEK_API_KEY;
-      if (!key) return { ok: false, error: 'DEEPSEEK_API_KEY ausente' };
-      // Test initialization
-      getDeepSeekClient();
+      const deepseekKey = process.env.DEEPSEEK_API_KEY;
+      if (!deepseekKey) return { ok: false, error: 'DEEPSEEK_API_KEY ausente' };
     }
-    return { ok: true };
+
+    // Health check simplified to check key existence on frontend
+    return { ok: !!geminiKey || !!process.env.DEEPSEEK_API_KEY };
   } catch (error: any) {
     return { ok: false, error: error.message };
   }

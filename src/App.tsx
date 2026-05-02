@@ -576,6 +576,10 @@ export default function App() {
         GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
         globalConfig={globalConfig}
         updateGlobalConfig={updateGlobalConfig}
+        health={health}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
+        updateProfile={updateProfile}
       />
 
       {showAdminPanel && isSuperAdmin && (

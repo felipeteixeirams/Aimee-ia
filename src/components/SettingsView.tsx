@@ -391,7 +391,11 @@ export const SettingsView = ({
                     <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Modo Escuro</span>
                   </div>
                   <button 
-                    onClick={() => updateProfile({ theme: isDarkMode ? 'light' : 'dark' })}
+                    onClick={() => {
+                      const next = !isDarkMode;
+                      setIsDarkMode(next);
+                      updateProfile({ theme: next ? 'dark' : 'light' });
+                    }}
                     className={cn(
                       "w-10 h-5 rounded-full transition-all relative",
                       isDarkMode ? "bg-brand" : "bg-neutral-200"
