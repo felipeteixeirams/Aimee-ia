@@ -21,6 +21,15 @@ export class ProfileRepository extends BaseRepository<UserProfile & { id?: strin
     const docRef = doc(db, 'users', uid);
     await updateDoc(docRef, updates);
   }
+
+  async getGoogleCredentials(uid: string): Promise<any | null> {
+    const docRef = doc(db, 'users', uid, 'private', 'credentials_google');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  }
 }
 
 export const profileRepository = new ProfileRepository();

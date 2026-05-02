@@ -32,14 +32,15 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ### 📅 Entregável C: Sincronização Google Agenda (Etapa 3)
 *Objetivo: Conectar o calendário familiar ao mundo externo.*
-- [ ] **Tarefa C.1 (6h)**: Implementar fluxo OAuth para permissões `calendar.events` (Escrita).
-- [ ] **Tarefa C.2 (8h)**: Criar worker de sincronização bidirecional (Firestore Events <-> Google Calendar).
+- [x] **Tarefa C.1 (6h)**: Implementar fluxo OAuth para permissões `calendar.events` (Escrita).
+- [x] **Tarefa C.2 (8h)**: Criar worker de sincronização bidirecional (Firestore Events <-> Google Calendar).
 
 ### 🛒 Entregável D: Compras Inteligentes & Geo (Etapa 4)
 *Objetivo: Transformar a lista de compras em um assistente de mercado.*
-- [ ] **Tarefa D.1 (6h)**: Criar interface mobile-first de "Modo Compra" (registro de preço e check rápido).
-- [ ] **Tarefa D.2 (6h)**: Implementar captura de geolocalização e persistência de coordenadas por item de compra.
-- [ ] **Tarefa D.3 (4h)**: Lógica de atualização automática de estoque ao finalizar "Modo Compra".
+- [x] **Tarefa D.1 (4h)**: Integrar Google Maps API para geolocalização e sugestões de mercado mais próximo.
+- [x] **Tarefa D.2 (6h)**: Criar interface mobile-first de "Modo Compra" (registro de preço e check rápido).
+- [x] **Tarefa D.3 (6h)**: Implementar captura de geolocalização e persistência de coordenadas por item de compra.
+- [x] **Tarefa D.4 (4h)**: Lógica de atualização automática de estoque ao finalizar "Modo Compra".
 
 ### 💡 Entregável E: Sistema de Insights & Feedback (Etapa 5 e 7)
 *Objetivo: IA proativa que aprende com o usuário.*
@@ -50,6 +51,11 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-02**: Implementação das Tarefas D.3 e D.4: Captura de geolocalização por item no checkout e atualização automática de estoque em batch.
+- **2026-05-02**: Implementação da Tarefa D.2: Interface de "Modo Compra" com registro tátil de preços e somatório de carrinho em tempo real.
+- **2026-05-02**: Implementação da Tarefa D.1: Integração com Google Maps/Places API para sugestão de mercados próximos via geolocalização.
+- **2026-05-02**: Implementação da Tarefa C.2: Sincronização bidirecional completa entre Firestore e Google Calendar via backend API.
+- **2026-05-02**: Implementação da Tarefa C.1: Configuração do OAuth Flow para Google Calendar e armazenamento seguro de tokens no subcoleção privada.
 - **2026-05-02**: Implementação da Tarefa B.2: Adicionado Audio Visualizer em tempo real e melhorias na UI de gravação no ChatView.
 - **2026-05-02**: Implementação da Tarefa B.1: Interface de voz nativa e compreensão multimodal de áudio via Gemini 2.0.
 - **2026-05-02**: Migração das chamadas de LLM para o servidor via `/api/ai` e limpeza do `aiService.ts`. Sincronização de ferramentas (tools) entre cliente e servidor.

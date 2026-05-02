@@ -1,17 +1,19 @@
-import { motion } from 'motion/react';
-import { ShoppingCart, Plus, CheckCircle2, Circle, Leaf, Package, Trash2, Apple } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ShoppingCart, Plus, CheckCircle2, Circle, Leaf, Package, Trash2, Apple, MapPin, Navigation, Star, Search, X, Zap } from 'lucide-react';
 import { ShoppingItem, UserProfile } from '../types';
 import { cn } from '../lib/utils';
-import React from 'react';
+import React, { useState } from 'react';
+import { locationService, MarketLocation } from '../services/locationService';
 
 interface ShoppingViewProps {
   shoppingFilter: 'list' | 'stock';
   setShoppingFilter: (filter: 'list' | 'stock') => void;
   shoppingList: ShoppingItem[];
-  handleToggleShoppingItem: (item: ShoppingItem) => void;
+  handleToggleShoppingItem: (item: ShoppingItem, extra?: Partial<ShoppingItem>) => void;
   handleMoveToStock: (item: ShoppingItem) => void;
   handleMoveToList: (item: ShoppingItem) => void;
   handleDeleteShoppingItem: (item: ShoppingItem) => void;
+  handleFinishShopping: () => void;
   profile: UserProfile | null;
 }
 
@@ -23,8 +25,168 @@ export const ShoppingView = ({
   handleMoveToStock,
   handleMoveToList,
   handleDeleteShoppingItem,
+  handleFinishShopping,
   profile
 }: ShoppingViewProps) => {
+  const [nearbyMarkets, setNearbyMarkets] = useState<MarketLocation[]>([]);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const handleFindMarkets = async () => {
+    setIsLocating(true);
+    setLocationError(null);
+    try {
+      const position = await locationService.getCurrentPosition();
+      const markets = await locationService.findNearbyMarkets(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      setNearbyMarkets(markets);
+    } catch (error: any) {
+      setLocationError(error.message || 'Erro ao buscar localização.');
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const [isShoppingMode, setIsShoppingMode] = useState(false);
+  const [recordedPrices, setRecordedPrices] = useState<Record<string, number>>({});
+
+  const cartTotal = Object.values(recordedPrices).reduce((acc, price) => acc + price, 0);
+
+  const toggleShoppingMode = () => {
+    setIsShoppingMode(!isShoppingMode);
+    if (!isShoppingMode) {
+      setRecordedPrices({});
+    }
+  };
+
+  const handlePriceChange = (itemId: string, price: string) => {
+    const numPrice = parseFloat(price.replace(',', '.'));
+    if (!isNaN(numPrice)) {
+      setRecordedPrices(prev => ({ ...prev, [itemId]: numPrice }));
+    } else if (price === '') {
+      const newPrices = { ...recordedPrices };
+      delete newPrices[itemId];
+      setRecordedPrices(newPrices);
+    }
+  };
+
+  const onToggleWithLocation = async (item: ShoppingItem) => {
+    let extra: Partial<ShoppingItem> = {};
+    
+    // Only capture if marking as purchased
+    if (!item.purchased && isShoppingMode) {
+      if (item.id && recordedPrices[item.id]) {
+        extra.lastPrice = recordedPrices[item.id];
+      }
+      
+      try {
+        const pos = await locationService.getCurrentPosition();
+        extra.latitude = pos.coords.latitude;
+        extra.longitude = pos.coords.longitude;
+      } catch (err) {
+        console.warn('Silent geolocation failure:', err);
+      }
+    }
+    
+    handleToggleShoppingItem(item, extra);
+  };
+
+  if (isShoppingMode) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="space-y-6 pb-32"
+      >
+        <div className="flex items-center justify-between bg-brand p-6 -mx-4 -mt-4 rounded-b-[3rem] shadow-xl shadow-brand/20 mb-8">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={toggleShoppingMode}
+              className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-95 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div>
+              <h2 className="text-lg font-black text-white uppercase tracking-tighter">Modo Compra</h2>
+              <p className="text-[10px] text-white/70 font-medium tracking-widest uppercase">Carrinho Ativo</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest">Total</p>
+            <p className="text-2xl font-black text-white">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {shoppingList.filter(item => !item.isStock).map((item) => (
+            <motion.div 
+              key={item.id}
+              layout
+              className={cn(
+                "p-4 rounded-[2rem] border transition-all flex items-center gap-4 group",
+                item.purchased 
+                  ? "bg-neutral-50 dark:bg-neutral-900/40 border-neutral-100 dark:border-neutral-800 opacity-60" 
+                  : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 shadow-sm"
+              )}
+            >
+              <button 
+                onClick={() => onToggleWithLocation(item)}
+                className="shrink-0"
+              >
+                {item.purchased ? (
+                  <CheckCircle2 className="w-6 h-6 text-brand" />
+                ) : (
+                  <Circle className="w-6 h-6 text-neutral-300" />
+                )}
+              </button>
+              
+              <div className="flex-1 min-w-0">
+                <span className={cn(
+                  "text-sm font-black dark:text-white block truncate mb-1",
+                  item.purchased && "line-through text-neutral-400"
+                )}>
+                  {item.name}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{item.quantity} {item.unit}</span>
+                </div>
+              </div>
+
+              {!item.purchased && (
+                <div className="relative w-24">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">R$</span>
+                  <input 
+                    type="text"
+                    placeholder="0,00"
+                    onChange={(e) => item.id && handlePriceChange(item.id, e.target.value)}
+                    className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl pl-8 pr-3 py-2 text-xs font-black text-neutral-800 dark:text-white focus:ring-2 focus:ring-brand/30 outline-none"
+                  />
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        {shoppingList.filter(item => !item.isStock).length > 0 && shoppingList.filter(item => !item.isStock).every(item => item.purchased) && (
+          <motion.button
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full py-5 bg-brand text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/40 active:scale-95 transition-all text-sm"
+            onClick={() => {
+              handleFinishShopping();
+              toggleShoppingMode();
+            }}
+          >
+            Finalizar e Atualizar Estoque
+          </motion.button>
+        )}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       key="shopping"
@@ -42,9 +204,20 @@ export const ShoppingView = ({
             {shoppingList.filter(i => shoppingFilter === 'stock' ? i.isStock : !i.isStock).length} itens encontrados
           </p>
         </div>
-        <button className="w-10 h-10 bg-brand text-brand-foreground rounded-xl flex items-center justify-center shadow-lg">
-          <Plus className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {shoppingFilter === 'list' && (
+            <button 
+              onClick={toggleShoppingMode}
+              className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center transition-all hover:bg-brand/20 active:scale-95"
+              title="Modo Compra"
+            >
+              <Zap className="w-5 h-5" />
+            </button>
+          )}
+          <button className="w-10 h-10 bg-brand text-brand-foreground rounded-xl flex items-center justify-center shadow-lg">
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
@@ -82,7 +255,7 @@ export const ShoppingView = ({
           )}>
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <button 
-                onClick={() => handleToggleShoppingItem(item)}
+                onClick={() => onToggleWithLocation(item)}
                 className="text-neutral-300 dark:text-neutral-700 hover:text-brand transition-colors shrink-0"
               >
                 {item.purchased ? <CheckCircle2 className="w-6 h-6 text-emerald-500" /> : <Circle className="w-6 h-6" />}
@@ -180,6 +353,76 @@ export const ShoppingView = ({
             ))}
           {shoppingList.filter(i => i.frequency && i.frequency > 3 && i.isStock).length === 0 && (
             <p className="text-xs opacity-60 italic">Continue usando para receber previsões de consumo e dicas nutricionais.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-tight">Mercados Próximos</h4>
+              <p className="text-[10px] text-neutral-400 font-medium italic">Encontre o melhor lugar para suas compras.</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleFindMarkets}
+            disabled={isLocating}
+            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:text-brand hover:bg-brand/10 rounded-xl transition-all disabled:opacity-50"
+          >
+            {isLocating ? <Search className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {locationError && (
+          <p className="text-[10px] text-red-500 font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
+            {locationError}
+          </p>
+        )}
+
+        <div className="grid grid-cols-1 gap-3">
+          <AnimatePresence>
+            {nearbyMarkets.slice(0, 3).map((market, i) => (
+              <motion.div 
+                key={market.placeId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800/50 flex items-center justify-between group hover:border-brand/30 transition-all shadow-sm"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-neutral-800 dark:text-white truncate">{market.name}</p>
+                  <p className="text-[9px] text-neutral-400 truncate tracking-tight">{market.address}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {market.rating && (
+                      <div className="flex items-center gap-0.5 text-[8px] font-black text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                        <Star className="w-2.5 h-2.5 fill-current" />
+                        {market.rating}
+                      </div>
+                    )}
+                    <span className="text-[8px] text-neutral-300 font-black uppercase tracking-widest">• 2km de distância</span>
+                  </div>
+                </div>
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(market.name + ' ' + market.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 flex items-center justify-center bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-100 dark:border-neutral-700 text-neutral-400 hover:text-brand hover:border-brand/30 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                </a>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {nearbyMarkets.length === 0 && !isLocating && !locationError && (
+            <div className="text-center py-6 border-2 border-dashed border-neutral-100 dark:border-neutral-800 rounded-[2rem]">
+              <p className="text-[10px] text-neutral-300 font-bold uppercase tracking-widest leading-loose">
+                Toque no ícone acima para<br/>encontrar locais próximos
+              </p>
+            </div>
           )}
         </div>
       </div>

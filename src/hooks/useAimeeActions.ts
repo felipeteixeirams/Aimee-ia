@@ -154,27 +154,56 @@ export function useAimeeActions(
   };
 
   const syncGoogleCalendar = async (token: string, targetUserId: string) => {
-    logger.info('Starting Google Calendar sync', { targetUserId });
+    logger.info('Starting Google Calendar bidirectional sync', { targetUserId });
     try {
-      const googleEvents = await fetchGoogleCalendarEvents(token);
-      const existingEvents = await eventRepository.list([], targetUserId);
-      const existingGoogleIds = new Set(
-        existingEvents
+      const { calendarService } = await import('../services/calendarService');
+      const googleEvents = await calendarService.fetchGoogleCalendarEvents(token);
+      const localEvents = await eventRepository.list([], targetUserId);
+      
+      const localGoogleIds = new Set(
+        localEvents
           .map(e => e.googleEventId)
           .filter(Boolean)
       );
 
-      let count = 0;
+      let pullCount = 0;
+      let pushCount = 0;
+
+      // 1. PULL: Insert missing Google events into Firestore
       for (const gEvent of googleEvents) {
-        if (gEvent.googleEventId && !existingGoogleIds.has(gEvent.googleEventId)) {
+        if (gEvent.googleEventId && !localGoogleIds.has(gEvent.googleEventId)) {
           await eventRepository.create({
             ...gEvent
           }, targetUserId);
-          count++;
+          pullCount++;
         }
       }
-      logger.info('Google Calendar sync complete', { eventsAdded: count });
-      return count;
+
+      // 2. PUSH: Push local events without googleEventId to Google Calendar
+      const tokensDoc = await profileRepository.getGoogleCredentials(targetUserId);
+      if (tokensDoc) {
+        const eventsToPush = localEvents.filter(e => !e.googleEventId);
+        for (const lEvent of eventsToPush) {
+          try {
+            const result = await calendarService.syncEventToGoogle(tokensDoc, {
+              title: lEvent.title,
+              description: lEvent.description,
+              date: lEvent.date,
+              type: lEvent.type
+            });
+            
+            if (result && result.id && lEvent.id) {
+              await eventRepository.update(lEvent.id, { googleEventId: result.id }, targetUserId);
+              pushCount++;
+            }
+          } catch (e: any) {
+            logger.warn('Failed to push individual event to Google', { eventId: lEvent.id, error: e.message });
+          }
+        }
+      }
+
+      logger.info('Google Calendar sync complete', { pullCount, pushCount });
+      return { pullCount, pushCount };
     } catch (error: any) {
       logger.error('Google Calendar sync error', { error: error.message });
       throw error;
@@ -246,12 +275,13 @@ export function useAimeeActions(
   };
 
   const manageShopping = {
-    toggle: async (item: ShoppingItem, targetId: string) => {
+    toggle: async (item: ShoppingItem, targetId: string, extraUpdates?: Partial<ShoppingItem>) => {
       if (!item.id) return;
       try {
         await shoppingRepository.update(item.id, {
           purchased: !item.purchased,
-          lastPurchasedAt: !item.purchased ? new Date().toISOString() : item.lastPurchasedAt
+          lastPurchasedAt: !item.purchased ? new Date().toISOString() : item.lastPurchasedAt,
+          ...extraUpdates
         }, targetId);
         showToast(item.purchased ? 'Item marcado como pendente' : 'Item marcado como comprado', 'success', 2000);
       } catch (err) {
@@ -289,6 +319,23 @@ export function useAimeeActions(
         showToast('Item removido', 'success', 2000);
       } catch (err) {
         showToast('Erro ao remover item', 'error');
+      }
+    },
+    finish: async (targetId: string) => {
+      const itemsToMove = aimeeData.shoppingList.filter(i => i.purchased && !i.isStock);
+      if (itemsToMove.length === 0) return;
+
+      try {
+        await Promise.all(itemsToMove.map(item => 
+          shoppingRepository.update(item.id!, {
+            isStock: true,
+            purchased: false
+          }, targetId)
+        ));
+        showToast(`${itemsToMove.length} itens movidos para o estoque`, 'success', 2000);
+      } catch (err) {
+        logger.error('Error finishing shopping', { error: err });
+        showToast('Erro ao finalizar compras', 'error');
       }
     }
   };

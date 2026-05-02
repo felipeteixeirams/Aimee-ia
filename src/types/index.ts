@@ -82,6 +82,8 @@ export interface UserProfile {
     city: string;
     region: string;
   };
+  calendarConnected?: boolean;
+  googleCalendarEmail?: string;
 }
 
 export const TransactionType = {
@@ -112,6 +114,7 @@ export interface ShoppingItem {
   userId: string;
   name: string;
   quantity: number;
+  unit?: string;
   category: string;
   purchased: boolean;
   lastPrice?: number;
@@ -121,6 +124,9 @@ export interface ShoppingItem {
   isStock?: boolean;
   frequency?: number;
   isEcoFriendly?: boolean;
+  latitude?: number;
+  longitude?: number;
+  locationName?: string;
 }
 
 export const ChatRole = {

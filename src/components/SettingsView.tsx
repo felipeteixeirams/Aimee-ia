@@ -1,9 +1,10 @@
-import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile, X } from 'lucide-react';
+import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Share, GlobalConfig, AIProvider, PermissionLevel, AIRecommendedPersona } from '../types';
 import { cn } from '../lib/utils';
 import { AimeeAvatar } from './AimeeAvatar';
 import React, { useState, useRef, useEffect } from 'react';
+import { calendarService } from '../services/calendarService';
 
 interface SettingsViewProps {
   profile: UserProfile | null;
@@ -170,6 +171,51 @@ export const SettingsView = ({
     updateProfile(updates);
     setIsEditingProfile(false);
   };
+
+  const handleConnectGoogle = async () => {
+    try {
+      const response = await fetch('/api/auth/google/url');
+      const { url } = await response.json();
+      
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      window.open(
+        url, 
+        'google_oauth', 
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+    } catch (err) {
+      console.error('Falha ao obter URL de autenticação:', err);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!user?.uid) return;
+    if (confirm('Tem certeza que deseja desconectar seu Google Calendar?')) {
+      await calendarService.disconnectGoogle(user.uid);
+      updateProfile({ calendarConnected: false, googleCalendarEmail: undefined });
+    }
+  };
+
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      // Security: check origin if possible, but in sandbox it might vary
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data?.source === 'google_calendar') {
+        const { tokens } = event.data;
+        if (user?.uid) {
+          await calendarService.saveGoogleCredentials(user.uid, tokens);
+          // Try to get email from tokens if available (requires userinfo scope)
+          updateProfile({ calendarConnected: true });
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [user, updateProfile]);
 
   return (
     <motion.div 
@@ -447,6 +493,50 @@ export const SettingsView = ({
                       active={profile?.themeColor === 'amber'} 
                       onClick={() => updateProfile({ themeColor: 'amber' })} 
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Integrations Section */}
+              <div className="pt-8 border-t border-neutral-100 dark:border-neutral-800 space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-brand/10 rounded-2xl flex items-center justify-center">
+                    <LinkIcon className="w-5 h-5 text-brand" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-[0.2em] mb-0.5">Integrações</h4>
+                    <p className="text-[10px] text-neutral-400 font-medium tracking-tight">Conecte com seus apps favoritos.</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 rounded-3xl group transition-all hover:border-brand/30">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white dark:bg-neutral-900 rounded-xl flex items-center justify-center shadow-sm">
+                        <Calendar className="w-5 h-5 text-brand" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-neutral-800 dark:text-white uppercase tracking-widest leading-none mb-1">Google Calendar</p>
+                        <p className="text-[9px] text-neutral-400 font-medium tracking-tight italic">
+                          {profile?.calendarConnected ? "Conectado" : "Sincronize eventos e rotinas."}
+                        </p>
+                      </div>
+                    </div>
+                    {profile?.calendarConnected ? (
+                      <button 
+                        onClick={handleDisconnectGoogle}
+                        className="px-3 py-2 bg-neutral-100 dark:bg-neutral-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                      >
+                        Desconectar
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={handleConnectGoogle}
+                        className="px-4 py-2.5 bg-brand text-white rounded-xl text-[8px] font-black uppercase tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
+                      >
+                        Conectar
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

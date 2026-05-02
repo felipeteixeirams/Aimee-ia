@@ -236,10 +236,13 @@ export default function App() {
     const token = sessionStorage.getItem('google_access_token');
     if (token && user) {
       setIsSyncing(true);
+      setSyncError(null);
       try {
-        await syncGoogleCalendar(token, activeSpace || user.uid);
+        const result = await syncGoogleCalendar(token, activeSpace || user.uid);
+        // Result is { pullCount, pushCount }
+        console.log('Sync result:', result);
       } catch (err) {
-        setSyncError("Erro na sincronização");
+        setSyncError("Erro na sincronização bi-direcional. Verifique sua permissões.");
       } finally {
         setIsSyncing(false);
       }
@@ -683,10 +686,11 @@ export default function App() {
               shoppingFilter={shoppingFilter}
               setShoppingFilter={setShoppingFilter}
               shoppingList={shoppingList}
-              handleToggleShoppingItem={(item) => manageShopping.toggle(item, activeSpace || user!.uid)}
+              handleToggleShoppingItem={(item, extra) => manageShopping.toggle(item, activeSpace || user!.uid, extra)}
               handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
               handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
               handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
+              handleFinishShopping={() => manageShopping.finish(activeSpace || user!.uid)}
               profile={profile}
             />
           )}
