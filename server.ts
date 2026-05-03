@@ -7,6 +7,13 @@ import dotenv from "dotenv";
 import { logger } from "./src/lib/logger.ts";
 import { config, validateConfig } from "./src/lib/config.ts";
 import { NotificationType, type NotificationPayload } from "./src/types/index.ts";
+import { 
+  sendRegistrationRequestEmail, 
+  sendApprovalEmail, 
+  sendRejectionEmail, 
+  sendBlockedEmail 
+} from "./src/services/emailService.ts";
+import { AimeeOrchestrator } from "./src/infrastructure/llm/AimeeOrchestrator.ts";
 
 dotenv.config();
 
@@ -115,13 +122,6 @@ app.post("/api/notify", async (req, res) => {
   logger.info('Email notification requested', { type, recipient: email });
   
   try {
-    const { 
-      sendRegistrationRequestEmail, 
-      sendApprovalEmail, 
-      sendRejectionEmail, 
-      sendBlockedEmail 
-    } = await import("./src/services/emailService.ts");
-
     switch (type) {
       case NotificationType.REQUEST:
         await sendRegistrationRequestEmail(email, name);
@@ -156,7 +156,6 @@ app.post("/api/ai", async (req, res) => {
       return res.status(500).json({ error: "GEMINI_API_KEY não configurada." });
     }
 
-    const { AimeeOrchestrator } = await import("./src/infrastructure/llm/AimeeOrchestrator.ts");
     const orchestrator = new AimeeOrchestrator(apiKey);
 
     // Enriquecer o prompt com o contexto recebido
@@ -297,11 +296,11 @@ async function setupVite() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    // Em produção, o servidor compilado está em dist/, e o front em dist/client/
+    const clientPath = path.join(__dirname, "client");
+    app.use(express.static(clientPath));
     app.get("*", (req, res) => {
-      const indexPath = path.join(distPath, "index.html");
-      res.sendFile(indexPath);
+      res.sendFile(path.join(clientPath, "index.html"));
     });
   }
 }

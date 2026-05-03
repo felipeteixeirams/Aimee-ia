@@ -12,7 +12,8 @@ interface LogEntry {
 
 class Logger {
   private static instance: Logger;
-  private isDevelopment = process.env.NODE_ENV !== 'production';
+  private isDevelopment = (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') || 
+                          (typeof (import.meta as any).env !== 'undefined' && (import.meta as any).env.DEV);
 
   private constructor() {}
 
