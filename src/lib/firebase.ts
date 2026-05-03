@@ -45,5 +45,14 @@ export async function testConnection(): Promise<{ ok: boolean; error?: string }>
   }
 }
 
-export { signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider };
+export { 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged, 
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
 export type { User };

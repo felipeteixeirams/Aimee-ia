@@ -39,8 +39,9 @@ export const RoutinesView = ({
   handleCreateTask,
   handleUpdateTask,
   handleDeleteTask,
-  handleDeleteEvent
-}: RoutinesViewProps) => {
+  handleDeleteEvent,
+  isGoogleEmail
+}: RoutinesViewProps & { isGoogleEmail: boolean }) => {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskCategory, setNewTaskCategory] = useState('Limpeza');
@@ -169,7 +170,7 @@ export const RoutinesView = ({
             </div>
           </div>
           
-           {(isSuperAdmin || globalConfig.calendarIntegrationEnabled) && (
+           {(isSuperAdmin || (globalConfig.calendarIntegrationEnabled && isGoogleEmail)) && (
               <button 
                 onClick={handleSyncCalendar}
                 disabled={isSyncing || calendarBlocked}
@@ -181,6 +182,13 @@ export const RoutinesView = ({
                 <RefreshCw className={cn("w-3.5 h-3.5 text-brand", isSyncing && "animate-spin")} />
                 {calendarBlocked ? 'Agenda Bloqueada' : (isSyncing ? 'Sincronizando...' : 'Sincronizar')}
               </button>
+            )}
+
+            {!isGoogleEmail && globalConfig.calendarIntegrationEnabled && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-neutral-100 dark:border-neutral-800 opacity-60">
+                <Info className="w-3 h-3 text-neutral-400" />
+                <span className="text-[8px] font-bold uppercase tracking-wider text-neutral-400">Google Calendar indisponível para este e-mail</span>
+              </div>
             )}
         </div>
 

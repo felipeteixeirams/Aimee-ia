@@ -70,10 +70,18 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - [x] **Tarefa H.3 (6h)**: Micro-animações e Feedback: Adicionar transições fluidas no chat, estados de "typing" sofisticados e toasts não intrusivos.
 - [x] **Tarefa H.4 (4h)**: Design de Componentes Avançados: Cards de insight, visualizadores de orçamento e listas de tarefas inspirados em apps de produtividade premium.
 
+### 🔐 Entregável I: Autenticação Híbrida e Recuperação (Etapa 9) ✅
+*Objetivo: Tornar e-mail/senha o método principal de acesso, mantendo Google como opcional e protegendo integrações específicas.*
+- [x] **Tarefa I.1 (4h)**: Reformular Interface de Login: Criar modal com abas "Login" e "Registro" com design premium e mobile-first.
+- [x] **Tarefa I.2 (4h)**: Fluxo de Registro Simplificado: Implementar validação inicial de e-mail e redirecionamento para formulário de cadastro completo.
+- [x] **Tarefa I.3 (2h)**: Recuperação de Senha: Implementar funcionalidade "Esqueci minha senha" com envio de link via Firebase Auth.
+- [x] **Tarefa I.4 (4h)**: Lógica de Integração Condicional: Restringir sincronização de Google Calendar apenas para e-mails Google (@gmail ou Workspace).
+
 ---
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-03**: Finalização da Etapa 9. Implementação de Autenticação Híbrida (E-mail/Senha + Google), fluxo de registro em 2 etapas, recuperação de senha e restrições de domínio para Google Calendar.
 - **2026-05-02**: Finalização da Etapa 8 (Premium UI/UX). Aimee agora possui uma estética moderna inspirada nos principais players de IA, com navegação flutuante, fontes premium (Outfit) e micro-interações fluidas.
 - **2026-05-02**: Finalização da Etapa 7 (Resiliência). Implementação de Retry com backoff exponencial, Global Error Boundary e validação rigorosa de variáveis de ambiente no boot.
 - **2026-05-02**: Início da Etapa 7. Centralização de configurações em `src/lib/config.ts` e padronização de erros no `FirestoreUtils` (Tarefa G.1/G.4).
@@ -98,5 +106,5 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 ---
 
 ## 🎯 Atividade Iniciada agora
-**Entregável G - Tarefa G.2**: Auditoria de tratamento de erros e implementação de resiliência em chamadas externas.
+**Projeto Concluído**: Todas as etapas do plano de implementação foram finalizadas e validadas.
 

@@ -10,6 +10,10 @@ import {
   onAuthStateChanged, 
   User,
   GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile as updateAuthProfile,
   testConnection
 } from './lib/firebase';
 import { 
@@ -270,9 +274,59 @@ export default function App() {
       }
     } catch (error: any) {
       logger.error('Login failed', { error: error.message });
-      setAuthError(error.message || 'Falha ao entrar com Google');
+      setAuthError(formatAuthError(error.code) || error.message || 'Falha ao entrar com Google');
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  const handleEmailLogin = async (email: string, pass: string) => {
+    setIsLoggingIn(true);
+    setAuthError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (error: any) {
+      logger.error('Email login failed', { error: error.code });
+      setAuthError(formatAuthError(error.code));
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleEmailRegister = async (email: string, pass: string) => {
+    setIsLoggingIn(true);
+    setAuthError(null);
+    try {
+      await createUserWithEmailAndPassword(auth, email, pass);
+      // Profile creation will be handled by the onAuthStateChanged -> isRegistering flow
+    } catch (error: any) {
+      logger.error('Email registration failed', { error: error.code });
+      setAuthError(formatAuthError(error.code));
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleResetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    } catch (error: any) {
+      logger.error('Password reset failed', { error: error.code });
+      setAuthError(formatAuthError(error.code));
+      return false;
+    }
+  };
+
+  const formatAuthError = (code: string) => {
+    switch (code) {
+      case 'auth/user-not-found': return 'Usuário não encontrado.';
+      case 'auth/wrong-password': return 'Senha incorreta.';
+      case 'auth/email-already-in-use': return 'Este e-mail já está em uso.';
+      case 'auth/invalid-email': return 'E-mail inválido.';
+      case 'auth/weak-password': return 'A senha deve ter pelo menos 6 caracteres.';
+      case 'auth/too-many-requests': return 'Muitas tentativas. Tente novamente mais tarde.';
+      default: return 'Ocorreu um erro na autenticação.';
     }
   };
 
@@ -545,7 +599,17 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={authError} health={health} />;
+    return (
+      <Login 
+        onLogin={handleLogin} 
+        onEmailLogin={handleEmailLogin}
+        onEmailRegister={handleEmailRegister}
+        onResetPassword={handleResetPassword}
+        isLoading={isLoggingIn} 
+        error={authError} 
+        health={health} 
+      />
+    );
   }
 
   if (isRegistering) {
@@ -564,7 +628,8 @@ export default function App() {
   }
 
   const isSuperAdmin = profile?.role === 'admin' || user?.email === 'felipeteixeirams@gmail.com';
-  
+  const isGoogleEmail = user?.email?.endsWith('@gmail.com') || (user?.providerData?.some(p => p.providerId === 'google.com'));
+
   return (
     <div className="flex flex-col h-[100dvh] bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden">
       <Header 
@@ -719,6 +784,7 @@ export default function App() {
               handleDeleteEvent={async (id) => {
                 await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
               }}
+              isGoogleEmail={isGoogleEmail}
             />
           )}
 

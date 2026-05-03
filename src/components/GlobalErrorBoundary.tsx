@@ -38,16 +38,18 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       let errorData: any = null;
 
       try {
-        errorData = JSON.parse(this.state.errorInfo || '{}');
-        if (errorData.code === 'MISSING_ENV_VAR' || errorData.operationType) {
-          isConfigError = true;
+        if (this.state.errorInfo) {
+          errorData = JSON.parse(this.state.errorInfo);
+          if (errorData && (errorData.code === 'MISSING_ENV_VAR' || errorData.operationType)) {
+            isConfigError = true;
+          }
         }
       } catch (e) {
         // Not a JSON error
       }
 
       return (
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex items-center justify-center p-6 text-neutral-900 dark:text-neutral-50">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -57,7 +59,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="w-10 h-10 text-rose-500" />
             </div>
 
-            <h1 className="text-2xl font-black text-neutral-800 dark:text-white mb-4 tracking-tight">
+            <h1 className="text-2xl font-black mb-4 tracking-tight">
               Oops! Algo deu errado.
             </h1>
             
@@ -72,8 +74,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Detalhes do Erro</p>
                   <p className="text-xs font-mono text-rose-500 break-all">
                     {errorData.code === 'MISSING_ENV_VAR' 
-                      ? `Variável Ausente: ${errorData.variable}`
-                      : `Falha na Operação: ${errorData.operationType} em ${errorData.path}`}
+                      ? `Variável Ausente: ${errorData.variable || (errorData.missing ? errorData.missing.join(', ') : 'Desconhecida')}`
+                      : `Falha na Operação: ${errorData.operationType || 'Desconhecida'} em ${errorData.path || 'Global'}`}
                   </p>
                </div>
             )}
@@ -81,7 +83,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <div className="grid grid-cols-1 gap-3">
               <button 
                 onClick={this.handleReset}
-                className="w-full py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                className="w-full py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 flex items-center justify-center gap-3 active:scale-95 transition-all cursor-pointer"
               >
                 <RefreshCcw className="w-4 h-4" />
                 Tentar Novamente
@@ -89,7 +91,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               
               <button 
                 onClick={() => window.location.href = '/'}
-                className="w-full py-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all"
+                className="w-full py-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all cursor-pointer"
               >
                 <Home className="w-4 h-4" />
                 Ir para Início
@@ -97,13 +99,13 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             </div>
 
             <p className="mt-8 text-[10px] text-neutral-400 font-medium italic">
-              ID do Erro: {Math.random().toString(36).substring(7).toUpperCase()}
+              ID do Erro: {Math.random().toString(36).substring(2, 9).toUpperCase()}
             </p>
           </motion.div>
         </div>
       );
     }
 
-    return this.props.children;
+    return this.props.children || null;
   }
 }
