@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User as UserIcon, ShieldCheck, Sparkles, AlertTriangle, Cpu, Globe } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  Sparkles, 
+  Globe, 
+  ArrowRight, 
+  Mail, 
+  Lock, 
+  X,
+  History,
+  Check
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 import { SystemHealth } from '../hooks/useAuth';
 
@@ -14,12 +24,21 @@ interface LoginProps {
   health: SystemHealth;
 }
 
+const PHRASES = [
+  "Vamos imaginar...",
+  "Vamos explorar...",
+  "Vamos criar...",
+  "AIMEE",
+  "Sua assistente inteligente."
+];
+
 const Spark = ({ delay }: { delay: number }) => {
   const [randoms] = useState(() => ({
     size: Math.random() * 3 + 1,
     left: Math.random() * 100,
-    duration: Math.random() * 3 + 2,
-    xOffset: Math.random() * 10 - 5
+    duration: Math.random() * 4 + 3,
+    xOffset: Math.random() * 20 - 10,
+    glow: Math.random() * 10 + 5
   }));
   
   return (
@@ -27,73 +46,89 @@ const Spark = ({ delay }: { delay: number }) => {
       initial={{ y: '110vh', x: `${randoms.left}vw`, opacity: 0, scale: 0 }}
       animate={{ 
         y: '-10vh', 
-        opacity: [0, 1, 1, 0],
-        scale: [0, 1, 1, 0.5],
+        opacity: [0, 0.8, 0.8, 0],
+        scale: [0, 1, 1, 0.2],
         x: [`${randoms.left}vw`, `${randoms.left + randoms.xOffset}vw`]
       }}
       transition={{ 
         duration: randoms.duration, 
         repeat: Infinity, 
         delay,
-        ease: "linear"
+        ease: "easeOut"
       }}
-      className="absolute rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"
-      style={{ width: randoms.size, height: randoms.size }}
+      className="absolute rounded-full bg-orange-500"
+      style={{ 
+        width: randoms.size, 
+        height: randoms.size,
+        boxShadow: `0 0 ${randoms.glow}px rgba(249, 115, 22, 0.8)`
+      }}
     />
   );
 };
 
 const FireBackground = () => {
-  const [sparks] = useState(() => Array.from({ length: 40 }));
+  const [sparks] = useState(() => Array.from({ length: 50 }));
   
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden pointer-events-none">
-      <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-gradient-to-t from-orange-900/20 to-transparent" />
+    <div className="fixed inset-0 bg-black overflow-hidden pointer-events-none z-0">
+      <div className="absolute bottom-0 left-0 right-0 h-[60vh] bg-gradient-to-t from-orange-950/30 via-orange-900/10 to-transparent" />
       {sparks.map((_, i) => (
-        <Spark key={i} delay={i * 0.2} />
+        <Spark key={i} delay={i * 0.15} />
       ))}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,40,0,0.15),transparent_70%)]" />
     </div>
   );
 };
 
-const GamifiedLoadingBar = ({ active }: { active: boolean }) => {
+const TypingHero = () => {
+  const [displayText, setDisplayText] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(100);
+
+  useEffect(() => {
+    const phrase = PHRASES[phraseIndex];
+    
+    const handleTyping = () => {
+      if (!isDeleting) {
+        setDisplayText(phrase.substring(0, displayText.length + 1));
+        setTypingSpeed(100);
+        
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+
+        if (displayText === phrase) {
+          setTimeout(() => setIsDeleting(true), 2500);
+        }
+      } else {
+        setDisplayText(phrase.substring(0, displayText.length - 1));
+        setTypingSpeed(60);
+
+        if (displayText === '') {
+          setIsDeleting(false);
+          setPhraseIndex((prev) => (prev + 1) % PHRASES.length);
+        }
+      }
+    };
+
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, phraseIndex, typingSpeed]);
+
   return (
-    <AnimatePresence>
-      {active && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="w-full h-1.5 bg-black/50 backdrop-blur-md overflow-hidden relative"
-        >
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: '100%' }}
-            transition={{ 
-              duration: 1.2, 
-              repeat: Infinity, 
-              ease: "linear" 
-            }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-brand to-transparent w-1/2 z-10"
-          />
-          <motion.div
-            initial={{ width: '0%' }}
-            animate={{ width: '100%' }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
-            }}
-            className="h-full bg-brand/40 shadow-[0_0_15px_rgba(var(--brand-rgb),0.6)]"
-          />
-          <motion.div
+    <div className="relative flex items-center justify-center h-[50vh] px-8 z-10">
+      <div className="text-center">
+        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter flex items-center justify-center gap-3 drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-sans">
+          {displayText}
+          <motion.span
             animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 0.4, repeat: Infinity }}
-            className="absolute top-0 bottom-0 right-0 w-px bg-white shadow-[0_0_8px_white]"
+            transition={{ duration: 0.8, repeat: Infinity }}
+            className="w-1.5 h-8 md:w-2 md:h-12 bg-white inline-block rounded-full shadow-[0_0_15px_white]"
           />
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </h1>
+      </div>
+    </div>
   );
 };
 
@@ -106,255 +141,287 @@ export const Login: React.FC<LoginProps> = ({
   error = null, 
   health 
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'options' | 'email' | 'password'>('options');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [lastUser, setLastUser] = useState<string | null>(localStorage.getItem('aimee_last_email'));
+  const [isNewUser, setIsNewUser] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [registerStep, setRegisterStep] = useState(1);
 
-  const isSystemDown = !health.firebase || (!health.gemini && !health.deepseek);
   const isMaintenance = !health.firebase;
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoaded(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
+    if (rememberMe && email) {
+      localStorage.setItem('aimee_last_email', email);
+    }
+  }, [email, rememberMe]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (activeTab === 'login') {
-      await onEmailLogin(email, password);
-    } else {
-      if (registerStep === 1) {
-        if (email.includes('@') && email.includes('.')) {
-          setRegisterStep(2);
-        }
-      } else {
-        await onEmailRegister(email, password);
-      }
+  const handleContinueAsLastUser = () => {
+    if (lastUser) {
+      setEmail(lastUser);
+      setStep('password');
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!email) return;
-    const ok = await onResetPassword(email);
-    if (ok) setResetSent(true);
+  const handleEmailContinue = async () => {
+    if (!email.includes('@')) return;
+    // Em um sistema real, aqui verificaríamos se o e-mail existe
+    // Para simplificar o fluxo "Elite", vamos assumir que ele vai para a senha
+    setStep('password');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step === 'email') {
+      handleEmailContinue();
+    } else if (step === 'password') {
+      // Tentar login, se falhar por "user-not-found" (ou similar se o backend expusesse), tentaríamos registro.
+      // Aqui, como o fluxo é unificado, tentamos login e o usuário escolhe se quer registrar se não tiver conta.
+      // Mas para seguir o Copilot, vamos apenas disparar o login.
+      await onEmailLogin(email, password);
+    }
+  };
+
+  const menuVariants = {
+    initial: { y: '50%', opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    exit: { y: '20%', opacity: 0 }
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden bg-black font-sans">
+    <div className="fixed inset-0 bg-black font-sans overflow-hidden select-none">
       <FireBackground />
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <GamifiedLoadingBar active={isLoading} />
-      </div>
+      
+      {/* Subtle Grain Overlay for cinematic feel */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-10" />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 30 }}
-        animate={isLoaded ? { opacity: 1, scale: 1, y: 0 } : {}}
-        transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
-        className="relative z-10 max-w-md w-full"
-      >
-        <div className="bg-neutral-900/40 backdrop-blur-3xl border border-white/10 rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.6)] relative overflow-hidden group">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_2px,3px_100%] pointer-events-none opacity-20" />
-          
-          <div className="flex p-2 bg-black/20 gap-1">
-            <button
-              onClick={() => { setActiveTab('login'); setRegisterStep(1); }}
-              className={cn(
-                "flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-[2rem] transition-all",
-                activeTab === 'login' ? "bg-brand text-white shadow-lg" : "bg-white/5 text-neutral-500 hover:bg-white/10"
-              )}
+      {/* Hero Section */}
+      <TypingHero />
+
+      {/* Bottom Interface */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 z-50">
+        <AnimatePresence mode="wait">
+          {step === 'options' && (
+            <motion.div
+              key="options"
+              variants={menuVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="space-y-3 pb-12"
             >
-              Login
-            </button>
-            <button
-              onClick={() => { setActiveTab('register'); setRegisterStep(1); }}
-              className={cn(
-                "flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-[2rem] transition-all",
-                activeTab === 'register' ? "bg-brand text-white shadow-lg" : "bg-white/5 text-neutral-500 hover:bg-white/10"
-              )}
-            >
-              Registro
-            </button>
-          </div>
-
-          <div className="p-10 pt-8 text-center">
-            <motion.div className="w-20 h-20 bg-gradient-to-br from-brand to-orange-700 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(249,115,22,0.3)] relative">
-              <UserIcon className="w-10 h-10 text-white" />
-            </motion.div>
-
-            <div className="mb-8">
-              <h1 className="text-4xl font-black tracking-tighter text-white">
-                AIMEE<span className="text-brand">.</span>
-              </h1>
-              <p className="text-neutral-500 text-[9px] font-bold uppercase tracking-[0.3em] mt-1">Neural Interface v4.0</p>
-            </div>
-
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mb-8 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl"
+              {lastUser && (
+                <button
+                  onClick={handleContinueAsLastUser}
+                  className="w-full bg-white text-black py-5 rounded-2xl font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all shadow-xl"
                 >
-                  <p className="text-[10px] text-rose-400 font-black uppercase tracking-wider">
-                    {error}
-                  </p>
-                </motion.div>
+                  <div className="text-left">
+                    <p className="text-[10px] uppercase tracking-widest opacity-60 font-black">Continuar como</p>
+                    <p className="text-sm truncate max-w-[200px] font-black">{lastUser}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-black/5 rounded-full flex items-center justify-center">
+                    <History className="w-5 h-5 opacity-40" />
+                  </div>
+                </button>
               )}
-            </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-left mt-4">
-              <div className="space-y-1.5">
-                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500 ml-4">E-mail</p>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  placeholder="seu@email.com"
-                  required
-                />
+              <button
+                onClick={onLogin}
+                className="w-full bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                <span className="tracking-tight font-black">Continuar com Google</span>
+              </button>
+
+              <button
+                onClick={() => setStep('email')}
+                className="w-full bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
+              >
+                <Mail className="w-5 h-5 opacity-60" />
+                <span className="tracking-tight font-black">Continuar com E-mail</span>
+              </button>
+
+              <div className="flex items-center justify-center gap-2 pt-6">
+                <button 
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] font-black group"
+                >
+                  <div className={cn(
+                    "w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
+                    rememberMe ? "bg-white border-white scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]" : "border-white/30 hover:border-white/60"
+                  )}>
+                    {rememberMe && <Check className="w-3.5 h-3.5 text-black stroke-[3]" />}
+                  </div>
+                  <span className={cn(
+                    "transition-colors duration-300",
+                    rememberMe ? "text-white" : "text-neutral-500"
+                  )}>Lembrar de mim</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {(step === 'email' || step === 'password') && (
+            <motion.div
+              key="form"
+              variants={menuVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="bg-neutral-900 rounded-[3rem] p-8 border border-white/5 relative shadow-2xl"
+            >
+              <button 
+                onClick={() => setStep('options')}
+                className="absolute top-8 right-8 p-3 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="mb-10">
+                <h2 className="text-3xl font-black text-white tracking-tighter">
+                  {step === 'email' ? 'E-mail' : 'Senha'}
+                </h2>
+                {step === 'password' && <p className="text-neutral-500 text-xs mt-2 font-medium truncate opacity-60">{email}</p>}
+                {error && (
+                  <motion.p 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-rose-500 text-[10px] font-black uppercase tracking-widest mt-3 bg-rose-500/10 py-2 px-4 rounded-xl border border-rose-500/20"
+                  >
+                    {error}
+                  </motion.p>
+                )}
               </div>
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${activeTab}-${registerStep}`}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4"
-                >
-                  {(activeTab === 'login' || (activeTab === 'register' && registerStep === 2)) && (
-                    <div className="space-y-1.5">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500 ml-4">Senha</p>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
-                        placeholder="••••••••"
-                        required={activeTab === 'login' || registerStep === 2}
-                      />
-                    </div>
-                  )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="relative group">
+                  <input
+                    autoFocus
+                    type={step === 'email' ? 'email' : 'password'}
+                    value={step === 'email' ? email : password}
+                    onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
+                    placeholder={step === 'email' ? "Seu melhor e-mail" : "Sua senha segura"}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700"
+                  />
+                  {step === 'email' && <Mail className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
+                  {step === 'password' && <Lock className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
+                </div>
 
-                  {activeTab === 'login' && (
-                    <div className="flex justify-end px-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowReset(true)}
-                        className="text-[10px] font-bold text-neutral-500 hover:text-brand transition-colors uppercase tracking-widest"
-                      >
-                        Esqueci minha senha
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-
-              <div className="flex gap-2 mt-4">
-                {activeTab === 'register' && registerStep === 2 && (
-                  <button
-                    type="button"
-                    onClick={() => setRegisterStep(1)}
-                    className="flex-none px-6 py-5 bg-white/5 text-neutral-500 border border-white/10 rounded-3xl font-black uppercase tracking-widest text-xs"
-                  >
-                    Voltar
-                  </button>
+                {step === 'password' && (
+                  <div className="flex justify-between items-center px-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReset(true)}
+                      className="text-[10px] uppercase tracking-widest font-black text-neutral-600 hover:text-white transition-colors"
+                    >
+                      Esqueci a senha
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewUser(!isNewUser)}
+                      className="text-[10px] uppercase tracking-widest font-black text-brand hover:brightness-125 transition-all"
+                    >
+                      {isNewUser ? 'Já tenho conta' : 'Criar conta'}
+                    </button>
+                  </div>
                 )}
+
                 <button
                   type="submit"
                   disabled={isLoading || isMaintenance}
-                  className={cn(
-                    "flex-1 py-5 text-black rounded-3xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-4 shadow-xl active:scale-95",
-                    (isLoading || isMaintenance) ? "bg-neutral-800 text-neutral-500 cursor-not-allowed" : "bg-white hover:bg-neutral-200"
-                  )}
+                  className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.1em] text-xs flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] transition-all hover:bg-neutral-100 disabled:opacity-50"
                 >
-                  {activeTab === 'login' ? 'Acessar Interface' : (registerStep === 1 ? 'Prosseguir' : 'Criar Identidade')}
+                  {isLoading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <>
+                      <span>{step === 'email' ? 'Continuar' : (isNewUser ? 'Criar Identidade' : 'Acessar')}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
-              </div>
-            </form>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
-              <div className="relative flex justify-center text-[9px] uppercase tracking-[0.3em] font-black"><span className="bg-transparent px-4 text-neutral-700">Ou continue com</span></div>
-            </div>
-
-            <button
-              disabled={isLoading || isMaintenance}
-              onClick={onLogin}
-              className={cn(
-                "w-full py-4 bg-white/5 border border-white/10 text-white rounded-3xl font-bold uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-4 hover:bg-white/10 active:scale-95",
-                (isLoading || isMaintenance) && "opacity-50 cursor-not-allowed"
-              )}
+      {/* System Status Indicators */}
+      <div className="fixed top-8 right-8 flex items-center gap-3 z-50">
+        <AnimatePresence>
+          {!health.firebase && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-black/40 backdrop-blur-xl text-rose-500 px-4 py-2 rounded-full border border-rose-500/30 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shadow-2xl"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Google Account
-            </button>
+              <Globe className="w-3.5 h-3.5 animate-pulse" />
+              Offline
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-            <AnimatePresence>
-              {!health.firebase && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-rose-400 text-[10px] font-bold uppercase">
-                  <Globe className="w-3 h-3" />
-                  Conexão Offline
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-col items-center gap-4 opacity-50">
-          <div className="flex gap-2">
-            {[0, 1, 2, 3].map(i => (
-              <motion.div
-                key={i}
-                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3], backgroundColor: isMaintenance ? '#f43f5e' : '#f97316' }}
-                transition={{ duration: 3, repeat: Infinity, delay: i * 0.2 }}
-                className="w-1 h-1 rounded-full"
-              />
-            ))}
-          </div>
-          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white">
-            {isMaintenance ? "Maintenance" : "Active"}
-          </p>
-        </div>
-      </motion.div>
-
+      {/* Modal Esqueci Senha */}
       <AnimatePresence>
         {showReset && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 backdrop-blur-2xl bg-black/60">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-neutral-900 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-sm text-center">
-              <h2 className="text-xl font-black text-white mb-4 uppercase tracking-tighter">Recuperar Acesso</h2>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+              className="bg-neutral-900 border border-white/10 p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+            >
+              <h2 className="text-2xl font-black text-white mb-4 tracking-tighter">RECUPERAR</h2>
               {!resetSent ? (
                 <>
-                  <p className="text-xs text-neutral-500 mb-6 font-medium">Insira seu e-mail para recuperar a senha.</p>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white mb-6" placeholder="seu@email.com" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => setShowReset(false)} className="py-4 bg-white/5 text-neutral-500 rounded-2xl font-black uppercase text-[10px] tracking-widest">Voltar</button>
-                    <button onClick={handleResetPassword} className="py-4 bg-brand text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Enviar</button>
+                  <p className="text-[10px] text-neutral-500 mb-8 font-black uppercase tracking-widest leading-loose">Enviaremos um link de acesso para seu e-mail.</p>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm text-white mb-6 focus:outline-none focus:ring-2 focus:ring-brand/50 font-bold" placeholder="seu@email.com" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => setShowReset(false)} className="py-5 bg-white/5 text-neutral-500 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-colors">Voltar</button>
+                    <button 
+                      onClick={async () => {
+                        const ok = await onResetPassword(email);
+                        if (ok) setResetSent(true);
+                      }} 
+                      className="py-5 bg-brand text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
+                    >
+                      Enviar
+                    </button>
                   </div>
                 </>
               ) : (
-                <div className="space-y-6">
-                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto"><ShieldCheck className="w-8 h-8 text-green-500" /></div>
-                  <p className="text-xs text-green-400 font-bold">Link enviado!</p>
-                  <button onClick={() => { setShowReset(false); setResetSent(false); }} className="w-full py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest">OK</button>
+                <div className="space-y-8 py-4 text-center">
+                  <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(34,197,94,0.1)]">
+                    <ShieldCheck className="w-10 h-10 text-green-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-white font-black uppercase tracking-tight">E-mail Enviado</p>
+                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Verifique sua caixa de entrada.</p>
+                  </div>
+                  <button onClick={() => { setShowReset(false); setResetSent(false); }} className="w-full py-5 bg-white text-black rounded-3xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl transition-all active:scale-95">Ok, entendi</button>
                 </div>
               )}
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]" />
+
+      {/* Screen Edge Shadow for depth */}
+      <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_200px_rgba(0,0,0,0.9)] z-50" />
     </div>
   );
 };

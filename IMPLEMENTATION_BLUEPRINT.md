@@ -77,10 +77,18 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - [x] **Tarefa I.3 (2h)**: Recuperação de Senha: Implementar funcionalidade "Esqueci minha senha" com envio de link via Firebase Auth.
 - [x] **Tarefa I.4 (4h)**: Lógica de Integração Condicional: Restringir sincronização de Google Calendar apenas para e-mails Google (@gmail ou Workspace).
 
+### 🚀 Entregável J: Modernização da Experiência de Login (Etapa 10)
+*Objetivo: Criar uma interface ultra-minimalista e mobile-first baseada em padrões de Elite (ChatGPT/Copilot).*
+- [ ] **Tarefa J.1 (4h)**: Hero Animation Engine: Implementar sistema de digitação letra-a-letra com cursor, frases cíclicas e vibração haptica.
+- [ ] **Tarefa J.2 (4h)**: Layout Stacked Bottom: Reposicionar todos os controles para a base da tela, otimizando o alcance dos polegares.
+- [ ] **Tarefa J.3 (2h)**: Fluxo de Descoberta Progressiva: Input único de e-mail que alterna dinamicamente entre login e registro baseado na existência do usuário.
+- [ ] **Tarefa J.4 (2h)**: Sistema de Memória Local: Implementar "Lembrar de mim" e exibição do último perfil acessado.
+
 ---
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-04**: Início da Etapa 10. Design de transição para interface "Elite" inspirada em ChatGPT/Copilot, com foco em animações hapticas e layout mobile-first.
 - **2026-05-03**: Finalização da Etapa 9. Implementação de Autenticação Híbrida (E-mail/Senha + Google), fluxo de registro em 2 etapas, recuperação de senha e restrições de domínio para Google Calendar.
 - **2026-05-02**: Finalização da Etapa 8 (Premium UI/UX). Aimee agora possui uma estética moderna inspirada nos principais players de IA, com navegação flutuante, fontes premium (Outfit) e micro-interações fluidas.
 - **2026-05-02**: Finalização da Etapa 7 (Resiliência). Implementação de Retry com backoff exponencial, Global Error Boundary e validação rigorosa de variáveis de ambiente no boot.
@@ -106,5 +114,5 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 ---
 
 ## 🎯 Atividade Iniciada agora
-**Projeto Concluído**: Todas as etapas do plano de implementação foram finalizadas e validadas.
+**Etapa 10**: Modernização da Experiência de Login (Inspirada em ChatGPT/Copilot).
 
