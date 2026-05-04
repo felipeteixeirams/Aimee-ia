@@ -42,8 +42,10 @@ export class AimeeOrchestrator {
       };
     } catch (error: any) {
       logger.error("Aimee Orchestrator Error", { 
-        error: error.message,
+        message: error.message,
         details: error.details,
+        status: error.status,
+        statusText: error.statusText,
         stack: error.stack
       });
       throw error;

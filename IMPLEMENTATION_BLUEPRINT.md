@@ -79,10 +79,10 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ### 🚀 Entregável J: Modernização da Experiência de Login (Etapa 10)
 *Objetivo: Criar uma interface ultra-minimalista e mobile-first baseada em padrões de Elite (ChatGPT/Copilot).*
-- [ ] **Tarefa J.1 (4h)**: Hero Animation Engine: Implementar sistema de digitação letra-a-letra com cursor, frases cíclicas e vibração haptica.
-- [ ] **Tarefa J.2 (4h)**: Layout Stacked Bottom: Reposicionar todos os controles para a base da tela, otimizando o alcance dos polegares.
-- [ ] **Tarefa J.3 (2h)**: Fluxo de Descoberta Progressiva: Input único de e-mail que alterna dinamicamente entre login e registro baseado na existência do usuário.
-- [ ] **Tarefa J.4 (2h)**: Sistema de Memória Local: Implementar "Lembrar de mim" e exibição do último perfil acessado.
+- [x] **Tarefa J.1 (4h)**: Hero Animation Engine: Implementar sistema de digitação letra-a-letra com cursor, frases cíclicas e vibração haptica.
+- [x] **Tarefa J.2 (4h)**: Layout Stacked Bottom: Reposicionar todos os controles para a base da tela, otimizando o alcance dos polegares.
+- [x] **Tarefa J.3 (2h)**: Fluxo de Descoberta Progressiva: Input único de e-mail que alterna dinamicamente entre login e registro baseado na existência do usuário.
+- [x] **Tarefa J.4 (2h)**: Sistema de Memória Local: Implementar "Lembrar de mim" e exibição do último perfil acessado.
 
 ---
 

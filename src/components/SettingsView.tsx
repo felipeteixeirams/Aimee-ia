@@ -701,19 +701,24 @@ export const SettingsView = ({
                         'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
                         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
                         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-                        'https://images.unsplash.com/photo-1554151228-14d9def656ec?w=100&h=100&fit=crop'
+                        'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop'
                       ].map((url) => {
-                        const isSelected = (globalConfig.aimeeAvatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop') === url;
+                        const isSelected = (globalConfig.aimeeAvatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop') === url;
                         return (
                           <button
                             key={url}
                             onClick={() => updateGlobalConfig({ aimeeAvatarUrl: url })}
                             className={cn(
-                              "relative aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95",
+                              "relative aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95 bg-neutral-100 dark:bg-neutral-800",
                               isSelected ? "border-violet-500 shadow-lg scale-105 z-10" : "border-transparent opacity-60 hover:opacity-100"
                             )}
                           >
-                            <img src={url} className="w-full h-full object-cover" alt="Avatar option" />
+                            <img 
+                              src={url} 
+                              className="w-full h-full object-cover" 
+                              alt="Avatar option" 
+                              referrerPolicy="no-referrer"
+                            />
                             {isSelected && (
                               <div className="absolute inset-0 bg-violet-500/10 flex items-center justify-center">
                                 <Check className="w-3 h-3 text-violet-600" />

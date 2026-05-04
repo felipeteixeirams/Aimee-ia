@@ -9,10 +9,13 @@ import {
   Lock, 
   X,
   History,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { SystemHealth } from '../hooks/useAuth';
+import { fetchSignInMethodsForEmail } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface LoginProps {
   onLogin: () => void;
@@ -34,48 +37,57 @@ const PHRASES = [
 
 const Spark = ({ delay }: { delay: number }) => {
   const [randoms] = useState(() => ({
-    size: Math.random() * 3 + 1,
+    size: Math.random() * 2 + 1,
     left: Math.random() * 100,
-    duration: Math.random() * 4 + 3,
-    xOffset: Math.random() * 20 - 10,
-    glow: Math.random() * 10 + 5
+    duration: Math.random() * 3 + 2,
+    xOffset: Math.random() * 30 - 15,
+    glow: Math.random() * 15 + 10,
+    delay: delay + Math.random() * 2
   }));
   
   return (
     <motion.div
       initial={{ y: '110vh', x: `${randoms.left}vw`, opacity: 0, scale: 0 }}
       animate={{ 
-        y: '-10vh', 
-        opacity: [0, 0.8, 0.8, 0],
-        scale: [0, 1, 1, 0.2],
+        y: '-20vh', 
+        opacity: [0, 1, 1, 0.4, 0],
+        scale: [0.5, 1.2, 1, 0.5, 0],
         x: [`${randoms.left}vw`, `${randoms.left + randoms.xOffset}vw`]
       }}
       transition={{ 
         duration: randoms.duration, 
         repeat: Infinity, 
-        delay,
+        delay: randoms.delay,
         ease: "easeOut"
       }}
-      className="absolute rounded-full bg-orange-500"
+      className="absolute rounded-full"
       style={{ 
         width: randoms.size, 
         height: randoms.size,
-        boxShadow: `0 0 ${randoms.glow}px rgba(249, 115, 22, 0.8)`
+        background: 'linear-gradient(to bottom, #ff9d00, #ff4c00)',
+        boxShadow: `0 0 ${randoms.glow}px #ff4c00, 0 0 ${randoms.glow/2}px #fff`
       }}
     />
   );
 };
 
 const FireBackground = () => {
-  const [sparks] = useState(() => Array.from({ length: 50 }));
+  const [sparks] = useState(() => Array.from({ length: 60 }));
   
   return (
     <div className="fixed inset-0 bg-black overflow-hidden pointer-events-none z-0">
-      <div className="absolute bottom-0 left-0 right-0 h-[60vh] bg-gradient-to-t from-orange-950/30 via-orange-900/10 to-transparent" />
+      {/* Base glow */}
+      <div className="absolute bottom-0 left-0 right-0 h-[80vh] bg-[radial-gradient(ellipse_at_50%_100%,rgba(120,40,0,0.25),transparent_70%)]" />
+      
+      {/* Fire core glow */}
+      <div className="absolute bottom-[-10vh] left-[20%] right-[20%] h-[40vh] bg-orange-900/20 blur-[100px] rounded-full" />
+      
       {sparks.map((_, i) => (
-        <Spark key={i} delay={i * 0.15} />
+        <Spark key={i} delay={i * 0.1} />
       ))}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,40,0,0.15),transparent_70%)]" />
+      
+      {/* Smoke effect (subtle) */}
+      <div className="absolute inset-0 bg-neutral-950/20 backdrop-blur-[1px]" />
     </div>
   );
 };
@@ -92,7 +104,7 @@ const TypingHero = () => {
     const handleTyping = () => {
       if (!isDeleting) {
         setDisplayText(phrase.substring(0, displayText.length + 1));
-        setTypingSpeed(100);
+        setTypingSpeed(60); // Mais rápido (era 100)
         
         if (navigator.vibrate) {
           navigator.vibrate(10);
@@ -103,7 +115,7 @@ const TypingHero = () => {
         }
       } else {
         setDisplayText(phrase.substring(0, displayText.length - 1));
-        setTypingSpeed(60);
+        setTypingSpeed(30); // Deleção bem mais rápida (era 60)
 
         if (displayText === '') {
           setIsDeleting(false);
@@ -147,6 +159,7 @@ export const Login: React.FC<LoginProps> = ({
   const [rememberMe, setRememberMe] = useState(true);
   const [lastUser, setLastUser] = useState<string | null>(localStorage.getItem('aimee_last_email'));
   const [isNewUser, setIsNewUser] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
@@ -161,15 +174,25 @@ export const Login: React.FC<LoginProps> = ({
   const handleContinueAsLastUser = () => {
     if (lastUser) {
       setEmail(lastUser);
+      setIsNewUser(false);
       setStep('password');
     }
   };
 
   const handleEmailContinue = async () => {
     if (!email.includes('@')) return;
-    // Em um sistema real, aqui verificaríamos se o e-mail existe
-    // Para simplificar o fluxo "Elite", vamos assumir que ele vai para a senha
-    setStep('password');
+    setIsCheckingEmail(true);
+    try {
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      setIsNewUser(methods.length === 0);
+      setStep('password');
+    } catch (e) {
+      // Se houver erro ou proteção contra enumeração, permitimos prosseguir e o botão de ação dirá "Acessar"
+      setIsNewUser(false);
+      setStep('password');
+    } finally {
+      setIsCheckingEmail(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,10 +200,11 @@ export const Login: React.FC<LoginProps> = ({
     if (step === 'email') {
       handleEmailContinue();
     } else if (step === 'password') {
-      // Tentar login, se falhar por "user-not-found" (ou similar se o backend expusesse), tentaríamos registro.
-      // Aqui, como o fluxo é unificado, tentamos login e o usuário escolhe se quer registrar se não tiver conta.
-      // Mas para seguir o Copilot, vamos apenas disparar o login.
-      await onEmailLogin(email, password);
+      if (isNewUser) {
+        await onEmailRegister(email, password);
+      } else {
+        await onEmailLogin(email, password);
+      }
     }
   };
 
@@ -256,13 +280,13 @@ export const Login: React.FC<LoginProps> = ({
                 >
                   <div className={cn(
                     "w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
-                    rememberMe ? "bg-white border-white scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]" : "border-white/30 hover:border-white/60"
+                    rememberMe ? "bg-white border-white scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]" : "border-white/40 group-hover:border-white/70"
                   )}>
                     {rememberMe && <Check className="w-3.5 h-3.5 text-black stroke-[3]" />}
                   </div>
                   <span className={cn(
-                    "transition-colors duration-300",
-                    rememberMe ? "text-white" : "text-neutral-500"
+                    "transition-colors duration-300 drop-shadow-sm",
+                    rememberMe ? "text-white" : "text-neutral-400 group-hover:text-white"
                   )}>Lembrar de mim</span>
                 </button>
               </div>
@@ -337,10 +361,10 @@ export const Login: React.FC<LoginProps> = ({
 
                 <button
                   type="submit"
-                  disabled={isLoading || isMaintenance}
+                  disabled={isLoading || isMaintenance || isCheckingEmail}
                   className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.1em] text-xs flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] transition-all hover:bg-neutral-100 disabled:opacity-50"
                 >
-                  {isLoading ? (
+                  {(isLoading || isCheckingEmail) ? (
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -348,7 +372,7 @@ export const Login: React.FC<LoginProps> = ({
                     />
                   ) : (
                     <>
-                      <span>{step === 'email' ? 'Continuar' : (isNewUser ? 'Criar Identidade' : 'Acessar')}</span>
+                      <span>{step === 'email' ? 'Continuar' : (isNewUser ? 'Registrar' : 'Acessar')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
