@@ -45,19 +45,26 @@ async function startServer() {
   // 4. Global Error Handling (Must be last)
   app.use(globalErrorHandler);
 
-  const PORT = Number(process.env.PORT) || 3000;
-  app.listen(PORT, "0.0.0.0", () => {
-    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode`, {
-      port: PORT,
-      host: "0.0.0.0"
+  return app;
+}
+
+const appPromise = startServer();
+
+// Inicia o listener apenas se não estiver em ambiente serverless (Vercel)
+if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
+  appPromise.then(app => {
+    const PORT = Number(process.env.PORT) || 3000;
+    app.listen(PORT, "0.0.0.0", () => {
+      logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode`, {
+        port: PORT,
+        host: "0.0.0.0"
+      });
+      console.log(`Server running on http://localhost:${PORT}`);
     });
-    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
-startServer().catch((error) => {
-  logger.error("Failed to start server", { error: error.message });
-  process.exit(1);
-});
-
-export default startServer;
+export default async (req: any, res: any) => {
+  const app = await appPromise;
+  return app(req, res);
+};
