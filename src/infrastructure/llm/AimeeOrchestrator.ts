@@ -29,6 +29,18 @@ export class AimeeOrchestrator {
     }
   }
 
+  async checkHealth(): Promise<{ providers: string[]; ok: boolean }> {
+    const providers = [];
+    if (this.genAI) providers.push('gemini');
+    if (this.deepseek) providers.push('deepseek');
+    if (this.openai) providers.push('openai');
+
+    return {
+      providers,
+      ok: providers.length > 0
+    };
+  }
+
   async processRequest(prompt: string, history: any[] = [], persona: string = "funny", audio?: { data: string; mimeType: string }): Promise<{ content: string; functionCalls?: any[] }> {
     // Ordem de tentativa: Gemini -> DeepSeek -> OpenAI
     const providers = [];

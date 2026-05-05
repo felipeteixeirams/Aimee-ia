@@ -14,6 +14,7 @@ import { UserProfile, AIProvider } from '../types';
 import { logger } from '../lib/logger';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { checkAIHealth } from '../services/aiService';
+import { config } from '../lib/config';
 
 export interface SystemHealth {
   firebase: boolean;
@@ -64,7 +65,11 @@ export function useAuth() {
 
         setHealth(newHealth);
         
-        if (!newHealth.firebase) {
+        if (newHealth.firebase) {
+          logger.info('✅ CONEXÃO FIREBASE ESTABELECIDA COM SUCESSO', { databaseId: config.firebase.databaseId });
+          setCriticalUnavailable(false);
+          retryCount = 0;
+        } else {
           if (retryCount < MAX_RETRIES) {
             retryCount++;
             const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
@@ -74,10 +79,6 @@ export function useAuth() {
             logger.error('System Health: Critical Failure (Database Offline)');
             setCriticalUnavailable(true);
           }
-        } else {
-          retryCount = 0;
-          setCriticalUnavailable(false);
-          logger.info('System Health OK', newHealth);
         }
       } catch (err) {
         logger.error('Health check process failed', err);

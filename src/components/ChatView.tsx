@@ -86,7 +86,7 @@ export const ChatView = ({
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden pt-4 px-4 pb-28 space-y-3"
       >
         {messages.length === 0 && (
           <div className="text-center py-20">
@@ -102,8 +102,8 @@ export const ChatView = ({
           
           if (dateStr !== prevDateStr) {
             acc.push(
-              <div key={`sep-${dateStr}`} className="flex justify-center my-8">
-                <span className="px-4 py-1.5 bg-neutral-100/50 dark:bg-neutral-900/50 text-[10px] text-neutral-400 font-bold rounded-full uppercase tracking-[0.2em] border border-neutral-200/50 dark:border-neutral-800/50">
+              <div key={`sep-${dateStr}`} className="flex justify-center my-6">
+                <span className="px-3 py-1 bg-neutral-100/50 dark:bg-neutral-900/50 text-[9px] text-neutral-400 font-bold rounded-full uppercase tracking-[0.15em] border border-neutral-200/50 dark:border-neutral-800/50">
                   {formatDateSeparator(msg.timestamp)}
                 </span>
               </div>
@@ -115,41 +115,41 @@ export const ChatView = ({
               key={msg.id || i} 
               id={`msg-${msg.id}`}
               layout
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               className={cn(
-                "flex group gap-4 max-w-4xl mx-auto w-full", 
+                "flex group gap-2.5 max-w-2xl mx-auto w-full", 
                 msg.role === 'user' ? "flex-row-reverse" : "flex-row"
               )}
             >
               <div className={cn(
-                "shrink-0 flex flex-col justify-end pb-1",
+                "shrink-0 flex flex-col justify-end pb-0.5",
                 msg.role === 'user' ? "items-end" : "items-start"
               )}>
                 {msg.role === 'assistant' ? (
                   <AimeeAvatar 
                     src={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR} 
                     size="sm" 
-                    className="w-10 h-10 rounded-2xl shadow-xl border-2 border-white dark:border-neutral-800 ring-4 ring-brand/5" 
+                    className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
-                     <span className="text-xs font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || 'U'}</span>
+                  <div className="w-8 h-8 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
+                     <span className="text-[10px] font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || 'U'}</span>
                   </div>
                 )}
               </div>
 
               <div className={cn(
-                "relative flex flex-col gap-1 max-w-[80%] md:max-w-[70%]",
+                "relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%]",
                 msg.role === 'user' ? "items-end" : "items-start"
               )}>
                 <div className={cn(
-                  "relative px-6 py-4 rounded-[2rem] text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap shadow-sm",
+                  "relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap",
                   msg.role === 'user' 
-                    ? "bg-brand text-white rounded-tr-none font-medium selection:bg-white/30 selection:text-white" 
+                    ? "bg-brand text-white rounded-tr-none font-medium" 
                     : msg.isInsight
                       ? "bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 text-amber-900 dark:text-amber-100 rounded-tl-none ring-1 ring-amber-500/10 ai-bubble"
-                      : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-tl-none ai-bubble"
+                      : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble"
                 )}>
                   {msg.isInsight && (
                     <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
@@ -276,61 +276,60 @@ export const ChatView = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom('smooth')}
-            className="absolute bottom-32 right-6 p-4 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
+            className="absolute bottom-24 right-6 p-4 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
           >
             <ChevronDown className="w-5 h-5" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-12 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pointer-events-none z-20">
-        <div className="max-w-xl mx-auto flex flex-col gap-3 pointer-events-auto">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-8 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none z-20">
+        <div className="max-w-xl mx-auto flex flex-col gap-2 pointer-events-auto">
           {isRecording && (
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between px-6 py-3 bg-brand/10 dark:bg-brand/20 backdrop-blur-xl border border-brand/20 rounded-2xl mb-2"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center justify-between px-4 py-2 bg-brand/10 dark:bg-brand/20 backdrop-blur-xl border border-brand/20 rounded-2xl mb-1"
             >
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-brand">Gravando Áudio...</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand">Gravando...</span>
               </div>
               <AudioVisualizer isRecording={isRecording} getFrequencyData={getFrequencyData} />
             </motion.div>
           )}
           
-          <div className="flex gap-3">
-            <div className="flex-1 relative group">
-              <input 
-                type="text" 
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={isRecording ? "Solte o botão para enviar..." : "Fale com sua Aimee..."}
-                disabled={isRecording}
-                className="w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-2xl border border-neutral-100 dark:border-neutral-800 rounded-[2rem] px-8 py-5 text-sm focus:ring-8 focus:ring-brand/5 focus:border-brand/30 transition-all outline-none dark:text-white shadow-2xl shadow-black/5 group-hover:shadow-xl group-hover:border-neutral-200 dark:group-hover:border-neutral-700 disabled:opacity-50"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                 <button
-                  onClick={isRecording ? onStopRecording : startRecording}
-                  className={cn(
-                    "p-2 rounded-full transition-all active:scale-90",
-                    isRecording 
-                      ? "bg-red-500 text-white shadow-lg shadow-red-500/40" 
-                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:text-brand"
-                  )}
-                 >
-                  {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                 </button>
-              </div>
+          <div className="relative group">
+            <input 
+              type="text" 
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder={isRecording ? "Solte para enviar..." : "Fale com sua Aimee..."}
+              disabled={isRecording}
+              className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-[2rem] pl-6 pr-24 py-4 text-sm focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all outline-none dark:text-white shadow-xl shadow-black/5 disabled:opacity-50"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              <button
+                onClick={isRecording ? onStopRecording : startRecording}
+                className={cn(
+                  "w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90",
+                  isRecording 
+                    ? "bg-red-500 text-white shadow-lg shadow-red-500/40" 
+                    : "text-neutral-400 hover:text-brand bg-neutral-50 dark:bg-neutral-800"
+                )}
+              >
+                {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+              
+              <button 
+                onClick={() => handleSendMessage()}
+                disabled={!inputText.trim() || isTyping || isRecording}
+                className="w-10 h-10 bg-brand text-white rounded-full flex items-center justify-center shadow-lg shadow-brand/20 active:scale-90 transition-all disabled:opacity-30 disabled:scale-100 group shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
             </div>
-            <button 
-              onClick={() => handleSendMessage()}
-              disabled={!inputText.trim() || isTyping || isRecording}
-              className="w-16 h-16 bg-brand text-brand-foreground rounded-[2rem] flex items-center justify-center shadow-2xl shadow-brand/40 active:scale-90 transition-all disabled:opacity-50 disabled:scale-100 group shrink-0"
-            >
-              <Send className="w-7 h-7 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </button>
           </div>
         </div>
       </div>

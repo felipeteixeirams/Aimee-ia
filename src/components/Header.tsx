@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { LogOut, Users, ChevronDown, Sparkles, Zap, Shield, Check, Moon, Sun } from 'lucide-react';
+import { LogOut, Users, ChevronDown, Sparkles, Zap, Shield, Check, Menu, MessageSquare, Wallet, ShoppingCart, Calendar, Settings } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { AimeeAvatar } from './AimeeAvatar';
-import { UserProfile, GlobalConfig, AIProvider } from '../types';
+import { UserProfile, GlobalConfig, AIProvider, Tab } from '../types';
 import { useState, useRef, useEffect } from 'react';
 
 interface HeaderProps {
@@ -18,9 +18,8 @@ interface HeaderProps {
   globalConfig: GlobalConfig;
   updateGlobalConfig: (updates: Partial<GlobalConfig>) => void;
   health: { firebase: boolean; ai: boolean };
-  isDarkMode: boolean;
-  setIsDarkMode: (val: boolean) => void;
-  updateProfile: (updates: Partial<UserProfile>) => void;
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
 }
 
 export function Header({
@@ -36,23 +35,82 @@ export function Header({
   globalConfig,
   updateGlobalConfig,
   health,
-  isDarkMode,
-  setIsDarkMode,
-  updateProfile
+  activeTab,
+  setActiveTab
 }: HeaderProps) {
   const isOnline = health.firebase && health.ai;
+  const [showNavMenu, setShowNavMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const toggleTheme = () => {
-    const next = !isDarkMode;
-    setIsDarkMode(next);
-    updateProfile({ theme: next ? 'dark' : 'light' });
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowNavMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const navItems = [
+    { id: 'chat' as Tab, label: 'Conversa', icon: MessageSquare },
+    { id: 'finance' as Tab, label: 'Finanças', icon: Wallet },
+    { id: 'shopping' as Tab, label: 'Compras', icon: ShoppingCart },
+    { id: 'routines' as Tab, label: 'Rotinas', icon: Calendar },
+    { id: 'settings' as Tab, label: 'Ajustes', icon: Settings },
+  ];
   
   return (
-    <header className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 sm:pb-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 shrink-0 z-40 sticky top-0">
+    <header className="px-4 sm:px-6 py-2 sm:py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 shrink-0 z-50 sticky top-0">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 sm:gap-4">
-        <div className="relative group">
+          {/* Navigation Menu Burger */}
+          <div className="relative" ref={menuRef}>
+            <button 
+              onClick={() => setShowNavMenu(!showNavMenu)}
+              className="w-10 h-10 flex items-center justify-center text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all active:scale-95"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+
+            <AnimatePresence>
+              {showNavMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl shadow-2xl z-50 overflow-hidden p-2"
+                >
+                  <p className="px-4 py-3 text-[10px] font-black text-neutral-400 uppercase tracking-widest border-b border-neutral-50 dark:border-neutral-800 mb-2">Navegação</p>
+                  <div className="space-y-1">
+                    {navItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          setShowNavMenu(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all",
+                          activeTab === item.id 
+                            ? "bg-brand text-white shadow-lg shadow-brand/20" 
+                            : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                        )}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="text-sm font-bold">{item.label}</span>
+                        {activeTab === item.id && (
+                          <motion.div layoutId="active-nav-dot" className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="relative group">
           <button 
             onClick={() => unreadInsightsCount > 0 && setShowInsightsModal(true)}
             className={cn(
@@ -105,37 +163,23 @@ export function Header({
           </div>
           
           <div className="flex items-center gap-1.5 mt-0.5">
-            <div className={cn(
-              "px-1.5 py-0.5 rounded-md flex items-center gap-1 transition-colors",
-              isOnline 
-                ? "bg-green-500/10" 
-                : "bg-red-500/10"
-            )}>
-              <div className={cn("w-1 h-1 rounded-full", isOnline ? "bg-green-500" : "bg-red-500 animate-pulse")} />
-              <span className={cn("text-[7px] font-black uppercase tracking-widest", isOnline ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
-                {isOnline ? 'Active' : 'Offline'}
-              </span>
-            </div>
             <p className="text-[9px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap flex items-center gap-1.5">
               {activeSpace ? `Espaço` : 
                profile?.selectedPersona === 'analytical' ? 'Analítico' : 
-               profile?.selectedPersona === 'frugal' ? 'Frugal' : 'IA Orquestradora'}
-              <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 3.0' : 'DeepSeek R1'}
+               profile?.selectedPersona === 'frugal' ? 'Frugal' : 
+               profile?.selectedPersona === 'funny' ? 'Divertido' : 'Analítico'}
+              {isSuperAdmin && (
+                <>
+                  <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                  {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 3.0' : 'DeepSeek R1'}
+                </>
+              )}
             </p>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <button 
-          onClick={toggleTheme}
-          className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-brand transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-2xl active:scale-95"
-          title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-        >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
-
         {isSuperAdmin && pendingUsersCount > 0 && (
           <button 
             onClick={() => setShowAdminPanel(true)}
@@ -149,7 +193,7 @@ export function Header({
         )}
         <button 
           onClick={onLogout} 
-          className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-rose-500 transition-all hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-2xl active:scale-95 group"
+          className="min-w-[40px] w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-rose-500 transition-all hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-2xl active:scale-95 group shrink-0"
           title="Sair"
         >
           <LogOut className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />

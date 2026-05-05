@@ -1,10 +1,10 @@
 {
+  "projectId": "aimee-db9b3",
+  "appId": "1:317073273380:web:c87faeeaf141201e5c1eb1",
   "apiKey": "AIzaSyDk69QVZqrm_qhMpynlQ41NoVMvrjF2HGo",
   "authDomain": "aimee-db9b3.firebaseapp.com",
-  "projectId": "aimee-db9b3",
+  "firestoreDatabaseId": "ai-studio-a42d197f-b2fd-4ea3-b5d9-b3b02ea6b201",
   "storageBucket": "aimee-db9b3.firebasestorage.app",
   "messagingSenderId": "317073273380",
-  "appId": "1:317073273380:web:022b4c4ca2f4b2df5c1eb1",
-  "measurementId": "G-NWD3LE9T11",
-  "firestoreDatabaseId": ""
+  "measurementId": ""
 }

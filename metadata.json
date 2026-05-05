@@ -1,5 +1,5 @@
 {
   "name": "Agente Pessoal IA",
   "description": "Um assistente pessoal inteligente para gestão financeira, listas de compras e automação de tarefas cotidianas.",
-  "requestFramePermissions": ["geolocation"]
+  "requestFramePermissions": ["geolocation", "microphone", "camera"]
 }

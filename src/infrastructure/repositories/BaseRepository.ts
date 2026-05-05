@@ -56,6 +56,16 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
     throw new Error(JSON.stringify(errInfo));
   }
 
+  private sanitizeData(data: any): any {
+    const sanitized = { ...data };
+    Object.keys(sanitized).forEach(key => {
+      if (sanitized[key] === undefined) {
+        delete sanitized[key];
+      }
+    });
+    return sanitized;
+  }
+
   async create(data: Omit<T, 'id' | 'createdAt' | 'updatedAt' | 'userId'>, customUserId?: string): Promise<string> {
     const userId = customUserId || auth.currentUser?.uid;
     if (!userId) throw new Error("Usuário não autenticado para criar documento.");
@@ -63,7 +73,7 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
     const path = this.collectionPath.replace('{userId}', userId);
     try {
       const docRef = await addDoc(collection(db, path), {
-        ...data,
+        ...this.sanitizeData(data),
         userId,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -83,7 +93,7 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
     const docRef = doc(db, path, id);
     try {
       await updateDoc(docRef, {
-        ...data,
+        ...this.sanitizeData(data),
         updatedAt: serverTimestamp(),
       });
     } catch (error) {

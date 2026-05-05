@@ -75,7 +75,7 @@ export function useAimeeActions(
         aimeeData.goals,
         aimeeData.tasks,
         aimeeData.events,
-        profile?.selectedPersona || 'funny', 
+        profile?.selectedPersona || 'analytical', 
         aimeeData.globalConfig.aiProvider,
         activeSpace || undefined,
         audio

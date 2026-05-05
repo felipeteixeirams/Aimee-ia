@@ -39,7 +39,8 @@ import { fetchGoogleCalendarEvents } from './services/calendarService';
 import { 
   ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, 
   HouseholdTask, FamilyEvent, GlobalConfig, Tab, Period,
-  AIProvider, UserRole, UserStatus, ChatRole, PermissionLevel, ShareStatus, TaskStatus
+  AIProvider, UserRole, UserStatus, ChatRole, PermissionLevel, ShareStatus, TaskStatus,
+  AIRecommendedPersona
 } from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
 import { Login } from './components/Login';
@@ -89,7 +90,8 @@ export default function App() {
 
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
 
-  const aimeeData = useAimeeData(user, activeSpace);
+  const isApproved = profile?.status === 'approved' || profile?.role === 'admin' || user?.email === 'felipeteixeirams@gmail.com';
+  const aimeeData = useAimeeData(user, activeSpace, isApproved);
   const {
     messages,
     transactions,
@@ -346,6 +348,7 @@ export default function App() {
         photoUrl: data.photoUrl,
         role: isAdmin ? UserRole.ADMIN : UserRole.USER,
         status: status,
+        selectedPersona: AIRecommendedPersona.ANALYTICAL,
         preferences: { currency: 'BRL', notificationsEnabled: true },
         gamification: { points: 0, level: 1, badges: [], weeklyGoal: 500, currentWeeklySpending: 0 },
         location: { city: 'São Paulo', region: 'Sudeste' },
@@ -650,9 +653,8 @@ export default function App() {
           firebase: health.firebase,
           ai: globalConfig.aiProvider === AIProvider.GEMINI ? health.gemini : health.deepseek
         }}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
-        updateProfile={updateProfile}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
       {showAdminPanel && isSuperAdmin && (
@@ -664,7 +666,7 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden relative pb-32">
+      <main className="flex-1 overflow-hidden relative pb-0">
         <div className="h-full max-w-5xl mx-auto flex flex-col">
           <AnimatePresence mode="wait">
           {activeTab === 'chat' && (
@@ -817,11 +819,6 @@ export default function App() {
         </AnimatePresence>
         </div>
       </main>
-
-      <NavigationBar 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
 
       <InsightsModal 
         showInsightsModal={showInsightsModal}

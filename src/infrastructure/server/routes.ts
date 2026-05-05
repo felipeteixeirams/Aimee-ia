@@ -13,7 +13,13 @@ import { google } from "googleapis";
 export default async function (fastify: FastifyInstance) {
   // Health check endpoint
   fastify.get("/health", async () => {
-    return { status: "healthy", timestamp: new Date().toISOString() };
+    const orchestrator = container.resolve(AimeeOrchestrator);
+    const health = await orchestrator.checkHealth();
+    return { 
+      status: health.ok ? "healthy" : "unhealthy", 
+      providers: health.providers,
+      timestamp: new Date().toISOString() 
+    };
   });
 
   // Google OAuth Configuration

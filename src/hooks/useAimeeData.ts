@@ -20,7 +20,7 @@ import {
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { User } from 'firebase/auth';
 
-export function useAimeeData(user: User | null, activeSpace: string | null) {
+export function useAimeeData(user: User | null, activeSpace: string | null, isApproved: boolean) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
@@ -47,21 +47,14 @@ export function useAimeeData(user: User | null, activeSpace: string | null) {
       return;
     }
 
-    // 1. Listen to Chat History (Always personal)
-    const chatPath = `users/${user.uid}/chatHistory`;
-    const chatQuery = query(
-      collection(db, chatPath),
-      orderBy('timestamp', 'desc'),
-      limit(50)
-    );
-    const unsubChat = onSnapshot(chatQuery, (snap) => {
-      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage));
-      setMessages(msgs.reverse());
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, chatPath);
+    // Always listen to Global Config (it's public for authenticated users)
+    const unsubConfig = onSnapshot(doc(db, 'config/global'), (snap) => {
+      if (snap.exists()) {
+        setGlobalConfig(snap.data() as GlobalConfig);
+      }
     });
 
-    // 2. Listen to Shares
+    // Always listen to Shares (I updated the rules to allow this for pending users)
     const sharesPath = 'shares';
     const sharesQuery = query(
       collection(db, sharesPath),
@@ -78,7 +71,29 @@ export function useAimeeData(user: User | null, activeSpace: string | null) {
       handleFirestoreError(error, OperationType.GET, sharesPath);
     });
 
-    // 3. Listen to Space-related Data (Transactions, Shopping, Goals, Tasks, Events)
+    // Guards for detailed data
+    if (!isApproved) {
+      return () => {
+        unsubConfig();
+        unsubShares();
+      };
+    }
+
+    // 1. Listen to Chat History (Always personal)
+    const chatPath = `users/${user.uid}/chatHistory`;
+    const chatQuery = query(
+      collection(db, chatPath),
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    );
+    const unsubChat = onSnapshot(chatQuery, (snap) => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatMessage));
+      setMessages(msgs.reverse());
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, chatPath);
+    });
+
+    // 3. Listen to Space-related Data
     const targetId = activeSpace || user.uid;
 
     const transPath = `users/${targetId}/transactions`;
@@ -106,13 +121,6 @@ export function useAimeeData(user: User | null, activeSpace: string | null) {
       setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyEvent)));
     }, (err) => handleFirestoreError(err, OperationType.GET, eventsPath));
 
-    // 4. Global Config
-    const unsubConfig = onSnapshot(doc(db, 'config/global'), (snap) => {
-      if (snap.exists()) {
-        setGlobalConfig(snap.data() as GlobalConfig);
-      }
-    });
-
     return () => {
       unsubChat();
       unsubShares();
@@ -123,7 +131,7 @@ export function useAimeeData(user: User | null, activeSpace: string | null) {
       unsubEvents();
       unsubConfig();
     };
-  }, [user, activeSpace]);
+  }, [user, activeSpace, isApproved]);
 
   return {
     messages,

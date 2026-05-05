@@ -26,6 +26,13 @@ export interface AppConfig {
     measurementId?: string;
     databaseId?: string;
   };
+
+  // Firebase Admin Config (Server-side)
+  firebaseAdmin: {
+    projectId: string;
+    clientEmail: string;
+    privateKey: string;
+  };
   
   // Infrastructure
   appUrl: string;
@@ -93,6 +100,12 @@ export const config: AppConfig = {
     appId: getViteEnv('FIREBASE_APP_ID') || localFirebaseConfig.appId || '',
     measurementId: getViteEnv('FIREBASE_MEASUREMENT_ID') || localFirebaseConfig.measurementId || '',
     databaseId: getViteEnv('FIREBASE_DATABASE_ID') || localFirebaseConfig.firestoreDatabaseId || '',
+  },
+  
+  firebaseAdmin: {
+    projectId: getEnv('FIREBASE_PROJECT_ID') || localFirebaseConfig.projectId || '',
+    clientEmail: getEnv('FIREBASE_CLIENT_EMAIL') || '',
+    privateKey: getEnv('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n') || '',
   },
   
   appUrl: getEnv('APP_URL', 'http://localhost:3000'),
