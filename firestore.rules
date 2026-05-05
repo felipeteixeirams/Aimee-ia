@@ -93,11 +93,18 @@ service cloud.firestore {
 
     match /shares/{shareId} {
       allow read: if isAuthenticated() && (
+        isAdmin() ||
         resource.data.ownerId == request.auth.uid || 
-        resource.data.sharedWithEmail == request.auth.token.email
+        resource.data.sharedWithEmail == request.auth.token.email ||
+        (('sharedWithId' in resource.data) && resource.data.sharedWithId == request.auth.uid)
       );
-      allow create: if isApproved() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || resource.data.sharedWithEmail == request.auth.token.email);
+      allow create: if isApproved() && (isAdmin() || request.resource.data.ownerId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.ownerId == request.auth.uid || 
+        resource.data.sharedWithEmail == request.auth.token.email ||
+        (('sharedWithId' in resource.data) && resource.data.sharedWithId == request.auth.uid)
+      );
     }
 
     match /config/global {

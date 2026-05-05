@@ -93,46 +93,121 @@ export const orchestrator = async (
   const activeUserId = targetUserId || userId;
   
   const callAI = async () => {
-    if (!genAI) throw new Error("Aimee (Gemini) não está configurada corretamente.");
+    // Se o provedor não for Gemini, usamos a API do backend
+    if (provider !== 'gemini') {
+      console.log(`[Aimee] Roteando para o backend (Provedor: ${provider})`);
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          history: history.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }]
+          })).slice(-10),
+          persona,
+          provider,
+          context: {
+            tasks: tasks.slice(0, 10),
+            finance: transactions.slice(0, 10),
+            shopping: shoppingList.slice(0, 10)
+          },
+          audio
+        })
+      });
 
-    const contextString = `
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Erro na comunicação com o servidor de IA");
+      }
+
+      const data = await response.json();
+      return {
+        content: data.content || "",
+        functionCalls: data.functionCalls
+      };
+    }
+
+    // Fluxo direto do Gemini no Frontend (Recomendado pela Skill)
+    if (genAI) {
+      console.log(`[Aimee] Tentando Gemini no Frontend...`);
+      try {
+        const contextString = `
 [CONTEXTO ATUAL]
 Tarefas: ${JSON.stringify(tasks.slice(0, 10))}
 Finanças: ${JSON.stringify(transactions.slice(0, 10))}
 Compras: ${JSON.stringify(shoppingList.slice(0, 10))}
 `;
-    
-    const fullPrompt = `${prompt}\n\n${contextString}`;
-    const formattedHistory = history.map(msg => ({
-      role: msg.role === 'user' ? ('user' as const) : ('model' as const),
-      parts: [{ text: msg.content }]
-    })).slice(-10);
+        
+        const fullPrompt = `${prompt}\n\n${contextString}`;
+        const formattedHistory = history.map(msg => ({
+          role: msg.role === 'user' ? ('user' as const) : ('model' as const),
+          parts: [{ text: msg.content }]
+        })).slice(-10);
 
-    const parts: any[] = [{ text: fullPrompt }];
-    if (audio) {
-      parts.push({
-        inlineData: {
-          data: audio.data,
-          mimeType: audio.mimeType
+        const parts: any[] = [{ text: fullPrompt }];
+        if (audio) {
+          parts.push({
+            inlineData: {
+              data: audio.data,
+              mimeType: audio.mimeType
+            }
+          });
         }
-      });
+
+        const response: GenerateContentResponse = await genAI.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: [
+            ...formattedHistory,
+            { role: "user", parts }
+          ],
+          config: {
+            systemInstruction: getSystemInstruction(persona, new Date().toLocaleString()),
+            tools: [{ functionDeclarations: allAimeeTools } as any]
+          }
+        });
+
+        return {
+          content: response.text || "",
+          functionCalls: response.functionCalls
+        };
+      } catch (err: any) {
+        console.warn(`[Aimee] Falha no Gemini Frontend, tentando fallback para backend...`, err);
+        // Fallback para o backend se o Gemini local falhar
+      }
     }
 
-    const response: GenerateContentResponse = await genAI.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        ...formattedHistory,
-        { role: "user", parts }
-      ],
-      config: {
-        systemInstruction: getSystemInstruction(persona, new Date().toLocaleString()),
-        tools: [{ functionDeclarations: allAimeeTools } as any]
-      }
+    // Se o Gemini não estiver configurado ou falhar, roteamos para o backend
+    console.log(`[Aimee] Roteando para o backend (Motivo: Gemini indisponível ou erro)`);
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        history: history.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }]
+        })).slice(-10),
+        persona,
+        provider: provider === 'gemini' ? undefined : provider, // Se era gemini e falhou, deixa o orchestrator escolher o melhor reserva
+        context: {
+          tasks: tasks.slice(0, 10),
+          finance: transactions.slice(0, 10),
+          shopping: shoppingList.slice(0, 10)
+        },
+        audio
+      })
     });
 
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Erro na comunicação com o servidor de IA");
+    }
+
+    const data = await response.json();
     return {
-      content: response.text || "",
-      functionCalls: response.functionCalls
+      content: data.content || "",
+      functionCalls: data.functionCalls
     };
   };
 

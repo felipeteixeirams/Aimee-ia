@@ -1,4 +1,5 @@
 import { ChatMessage, UserProfile } from '../types';
+import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -33,6 +34,7 @@ interface ChatViewProps {
   copyToClipboard: (text: string, id: string) => void;
   copiedId: string | null;
   profile: UserProfile | null;
+  user: User | null;
   GLOBAL_AIMEE_AVATAR: string;
 }
 
@@ -57,6 +59,7 @@ export const ChatView = ({
   copyToClipboard,
   copiedId,
   profile,
+  user,
   GLOBAL_AIMEE_AVATAR,
   unreadInsights,
   handleGoToInsight,
@@ -128,13 +131,22 @@ export const ChatView = ({
               )}>
                 {msg.role === 'assistant' ? (
                   <AimeeAvatar 
-                    src={profile?.avatarUrl || GLOBAL_AIMEE_AVATAR} 
+                    src={GLOBAL_AIMEE_AVATAR} 
                     size="sm" 
                     className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
-                     <span className="text-[10px] font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || 'U'}</span>
+                  <div className="w-8 h-8 rounded-xl overflow-hidden bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
+                    {(profile?.avatarUrl || profile?.photoUrl || user?.photoURL) ? (
+                      <img 
+                        src={profile?.avatarUrl || profile?.photoUrl || user?.photoURL || ''} 
+                        className="w-full h-full object-cover" 
+                        alt="User" 
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-[10px] font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || user?.displayName?.charAt(0) || 'U'}</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -146,10 +158,10 @@ export const ChatView = ({
                 <div className={cn(
                   "relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap",
                   msg.role === 'user' 
-                    ? "bg-brand text-white rounded-tr-none font-medium" 
+                    ? "bg-brand text-brand-foreground rounded-tr-none font-medium" 
                     : msg.isInsight
-                      ? "bg-amber-50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 text-amber-900 dark:text-amber-100 rounded-tl-none ring-1 ring-amber-500/10 ai-bubble"
-                      : "bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble"
+                      ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-tl-none shadow-sm ring-1 ring-amber-500/10 ai-bubble"
+                      : "bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble"
                 )}>
                   {msg.isInsight && (
                     <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
@@ -241,12 +253,25 @@ export const ChatView = ({
         {typingContent && (
           <motion.div 
             layout
-            initial={{ opacity: 0, scale: 0.95, y: 5 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="flex justify-start"
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="flex group gap-2.5 max-w-2xl mx-auto w-full flex-row"
           >
-            <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-none bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 shadow-sm text-sm leading-relaxed break-words whitespace-pre-wrap">
-              {typingContent}
+            <div className="shrink-0 flex flex-col justify-end pb-0.5 items-start">
+              <AimeeAvatar 
+                src={GLOBAL_AIMEE_AVATAR} 
+                size="sm" 
+                className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
+              />
+            </div>
+
+            <div className="relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%] items-start">
+              <div className="relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble">
+                {typingContent}
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2 text-left">
+                Digitando...
+              </span>
             </div>
           </motion.div>
         )}
@@ -255,9 +280,16 @@ export const ChatView = ({
             layout
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
+            className="flex group gap-2.5 max-w-2xl mx-auto w-full flex-row"
           >
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
+            <div className="shrink-0 flex flex-col justify-end pb-0.5 items-start">
+              <AimeeAvatar 
+                src={GLOBAL_AIMEE_AVATAR} 
+                size="sm" 
+                className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
+              />
+            </div>
+            <div className="bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm h-10 flex items-center">
               <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce" />
                 <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:0.2s]" />
@@ -325,7 +357,7 @@ export const ChatView = ({
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording}
-                className="w-10 h-10 bg-brand text-white rounded-full flex items-center justify-center shadow-lg shadow-brand/20 active:scale-90 transition-all disabled:opacity-30 disabled:scale-100 group shrink-0"
+                className="w-10 h-10 bg-brand text-brand-foreground rounded-full flex items-center justify-center shadow-lg shadow-brand/20 active:scale-90 transition-all disabled:opacity-30 disabled:scale-100 group shrink-0"
               >
                 <Send className="w-4 h-4" />
               </button>

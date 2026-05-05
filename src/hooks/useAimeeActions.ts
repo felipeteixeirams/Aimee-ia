@@ -447,6 +447,8 @@ export function useAimeeActions(
         const baseTask = {
           ...task,
           status: task.status || 'todo' as any,
+          assignedTo: task.assignedTo || null,
+          category: (task.category as any) || 'cleaning',
         };
 
         if (task.recurrence) {

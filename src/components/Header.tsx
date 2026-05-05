@@ -93,7 +93,7 @@ export function Header({
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all",
                           activeTab === item.id 
-                            ? "bg-brand text-white shadow-lg shadow-brand/20" 
+                            ? "bg-brand text-brand-foreground shadow-lg shadow-brand/20" 
                             : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                         )}
                       >
@@ -186,7 +186,7 @@ export function Header({
             className="relative w-10 h-10 flex items-center justify-center bg-brand/10 text-brand rounded-2xl hover:bg-brand/20 transition-all group active:scale-95"
           >
             <Users className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-900 shadow-sm animate-pulse">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand text-brand-foreground text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-900 shadow-sm animate-pulse">
               {pendingUsersCount}
             </span>
           </button>

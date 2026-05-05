@@ -83,7 +83,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <div className="grid grid-cols-1 gap-3">
               <button 
                 onClick={this.handleReset}
-                className="w-full py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 flex items-center justify-center gap-3 active:scale-95 transition-all cursor-pointer"
+                className="w-full py-4 bg-brand text-brand-foreground rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 flex items-center justify-center gap-3 active:scale-95 transition-all cursor-pointer"
               >
                 <RefreshCcw className="w-4 h-4" />
                 Tentar Novamente

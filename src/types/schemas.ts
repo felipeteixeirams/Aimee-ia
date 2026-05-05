@@ -14,10 +14,13 @@ export const aiRequestSchema = z.object({
   prompt: z.string().min(1, 'O prompt não pode estar vazio'),
   history: z.array(z.any()).default([]),
   persona: z.string().default('funny'),
+  provider: z.enum(['gemini', 'deepseek', 'openai']).optional(),
   context: z.object({
     tasks: z.array(z.any()).optional(),
     events: z.array(z.any()).optional(),
     user: z.any().optional(),
+    finance: z.array(z.any()).optional(),
+    shopping: z.array(z.any()).optional(),
   }).default({}),
   audio: z.object({
     data: z.string(),

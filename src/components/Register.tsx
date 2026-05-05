@@ -68,7 +68,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
                 </div>
                 <button 
                   type="button"
-                  className="absolute bottom-0 right-0 p-2 bg-brand text-white rounded-xl shadow-lg hover:scale-110 transition-transform"
+                  className="absolute bottom-0 right-0 p-2 bg-brand text-brand-foreground rounded-xl shadow-lg hover:scale-110 transition-transform"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Camera className="w-4 h-4" />
@@ -137,7 +137,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
                 type="submit"
                 disabled={isSubmitting}
                 className={cn(
-                  "w-full max-w-[280px] py-4 bg-brand text-white rounded-[2rem] font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all mx-auto",
+                  "w-full max-w-[280px] py-4 bg-brand text-brand-foreground rounded-[2rem] font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all mx-auto",
                   isSubmitting && "opacity-50 pointer-events-none"
                 )}
               >

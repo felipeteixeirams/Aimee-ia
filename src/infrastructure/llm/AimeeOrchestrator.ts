@@ -24,7 +24,7 @@ export class AimeeOrchestrator {
     if (config.deepseekApiKey) {
       this.deepseek = new OpenAI({ 
         apiKey: config.deepseekApiKey,
-        baseURL: "https://api.deepseek.com/v1" // BaseURL padrão do DeepSeek
+        baseURL: "https://api.deepseek.com" // BaseURL oficial do DeepSeek (sem /v1 para o SDK)
       });
     }
   }
@@ -41,12 +41,18 @@ export class AimeeOrchestrator {
     };
   }
 
-  async processRequest(prompt: string, history: any[] = [], persona: string = "funny", audio?: { data: string; mimeType: string }): Promise<{ content: string; functionCalls?: any[] }> {
-    // Ordem de tentativa: Gemini -> DeepSeek -> OpenAI
+  async processRequest(prompt: string, history: any[] = [], persona: string = "funny", audio?: { data: string; mimeType: string }, preferredProvider?: 'gemini' | 'deepseek' | 'openai'): Promise<{ content: string; functionCalls?: any[] }> {
+    // Ordem de tentativa: Preferred -> Gemini -> DeepSeek -> OpenAI
     const providers = [];
-    if (this.genAI) providers.push('gemini');
-    if (this.deepseek) providers.push('deepseek');
-    if (this.openai) providers.push('openai');
+    if (preferredProvider) {
+      if (preferredProvider === 'gemini' && this.genAI) providers.push('gemini');
+      else if (preferredProvider === 'deepseek' && this.deepseek) providers.push('deepseek');
+      else if (preferredProvider === 'openai' && this.openai) providers.push('openai');
+    }
+
+    if (this.genAI && !providers.includes('gemini')) providers.push('gemini');
+    if (this.deepseek && !providers.includes('deepseek')) providers.push('deepseek');
+    if (this.openai && !providers.includes('openai')) providers.push('openai');
 
     if (providers.length === 0) {
       throw new Error("Nenhuma chave de API de IA configurada (Gemini, DeepSeek ou OpenAI).");

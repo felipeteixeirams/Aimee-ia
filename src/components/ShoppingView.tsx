@@ -174,7 +174,7 @@ export const ShoppingView = ({
           <motion.button
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-[320px] py-5 bg-brand text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/40 active:scale-95 transition-all text-sm mx-auto block"
+            className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/40 active:scale-95 transition-all text-sm mx-auto block"
             onClick={() => {
               handleFinishShopping();
               toggleShoppingMode();

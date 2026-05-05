@@ -727,6 +727,7 @@ export default function App() {
               copyToClipboard={copyToClipboard}
               copiedId={copiedId}
               profile={profile}
+              user={user}
               GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
             />
           )}

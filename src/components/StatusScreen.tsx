@@ -97,7 +97,7 @@ export const StatusScreen = ({ status, profile, onLogout, onRetry }: StatusScree
           {onRetry && (status === 'rejected') && (
             <button
               onClick={onRetry}
-              className="w-full py-4 bg-brand text-white rounded-[2rem] font-bold uppercase tracking-widest text-xs shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="w-full py-4 bg-brand text-brand-foreground rounded-[2rem] font-bold uppercase tracking-widest text-xs shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               {content.button}
             </button>

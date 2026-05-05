@@ -489,7 +489,7 @@ export const Login: React.FC<LoginProps> = ({
                         const ok = await onResetPassword(email);
                         if (ok) setResetSent(true);
                       }} 
-                      className="py-5 bg-brand text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
+                      className="py-5 bg-brand text-brand-foreground rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
                     >
                       Enviar
                     </button>

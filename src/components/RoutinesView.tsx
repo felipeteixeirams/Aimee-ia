@@ -401,7 +401,7 @@ export const RoutinesView = ({
         whileHover={{ scale: 1.1, rotate: 90 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsAddingTask(true)}
-        className="absolute bottom-24 right-6 w-14 h-14 bg-brand text-white rounded-full shadow-lg shadow-brand/30 flex items-center justify-center z-40"
+        className="absolute bottom-24 right-6 w-14 h-14 bg-brand text-brand-foreground rounded-full shadow-lg shadow-brand/30 flex items-center justify-center z-40"
       >
         <Plus className="w-6 h-6" />
       </motion.button>
@@ -482,7 +482,7 @@ export const RoutinesView = ({
                         }}
                         className={cn(
                           "px-3 py-4 rounded-2xl text-[10px] font-bold uppercase border transition-all",
-                          newTaskIsAllDay ? "bg-brand text-white border-brand" : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-400"
+                          newTaskIsAllDay ? "bg-brand text-brand-foreground border-brand" : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 text-neutral-400"
                         )}
                       >
                         Dia Todo
@@ -538,7 +538,7 @@ export const RoutinesView = ({
                                 }}
                                 className={cn(
                                   "w-8 h-8 rounded-lg text-[10px] font-bold transition-all border",
-                                  newTaskRecurrence.daysOfWeek.includes(idx) ? "bg-brand text-white border-brand" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-400"
+                                  newTaskRecurrence.daysOfWeek.includes(idx) ? "bg-brand text-brand-foreground border-brand" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-400"
                                 )}
                              >
                                {day}
@@ -563,7 +563,7 @@ export const RoutinesView = ({
                                 }}
                                 className={cn(
                                   "w-full aspect-square rounded-lg text-[10px] font-bold transition-all border",
-                                  newTaskRecurrence.daysOfMonth.includes(day) ? "bg-brand text-white border-brand" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-400"
+                                  newTaskRecurrence.daysOfMonth.includes(day) ? "bg-brand text-brand-foreground border-brand" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 text-neutral-400"
                                 )}
                              >
                                {day}
@@ -634,7 +634,7 @@ export const RoutinesView = ({
                 <button 
                   type="submit"
                   disabled={!newTaskTitle.trim()}
-                  className="w-full max-w-[280px] py-5 bg-brand text-white rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 mx-auto block"
+                  className="w-full max-w-[280px] py-5 bg-brand text-brand-foreground rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 mx-auto block"
                 >
                   Adicionar Tarefa
                 </button>
@@ -739,7 +739,7 @@ export const RoutinesView = ({
                     else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'all');
                     setScopeModal({ ...scopeModal, show: false });
                   }}
-                  className="w-full max-w-[280px] py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-brand/20 mx-auto"
+                  className="w-full max-w-[280px] py-4 bg-brand text-brand-foreground rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-brand/20 mx-auto"
                 >
                   Todos os eventos
                 </button>

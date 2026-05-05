@@ -81,7 +81,7 @@ const PermissionToggle = ({
             className={cn(
               "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all",
               value === level 
-                ? "bg-brand text-white shadow-sm" 
+                ? "bg-brand text-brand-foreground shadow-sm" 
                 : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
             )}
           >
@@ -241,7 +241,7 @@ export const SettingsView = ({
                 )}
               </div>
               {isSuperAdmin && (
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-7 md:h-7 bg-brand text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900">
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-7 md:h-7 bg-brand text-brand-foreground rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-neutral-900">
                   <Shield className="w-3 md:w-3.5 h-3 md:h-3.5" />
                 </div>
               )}
@@ -404,7 +404,7 @@ export const SettingsView = ({
 
                 <button 
                   onClick={handleSaveProfile}
-                  className="w-full max-w-[320px] py-5 bg-brand text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4 mx-auto block"
+                  className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4 mx-auto block"
                 >
                   Salvar Alterações
                 </button>
@@ -532,7 +532,7 @@ export const SettingsView = ({
                     ) : (
                       <button 
                         onClick={handleConnectGoogle}
-                        className="px-4 py-2.5 bg-brand text-white rounded-xl text-[8px] font-black uppercase tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
+                        className="px-4 py-2.5 bg-brand text-brand-foreground rounded-xl text-[8px] font-black uppercase tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
                       >
                         Conectar
                       </button>
@@ -816,7 +816,7 @@ export const SettingsView = ({
                 <button 
                   onClick={handleInvite}
                   disabled={!inviteEmail.trim() || !inviteEmail.includes('@')}
-                  className="w-full max-w-[320px] py-4 bg-brand text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 shadow-xl shadow-brand/20 disabled:opacity-30 disabled:shadow-none transition-all active:scale-95 mx-auto"
+                  className="w-full max-w-[320px] py-4 bg-brand text-brand-foreground rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 shadow-xl shadow-brand/20 disabled:opacity-30 disabled:shadow-none transition-all active:scale-95 mx-auto"
                 >
                   <Send className="w-4 h-4" />
                   Convidar Agora
