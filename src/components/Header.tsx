@@ -49,8 +49,9 @@ export function Header({
   };
   
   return (
-    <header className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 sm:pb-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 z-40 sticky top-0">
-      <div className="flex items-center gap-3 sm:gap-4">
+    <header className="px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 sm:pb-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 shrink-0 z-40 sticky top-0">
+      <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
         <div className="relative group">
           <button 
             onClick={() => unreadInsightsCount > 0 && setShowInsightsModal(true)}
@@ -154,6 +155,7 @@ export function Header({
           <LogOut className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
+     </div>
     </header>
   );
 }

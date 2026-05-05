@@ -665,7 +665,8 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden relative pb-32">
-        <AnimatePresence mode="wait">
+        <div className="h-full max-w-5xl mx-auto flex flex-col">
+          <AnimatePresence mode="wait">
           {activeTab === 'chat' && (
             <ChatView 
               messages={messages}
@@ -814,6 +815,7 @@ export default function App() {
             />
           )}
         </AnimatePresence>
+        </div>
       </main>
 
       <NavigationBar 

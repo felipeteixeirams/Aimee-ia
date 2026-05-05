@@ -132,12 +132,12 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
               </div>
             </div>
 
-            <div className="pt-4 flex flex-col gap-3">
+            <div className="pt-4 flex flex-col items-center gap-3">
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className={cn(
-                  "w-full py-4 bg-brand text-white rounded-[2rem] font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all",
+                  "w-full max-w-[280px] py-4 bg-brand text-white rounded-[2rem] font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all mx-auto",
                   isSubmitting && "opacity-50 pointer-events-none"
                 )}
               >
@@ -158,7 +158,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
               <button
                 type="button"
                 onClick={onCancel}
-                className="w-full py-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 font-bold uppercase tracking-widest text-[10px] transition-colors"
+                className="w-full max-w-[280px] py-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 font-bold uppercase tracking-widest text-[10px] transition-colors mx-auto"
               >
                 Cancelar e Voltar
               </button>

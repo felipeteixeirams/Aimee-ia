@@ -18,6 +18,7 @@ import { orchestrator } from '../services/aiService';
 import { fetchGoogleCalendarEvents } from '../services/calendarService';
 import { logger } from '../lib/logger';
 import { useToast } from '../components/ToastProvider';
+import { notificationSchema } from '../types/schemas';
 
 interface AimeeData {
   messages: ChatMessage[];
@@ -262,11 +263,18 @@ export function useAimeeActions(
       } as any);
 
       // Simulation of email notify
-      fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: action, email: uData.email, name: uData.displayName })
-      }).catch(() => {});
+      const payload = { type: action, email: uData.email, name: uData.displayName };
+      
+      const validation = notificationSchema.safeParse(payload);
+      if (validation.success) {
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validation.data)
+        }).catch(() => {});
+      } else {
+        logger.warn('Frontend validation failed for notify', { errors: validation.error.issues });
+      }
 
       // Log to admin
       await chatRepository.create({

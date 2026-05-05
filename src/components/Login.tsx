@@ -17,6 +17,8 @@ import { SystemHealth } from '../hooks/useAuth';
 import { fetchSignInMethodsForEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
+import { supportSchema } from '../types/schemas';
+
 interface LoginProps {
   onLogin: () => void;
   onEmailLogin: (email: string, pass: string) => Promise<void>;
@@ -174,13 +176,21 @@ export const Login: React.FC<LoginProps> = ({
   const isMaintenance = !health.firebase || criticalUnavailable;
 
   const handleSendSupport = async () => {
-    if (!supportMessage.trim()) return;
+    const payload = { email: email || 'usuario@aimee.link', message: supportMessage };
+    
+    // Validação frontend antecipada
+    const validation = supportSchema.safeParse(payload);
+    if (!validation.success) {
+      alert(validation.error.issues[0].message);
+      return;
+    }
+
     setIsSendingSupport(true);
     try {
       const response = await fetch('/api/support/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email || 'usuario@aimee.link', message: supportMessage })
+        body: JSON.stringify(payload)
       });
       if (response.ok) setSupportSent(true);
     } catch (e) {
@@ -275,14 +285,14 @@ export const Login: React.FC<LoginProps> = ({
                 </p>
               </div>
 
-              <div className="pt-4 space-y-3">
+              <div className="pt-4 space-y-3 flex flex-col items-center">
                 <button
                   onClick={() => setShowSupport(true)}
-                  className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-white/5 active:scale-95 transition-all"
+                  className="w-full max-w-[280px] bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-white/5 active:scale-95 transition-all mx-auto"
                 >
                   Contatar Administrador
                 </button>
-                <p className="text-[10px] text-neutral-600 font-black uppercase tracking-widest">Aimee Core v3.0</p>
+                <p className="text-[10px] text-neutral-600 font-black uppercase tracking-widest text-center">Aimee Core v3.0</p>
               </div>
             </motion.div>
           ) : step === 'options' && (
@@ -293,12 +303,12 @@ export const Login: React.FC<LoginProps> = ({
               animate="animate"
               exit="exit"
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="space-y-3 pb-12"
+              className="space-y-3 pb-12 flex flex-col items-center"
             >
               {lastUser && (
                 <button
                   onClick={handleContinueAsLastUser}
-                  className="w-full bg-white text-black py-5 rounded-2xl font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all shadow-xl"
+                  className="w-full max-w-[320px] bg-white text-black py-5 rounded-2xl font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all shadow-xl mx-auto"
                 >
                   <div className="text-left">
                     <p className="text-[10px] uppercase tracking-widest opacity-60 font-black">Continuar como</p>
@@ -312,7 +322,7 @@ export const Login: React.FC<LoginProps> = ({
 
               <button
                 onClick={onLogin}
-                className="w-full bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
+                className="w-full max-w-[320px] bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all mx-auto"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -325,7 +335,7 @@ export const Login: React.FC<LoginProps> = ({
 
               <button
                 onClick={() => setStep('email')}
-                className="w-full bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
+                className="w-full max-w-[320px] bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all mx-auto"
               >
                 <Mail className="w-5 h-5 opacity-60" />
                 <span className="tracking-tight font-black">Continuar com E-mail</span>
@@ -392,7 +402,7 @@ export const Login: React.FC<LoginProps> = ({
                     value={step === 'email' ? email : password}
                     onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
                     placeholder={step === 'email' ? "Seu melhor e-mail" : "Sua senha segura"}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700"
+                    className="w-full max-w-[320px] bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700 mx-auto block"
                   />
                   {step === 'email' && <Mail className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
                   {step === 'password' && <Lock className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
@@ -420,7 +430,7 @@ export const Login: React.FC<LoginProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || isMaintenance || isCheckingEmail}
-                  className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.1em] text-xs flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] transition-all hover:bg-neutral-100 disabled:opacity-50"
+                  className="w-full max-w-[280px] bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.1em] text-xs flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] transition-all hover:bg-neutral-100 disabled:opacity-50 mx-auto"
                 >
                   {(isLoading || isCheckingEmail) ? (
                     <motion.div
@@ -472,7 +482,7 @@ export const Login: React.FC<LoginProps> = ({
                 <>
                   <p className="text-[10px] text-neutral-500 mb-8 font-black uppercase tracking-widest leading-loose">Enviaremos um link de acesso para seu e-mail.</p>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm text-white mb-6 focus:outline-none focus:ring-2 focus:ring-brand/50 font-bold" placeholder="seu@email.com" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 max-w-[320px] mx-auto">
                     <button onClick={() => setShowReset(false)} className="py-5 bg-white/5 text-neutral-500 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-colors">Voltar</button>
                     <button 
                       onClick={async () => {
@@ -544,7 +554,7 @@ export const Login: React.FC<LoginProps> = ({
                     <button 
                       onClick={handleSendSupport}
                       disabled={isSendingSupport || !supportMessage.trim()}
-                      className="w-full py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full max-w-[280px] py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mx-auto"
                     >
                       {isSendingSupport ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

@@ -634,7 +634,7 @@ export const RoutinesView = ({
                 <button 
                   type="submit"
                   disabled={!newTaskTitle.trim()}
-                  className="w-full py-5 bg-brand text-white rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                  className="w-full max-w-[280px] py-5 bg-brand text-white rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 mx-auto block"
                 >
                   Adicionar Tarefa
                 </button>
@@ -676,7 +676,7 @@ export const RoutinesView = ({
 
               <button 
                 onClick={() => setSelectedTaskDescription(null)}
-                className="w-full py-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded-2xl font-bold text-xs uppercase tracking-widest mt-6 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all"
+                className="w-full max-w-[240px] py-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded-2xl font-bold text-xs uppercase tracking-widest mt-6 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all mx-auto block"
               >
                 Fechar
               </button>
@@ -712,14 +712,14 @@ export const RoutinesView = ({
                 Esta é uma tarefa recorrente. Como você deseja proceder com a {scopeModal.type === 'delete' ? 'exclusão' : 'edição'}?
               </p>
 
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col items-center">
                 <button 
                   onClick={() => {
                     if (scopeModal.type === 'delete') handleDeleteTask(scopeModal.taskId, 'single');
                     else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'single');
                     setScopeModal({ ...scopeModal, show: false });
                   }}
-                  className="w-full py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-800"
+                  className="w-full max-w-[280px] py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-800 mx-auto"
                 >
                   Somente este evento
                 </button>
@@ -729,7 +729,7 @@ export const RoutinesView = ({
                     else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'following');
                     setScopeModal({ ...scopeModal, show: false });
                   }}
-                  className="w-full py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-800"
+                  className="w-full max-w-[280px] py-4 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-neutral-100 dark:border-neutral-800 mx-auto"
                 >
                   Este e os eventos seguintes
                 </button>
@@ -739,13 +739,13 @@ export const RoutinesView = ({
                     else if (scopeModal.updates) handleUpdateTask(scopeModal.taskId, scopeModal.updates, 'all');
                     setScopeModal({ ...scopeModal, show: false });
                   }}
-                  className="w-full py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-brand/20"
+                  className="w-full max-w-[280px] py-4 bg-brand text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-brand/20 mx-auto"
                 >
                   Todos os eventos
                 </button>
                 <button 
                   onClick={() => setScopeModal({ ...scopeModal, show: false })}
-                  className="w-full py-4 text-neutral-400 font-bold text-xs uppercase tracking-widest mt-2"
+                  className="w-full max-w-[280px] py-4 text-neutral-400 font-bold text-xs uppercase tracking-widest mt-2 mx-auto"
                 >
                   Cancelar
                 </button>

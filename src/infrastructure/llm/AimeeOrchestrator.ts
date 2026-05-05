@@ -1,9 +1,12 @@
+import "reflect-metadata";
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import OpenAI from "openai";
-import { logger } from "../../lib/logger.ts";
-import { allAimeeTools } from "../tools/AimeeTools.ts";
-import { config } from "../../lib/config.ts";
+import { singleton } from "tsyringe";
+import { logger } from "../../lib/logger";
+import { allAimeeTools } from "../tools/AimeeTools";
+import { config } from "../../lib/config";
 
+@singleton()
 export class AimeeOrchestrator {
   private genAI: GoogleGenAI | null = null;
   private openai: OpenAI | null = null;

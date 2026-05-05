@@ -284,7 +284,7 @@ export const ChatView = ({
       </AnimatePresence>
 
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-12 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pointer-events-none z-20">
-        <div className="max-w-4xl mx-auto flex flex-col gap-3 pointer-events-auto">
+        <div className="max-w-xl mx-auto flex flex-col gap-3 pointer-events-auto">
           {isRecording && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}

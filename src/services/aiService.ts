@@ -5,6 +5,7 @@ import {
   shoppingSkill
 } from "../domain/skills";
 
+import { aiRequestSchema } from "../types/schemas";
 import { withRetry } from "../lib/retryUtils";
 
 export const orchestrator = async (
@@ -24,23 +25,28 @@ export const orchestrator = async (
   const activeUserId = targetUserId || userId;
   
   const callAI = async () => {
+    const payload = {
+      prompt,
+      history: history.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      })).slice(-10),
+      persona,
+      context: {
+        tasks: tasks.slice(0, 10),
+        finance: transactions.slice(0, 10),
+        shopping: shoppingList.slice(0, 10)
+      },
+      audio
+    };
+
+    // Validação frontend antecipada
+    aiRequestSchema.parse(payload);
+
     const response = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt,
-        history: history.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }]
-        })).slice(-10),
-        persona,
-        context: {
-          tasks: tasks.slice(0, 10),
-          finance: transactions.slice(0, 10),
-          shopping: shoppingList.slice(0, 10)
-        },
-        audio
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {

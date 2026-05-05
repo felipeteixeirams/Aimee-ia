@@ -1,235 +1,236 @@
-import { Router } from "express";
-import { logger } from "../../lib/logger.ts";
-import { config } from "../../lib/config.ts";
-import { NotificationType, type NotificationPayload } from "../../types/index.ts";
-import { 
-  sendRegistrationRequestEmail, 
-  sendApprovalEmail, 
-  sendRejectionEmail, 
-  sendBlockedEmail,
-  sendSupportEmail
-} from "../../services/emailService.ts";
-import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator.ts";
-import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.ts";
+import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { logger } from "../../lib/logger";
+import { config } from "../../lib/config";
+import { NotificationType, type NotificationPayload } from "../../types/index";
+import { EmailService } from "../../services/EmailService";
+import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator";
+import { container } from "../../infrastructure/container";
+import { validateRequest } from "./middlewares";
+import { aiRequestSchema, notificationSchema, supportSchema } from "../../types/schemas";
+import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth";
 import { google } from "googleapis";
 
-const router = Router();
-
-// Health check endpoint
-router.get("/health", (req, res) => {
-  res.json({ status: "healthy", timestamp: new Date().toISOString() });
-});
-
-// Google OAuth Configuration
-router.get("/auth/google/url", (req, res) => {
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: GOOGLE_CALENDAR_SCOPES,
-    prompt: 'consent'
+export default async function (fastify: FastifyInstance) {
+  // Health check endpoint
+  fastify.get("/health", async () => {
+    return { status: "healthy", timestamp: new Date().toISOString() };
   });
-  res.json({ url });
-});
 
-router.get(["/auth/google/callback", "/auth/google/callback/"], async (req, res) => {
-  const { code } = req.query;
-  if (!code) return res.status(400).send("Código não fornecido");
+  // Google OAuth Configuration
+  fastify.get("/auth/google/url", async () => {
+    const url = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: GOOGLE_CALENDAR_SCOPES,
+      prompt: 'consent'
+    });
+    return { url };
+  });
 
-  try {
-    const { tokens } = await oauth2Client.getToken(code as string);
-    res.send(`
-      <html>
-        <body>
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({ 
-                type: 'OAUTH_AUTH_SUCCESS', 
-                source: 'google_calendar',
-                tokens: ${JSON.stringify(tokens)} 
-              }, '*');
-              window.close();
-            } else {
-              window.location.href = '/';
-            }
-          </script>
-          <p>Autenticação do Google Calendar concluída com sucesso. Esta janela fechará automaticamente.</p>
-        </body>
-      </html>
-    `);
-  } catch (error: any) {
-    logger.error("OAuth Callback Error", { error: error.message });
-    res.status(500).send("Erro na autenticação");
-  }
-});
-
-// Email Notification Route
-router.post("/notify", async (req, res) => {
-  const { type, email, name, days } = req.body as NotificationPayload;
-  
-  if (!email || !type || !name) {
-    logger.warn('Invalid notification payload received', { payload: req.body });
-    return res.status(400).json({ error: "Missing required fields: email, type, and name are required." });
-  }
-
-  try {
-    switch (type) {
-      case NotificationType.REQUEST:
-        await sendRegistrationRequestEmail(email, name);
-        break;
-      case NotificationType.APPROVE:
-        await sendApprovalEmail(email, name);
-        break;
-      case NotificationType.REJECT:
-        await sendRejectionEmail(email, name);
-        break;
-      case NotificationType.BLOCK:
-        await sendBlockedEmail(email, name, days || 5);
-        break;
-      default:
-        return res.status(400).json({ error: "Invalid notification type" });
+  fastify.get("/auth/google/callback", async (req: FastifyRequest<{ Querystring: { code: string } }>, reply: FastifyReply) => {
+    const { code } = req.query;
+    if (!code) {
+      reply.status(400).send("Código não fornecido");
+      return;
     }
-    res.json({ success: true });
-  } catch (error: any) {
-    logger.error("Email API Error", { error: error.message, recipient: email, type });
-    res.status(500).json({ success: false, error: "Failed to send email notification" });
-  }
-});
 
-// AI Route
-router.post("/ai", async (req, res) => {
-  const { prompt, history, persona, context, audio } = req.body;
+    try {
+      const { tokens } = await oauth2Client.getToken(code);
+      reply.type('text/html').send(`
+        <html>
+          <body>
+            <script>
+              if (window.opener) {
+                window.opener.postMessage({ 
+                  type: 'OAUTH_AUTH_SUCCESS', 
+                  source: 'google_calendar',
+                  tokens: ${JSON.stringify(tokens)} 
+                }, '*');
+                window.close();
+              } else {
+                window.location.href = '/';
+              }
+            </script>
+            <p>Autenticação do Google Calendar concluída com sucesso. Esta janela fechará automaticamente.</p>
+          </body>
+        </html>
+      `);
+    } catch (error: any) {
+      logger.error("OAuth Callback Error", { error: error.message });
+      reply.status(500).send("Erro na autenticação");
+    }
+  });
 
-  try {
-    const orchestrator = new AimeeOrchestrator();
-    const contextString = `
+  // Email Notification Route
+  fastify.post("/notify", { preHandler: validateRequest(notificationSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
+    const { type, email, name, days } = req.body as any;
+    
+    try {
+      const emailService = container.resolve(EmailService);
+      switch (type) {
+        case NotificationType.REQUEST:
+          await emailService.sendRegistrationRequestEmail(email, name);
+          break;
+        case NotificationType.APPROVE:
+          await emailService.sendApprovalEmail(email, name);
+          break;
+        case NotificationType.REJECT:
+          await emailService.sendRejectionEmail(email, name);
+          break;
+        case NotificationType.BLOCK:
+          await emailService.sendBlockedEmail(email, name, days || 5);
+          break;
+        default:
+          reply.status(400).send({ error: "Invalid notification type" });
+          return;
+      }
+      return { success: true };
+    } catch (error: any) {
+      logger.error("Email API Error", { error: error.message, recipient: email, type });
+      reply.status(500).send({ success: false, error: "Failed to send email notification" });
+    }
+  });
+
+  // AI Route
+  fastify.post("/ai", { preHandler: validateRequest(aiRequestSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
+    const { prompt, history, persona, context, audio } = req.body as any;
+
+    try {
+      const orchestrator = container.resolve(AimeeOrchestrator);
+      const contextString = `
 [CONTEXTO ATUAL]
 Tarefas: ${JSON.stringify(context.tasks || [])}
 Finanças: ${JSON.stringify(context.finance || [])}
 Compras: ${JSON.stringify(context.shopping || [])}
 `;
-    
-    const fullPrompt = `${prompt}\n\n${contextString}`;
-    const result = await orchestrator.processRequest(fullPrompt, history, persona, audio);
-    res.json(result);
-  } catch (error: any) {
-    logger.error("Server AI Error", { 
-      message: error.message,
-      stack: error.stack 
-    });
-    res.status(500).json({ error: error.message || "Internal AI Error" });
-  }
-});
+      
+      const fullPrompt = `${prompt}\n\n${contextString}`;
+      const result = await orchestrator.processRequest(fullPrompt, history, persona, audio);
+      return result;
+    } catch (error: any) {
+      logger.error("Server AI Error", { 
+        message: error.message,
+        stack: error.stack 
+      });
+      reply.status(500).send({ error: error.message || "Internal AI Error" });
+    }
+  });
 
-// Google Places Proxy Route
-router.get("/location/nearby-markets", async (req, res) => {
-  const { lat, lng } = req.query;
-  const apiKey = config.google.mapsApiKey;
+  // Google Places Proxy Route
+  fastify.get("/location/nearby-markets", async (req: FastifyRequest<{ Querystring: { lat: string, lng: string } }>, reply: FastifyReply) => {
+    const { lat, lng } = req.query;
+    const apiKey = config.google.mapsApiKey;
 
-  if (!apiKey) return res.status(500).json({ error: "Chave da API do Google Maps não configurada." });
-
-  try {
-    const radius = 2000;
-    const type = "supermarket";
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.status !== "OK") {
-      throw new Error(`Google Maps API Error: ${data.status} ${data.error_message || ""}`);
+    if (!apiKey) {
+      reply.status(500).send({ error: "Chave da API do Google Maps não configurada." });
+      return;
     }
 
-    const results = data.results.map((place: any) => ({
-      name: place.name,
-      address: place.vicinity,
-      rating: place.rating,
-      placeId: place.place_id,
-      distance: "Calcular"
-    }));
+    try {
+      const radius = 2000;
+      const type = "supermarket";
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}`;
 
-    res.json({ results });
-  } catch (error: any) {
-    logger.error("Nearby Markets Error", { error: error.message });
-    res.status(500).json({ error: "Erro ao buscar mercados próximos." });
-  }
-});
+      const response = await fetch(url);
+      const data = await response.json();
 
-// Calendar Management Routes
-router.post("/calendar/events", async (req, res) => {
-  const { tokens, event } = req.body;
-  if (!tokens || !event) return res.status(400).send("Faltam parâmetros");
+      if (data.status !== "OK") {
+        throw new Error(`Google Maps API Error: ${data.status} ${data.error_message || ""}`);
+      }
 
-  try {
-    oauth2Client.setCredentials(tokens);
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+      const results = data.results.map((place: any) => ({
+        name: place.name,
+        address: place.vicinity,
+        rating: place.rating,
+        placeId: place.place_id,
+        distance: "Calcular"
+      }));
+
+      return { results };
+    } catch (error: any) {
+      logger.error("Nearby Markets Error", { error: error.message });
+      reply.status(500).send({ error: "Erro ao buscar mercados próximos." });
+    }
+  });
+
+  // Calendar Management Routes
+  fastify.post("/calendar/events", async (req: FastifyRequest, reply: FastifyReply) => {
+    const { tokens, event } = req.body as any;
+    if (!tokens || !event) {
+      reply.status(400).send("Faltam parâmetros");
+      return;
+    }
+
+    try {
+      oauth2Client.setCredentials(tokens);
+      const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+      
+      const response = await calendar.events.insert({
+        calendarId: 'primary',
+        requestBody: {
+          summary: event.title,
+          description: event.description,
+          start: { dateTime: event.date },
+          end: { dateTime: new Date(new Date(event.date).getTime() + 3600000).toISOString() },
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      logger.error("Calendar Insert Error", { error: error.message });
+      reply.status(500).send({ error: error.message });
+    }
+  });
+
+  fastify.put("/calendar/events/:id", async (req: FastifyRequest, reply: FastifyReply) => {
+    const { tokens, event } = req.body as any;
+    const { id } = req.params as any;
     
-    const response = await calendar.events.insert({
-      calendarId: 'primary',
-      requestBody: {
-        summary: event.title,
-        description: event.description,
-        start: { dateTime: event.date },
-        end: { dateTime: new Date(new Date(event.date).getTime() + 3600000).toISOString() },
-      },
-    });
+    try {
+      oauth2Client.setCredentials(tokens);
+      const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+      
+      const response = await calendar.events.update({
+        calendarId: 'primary',
+        eventId: id,
+        requestBody: {
+          summary: event.title,
+          description: event.description,
+          start: { dateTime: event.date },
+          end: { dateTime: new Date(new Date(event.date).getTime() + 3600000).toISOString() },
+        },
+      });
 
-    res.json(response.data);
-  } catch (error: any) {
-    logger.error("Calendar Insert Error", { error: error.message });
-    res.status(500).json({ error: error.message });
-  }
-});
+      return response.data;
+    } catch (error: any) {
+      reply.status(500).send({ error: error.message });
+    }
+  });
 
-router.put("/calendar/events/:id", async (req, res) => {
-  const { tokens, event } = req.body;
-  const { id } = req.params;
-  
-  try {
-    oauth2Client.setCredentials(tokens);
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  fastify.delete("/calendar/events/:id", async (req: FastifyRequest, reply: FastifyReply) => {
+    const { tokens } = req.body as any;
+    const { id } = req.params as any;
     
-    const response = await calendar.events.update({
-      calendarId: 'primary',
-      eventId: id,
-      requestBody: {
-        summary: event.title,
-        description: event.description,
-        start: { dateTime: event.date },
-        end: { dateTime: new Date(new Date(event.date).getTime() + 3600000).toISOString() },
-      },
-    });
+    try {
+      oauth2Client.setCredentials(tokens);
+      const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+      await calendar.events.delete({ calendarId: 'primary', eventId: id });
+      return { success: true };
+    } catch (error: any) {
+      reply.status(500).send({ error: error.message });
+    }
+  });
 
-    res.json(response.data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.delete("/calendar/events/:id", async (req, res) => {
-  const { tokens } = req.body;
-  const { id } = req.params;
-  
-  try {
-    oauth2Client.setCredentials(tokens);
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    await calendar.events.delete({ calendarId: 'primary', eventId: id });
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Support Route
-router.post("/support/message", async (req, res) => {
-  const { email, message } = req.body;
-  if (!email || !message) return res.status(400).json({ error: "Email e mensagem são obrigatórios." });
-
-  try {
-    await sendSupportEmail(email, message.substring(0, 100));
-    res.json({ success: true });
-  } catch (error: any) {
-    logger.error("Support API Error", { error: error.message });
-    res.status(500).json({ error: "Erro ao enviar mensagem de suporte." });
-  }
-});
-
-export default router;
+  // Support Route
+  fastify.post("/support/message", { preHandler: validateRequest(supportSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email, message } = req.body as any;
+    
+    try {
+      const emailService = container.resolve(EmailService);
+      await emailService.sendSupportEmail(email, message.substring(0, 100));
+      return { success: true };
+    } catch (error: any) {
+      logger.error("Support API Error", { error: error.message });
+      reply.status(500).send({ error: "Erro ao enviar mensagem de suporte." });
+    }
+  });
+}

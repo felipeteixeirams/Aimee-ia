@@ -404,7 +404,7 @@ export const SettingsView = ({
 
                 <button 
                   onClick={handleSaveProfile}
-                  className="w-full py-5 bg-brand text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4"
+                  className="w-full max-w-[320px] py-5 bg-brand text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4 mx-auto block"
                 >
                   Salvar Alterações
                 </button>
@@ -816,7 +816,7 @@ export const SettingsView = ({
                 <button 
                   onClick={handleInvite}
                   disabled={!inviteEmail.trim() || !inviteEmail.includes('@')}
-                  className="w-full py-4 bg-brand text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 shadow-xl shadow-brand/20 disabled:opacity-30 disabled:shadow-none transition-all active:scale-95"
+                  className="w-full max-w-[320px] py-4 bg-brand text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 shadow-xl shadow-brand/20 disabled:opacity-30 disabled:shadow-none transition-all active:scale-95 mx-auto"
                 >
                   <Send className="w-4 h-4" />
                   Convidar Agora
