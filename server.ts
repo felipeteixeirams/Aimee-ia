@@ -45,8 +45,8 @@ async function startServer() {
     // Usamos middie para integrar o middleware do Vite
     await fastify.use(vite.middlewares);
   } else {
-    // Em produção servimos os arquivos de dist/client
-    const clientPath = path.join(process.cwd(), "dist", "client");
+    // Em produção servimos os arquivos de dist
+    const clientPath = path.join(process.cwd(), "dist");
     
     await fastify.register(fastifyStatic, {
       root: clientPath,
