@@ -38,7 +38,7 @@ describe('AimeeOrchestrator', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    orchestrator = new AimeeOrchestrator(API_KEY);
+    orchestrator = new AimeeOrchestrator();
   });
 
   it('should format message and return content', async () => {

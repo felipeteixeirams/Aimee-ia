@@ -98,10 +98,7 @@ router.post("/ai", async (req, res) => {
   const { prompt, history, persona, context, audio } = req.body;
 
   try {
-    const apiKey = config.geminiApiKey;
-    if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY não configurada." });
-
-    const orchestrator = new AimeeOrchestrator(apiKey);
+    const orchestrator = new AimeeOrchestrator();
     const contextString = `
 [CONTEXTO ATUAL]
 Tarefas: ${JSON.stringify(context.tasks || [])}
@@ -113,7 +110,10 @@ Compras: ${JSON.stringify(context.shopping || [])}
     const result = await orchestrator.processRequest(fullPrompt, history, persona, audio);
     res.json(result);
   } catch (error: any) {
-    logger.error("Server AI Error", { error: error.message });
+    logger.error("Server AI Error", { 
+      message: error.message,
+      stack: error.stack 
+    });
     res.status(500).json({ error: error.message || "Internal AI Error" });
   }
 });

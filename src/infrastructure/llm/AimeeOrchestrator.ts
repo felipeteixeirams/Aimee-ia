@@ -1,55 +1,139 @@
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
+import OpenAI from "openai";
 import { logger } from "../../lib/logger.ts";
 import { allAimeeTools } from "../tools/AimeeTools.ts";
+import { config } from "../../lib/config.ts";
 
 export class AimeeOrchestrator {
-  private genAI: GoogleGenAI;
+  private genAI: GoogleGenAI | null = null;
+  private openai: OpenAI | null = null;
+  private deepseek: OpenAI | null = null;
 
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenAI({ apiKey });
+  constructor() {
+    if (config.geminiApiKey) {
+      this.genAI = new GoogleGenAI({ apiKey: config.geminiApiKey });
+    }
+    
+    if (config.openaiApiKey) {
+      this.openai = new OpenAI({ apiKey: config.openaiApiKey });
+    }
+
+    if (config.deepseekApiKey) {
+      this.deepseek = new OpenAI({ 
+        apiKey: config.deepseekApiKey,
+        baseURL: "https://api.deepseek.com/v1" // BaseURL padrão do DeepSeek
+      });
+    }
   }
 
   async processRequest(prompt: string, history: any[] = [], persona: string = "funny", audio?: { data: string; mimeType: string }): Promise<{ content: string; functionCalls?: any[] }> {
-    try {
-      const parts: any[] = [{ text: prompt }];
-      
-      if (audio) {
-        parts.push({
-          inlineData: {
-            data: audio.data,
-            mimeType: audio.mimeType
-          }
-        });
-      }
+    // Ordem de tentativa: Gemini -> DeepSeek -> OpenAI
+    const providers = [];
+    if (this.genAI) providers.push('gemini');
+    if (this.deepseek) providers.push('deepseek');
+    if (this.openai) providers.push('openai');
 
-      const response: GenerateContentResponse = await this.genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          ...history,
-          { role: "user", parts }
-        ],
-        config: {
-          systemInstruction: this.getSystemInstruction(persona, new Date().toLocaleString()),
-          tools: [{ functionDeclarations: allAimeeTools } as any]
+    if (providers.length === 0) {
+      throw new Error("Nenhuma chave de API de IA configurada (Gemini, DeepSeek ou OpenAI).");
+    }
+
+    let lastError: any = null;
+
+    for (const provider of providers) {
+      try {
+        logger.info(`Tentando processar requisição com provedor: ${provider}`);
+        if (provider === 'gemini' && this.genAI) {
+          return await this.processWithGemini(prompt, history, persona, audio);
+        } else if (provider === 'deepseek' && this.deepseek) {
+          return await this.processWithOpenAICompatible(this.deepseek, "deepseek-chat", prompt, history, persona);
+        } else if (provider === 'openai' && this.openai) {
+          return await this.processWithOpenAICompatible(this.openai, "gpt-4o", prompt, history, persona);
+        }
+      } catch (error: any) {
+        lastError = error;
+        logger.warn(`Falha no provedor ${provider}, tentando próximo se houver.`, { error: error.message });
+      }
+    }
+
+    throw lastError || new Error("Falha ao processar com todos os provedores de IA disponíveis.");
+  }
+
+  private async processWithGemini(prompt: string, history: any[], persona: string, audio?: { data: string; mimeType: string }) {
+    if (!this.genAI) throw new Error("GenAI não inicializado");
+    
+    const parts: any[] = [{ text: prompt }];
+    if (audio) {
+      parts.push({
+        inlineData: {
+          data: audio.data,
+          mimeType: audio.mimeType
         }
       });
-
-      const functionCalls = response.functionCalls;
-
-      return {
-        content: response.text || "Comando processado.",
-        functionCalls: functionCalls && functionCalls.length > 0 ? functionCalls : undefined
-      };
-    } catch (error: any) {
-      logger.error("Aimee Orchestrator Error", { 
-        message: error.message,
-        details: error.details,
-        status: error.status,
-        statusText: error.statusText,
-        stack: error.stack
-      });
-      throw error;
     }
+
+    const response: GenerateContentResponse = await this.genAI.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        ...history,
+        { role: "user", parts }
+      ],
+      config: {
+        systemInstruction: this.getSystemInstruction(persona, new Date().toLocaleString()),
+        tools: [{ functionDeclarations: allAimeeTools } as any]
+      }
+    });
+
+    const functionCalls = response.functionCalls;
+
+    return {
+      content: response.text || "Comando processado.",
+      functionCalls: functionCalls && functionCalls.length > 0 ? functionCalls : undefined
+    };
+  }
+
+  private async processWithOpenAICompatible(client: OpenAI, model: string, prompt: string, history: any[], persona: string) {
+    const systemMessage = {
+      role: "system",
+      content: this.getSystemInstruction(persona, new Date().toLocaleString())
+    };
+
+    // Converter histórico do Google para OpenAI format
+    const formattedHistory = history.map(h => ({
+      role: h.role === 'model' ? 'assistant' : 'user',
+      content: typeof h.parts[0].text === 'string' ? h.parts[0].text : JSON.stringify(h.parts[0])
+    }));
+
+    const response = await client.chat.completions.create({
+      model,
+      messages: [systemMessage, ...formattedHistory, { role: "user", content: prompt }] as any,
+      tools: allAimeeTools.map(tool => ({
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      })) as any,
+      tool_choice: "auto"
+    });
+
+    const choice = response.choices[0];
+    const message = choice.message;
+
+    const functionCalls = message.tool_calls?.map(tc => {
+      if ('function' in tc) {
+        return {
+          name: tc.function.name,
+          args: JSON.parse(tc.function.arguments)
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    return {
+      content: message.content || "",
+      functionCalls: (functionCalls && functionCalls.length > 0) ? (functionCalls as any[]) : undefined
+    };
   }
 
   private getSystemInstruction(persona: string = 'funny', currentDate: string): string {

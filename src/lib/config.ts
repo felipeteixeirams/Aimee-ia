@@ -12,6 +12,8 @@ export interface AppConfig {
   // AI Config
   geminiApiKey: string;
   deepseekApiKey?: string;
+  openaiApiKey?: string;
+  anthropicApiKey?: string;
   
   // Firebase Config (Frontend)
   firebase: {
@@ -79,6 +81,8 @@ export const config: AppConfig = {
   
   geminiApiKey: getEnv('GEMINI_API_KEY'),
   deepseekApiKey: getEnv('DEEPSEEK_API_KEY'),
+  openaiApiKey: getEnv('OPENAI_API_KEY'),
+  anthropicApiKey: getEnv('ANTHROPIC_API_KEY'),
   
   firebase: {
     apiKey: getViteEnv('FIREBASE_API_KEY') || localFirebaseConfig.apiKey || '',
@@ -118,9 +122,10 @@ export function validateConfig(): boolean {
   const missingCritical: string[] = [];
   const missingRecommended: string[] = [];
   
-  // Critical for AI (Server-side check mostly, but helpful for client if exposed)
-  if (!config.geminiApiKey && isServer) {
-    missingCritical.push('GEMINI_API_KEY');
+  // Critical for AI (Server-side check)
+  const hasAnyAiKey = config.geminiApiKey || config.deepseekApiKey || config.openaiApiKey || config.anthropicApiKey;
+  if (!hasAnyAiKey && isServer) {
+    missingCritical.push('GEMINI_API_KEY ou OPENAI_API_KEY ou DEEPSEEK_API_KEY');
   }
   
   // Critical for Firebase (Always required)
