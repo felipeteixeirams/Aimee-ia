@@ -83,7 +83,8 @@ export default function App() {
     isDarkMode, 
     setIsDarkMode,
     setProfile,
-    health
+    health,
+    criticalUnavailable
   } = useAuth();
 
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
@@ -608,6 +609,7 @@ export default function App() {
         isLoading={isLoggingIn} 
         error={authError} 
         health={health} 
+        criticalUnavailable={criticalUnavailable}
       />
     );
   }

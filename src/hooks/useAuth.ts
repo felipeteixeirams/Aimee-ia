@@ -33,6 +33,8 @@ export function useAuth() {
     deepseek: true,
     isReady: false
   });
+  const [criticalUnavailable, setCriticalUnavailable] = useState(false);
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true' || 
@@ -41,30 +43,58 @@ export function useAuth() {
     return false;
   });
 
-  // Health Check Effect
+  // Health Check & Retry Engine
   useEffect(() => {
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+    let timeoutId: any;
+
     async function performHealthCheck() {
-      const fbStatus = await testConnection();
-      const geminiStatus = await checkAIHealth(AIProvider.GEMINI);
-      const deepseekStatus = await checkAIHealth(AIProvider.DEEPSEEK);
+      try {
+        const fbStatus = await testConnection();
+        const geminiStatus = await checkAIHealth(AIProvider.GEMINI);
+        const deepseekStatus = await checkAIHealth(AIProvider.DEEPSEEK);
 
-      const newHealth = {
-        firebase: fbStatus.ok,
-        gemini: geminiStatus.ok,
-        deepseek: deepseekStatus.ok,
-        isReady: true
-      };
+        const newHealth = {
+          firebase: fbStatus.ok,
+          gemini: geminiStatus.ok,
+          deepseek: deepseekStatus.ok,
+          isReady: true
+        };
 
-      setHealth(newHealth);
-      
-      if (!newHealth.firebase || (!newHealth.gemini && !newHealth.deepseek)) {
-        logger.warn('System Health Warning', newHealth);
-      } else {
-        logger.info('System Health OK', newHealth);
+        setHealth(newHealth);
+        
+        if (!newHealth.firebase) {
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+            logger.warn(`Firebase connection failed. Retry ${retryCount}/${MAX_RETRIES} in ${delay}ms...`);
+            timeoutId = setTimeout(performHealthCheck, delay);
+          } else {
+            logger.error('System Health: Critical Failure (Database Offline)');
+            setCriticalUnavailable(true);
+          }
+        } else {
+          retryCount = 0;
+          setCriticalUnavailable(false);
+          logger.info('System Health OK', newHealth);
+        }
+      } catch (err) {
+        logger.error('Health check process failed', err);
+        timeoutId = setTimeout(performHealthCheck, 5000);
       }
     }
 
     performHealthCheck();
+
+    const intervalId = setInterval(() => {
+      performHealthCheck();
+    }, 60000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
@@ -153,6 +183,7 @@ export function useAuth() {
     isDarkMode,
     setIsDarkMode,
     setProfile,
-    health
+    health,
+    criticalUnavailable
   };
 }

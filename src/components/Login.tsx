@@ -25,6 +25,7 @@ interface LoginProps {
   isLoading?: boolean;
   error?: string | null;
   health: SystemHealth;
+  criticalUnavailable: boolean;
 }
 
 const PHRASES = [
@@ -151,7 +152,8 @@ export const Login: React.FC<LoginProps> = ({
   onResetPassword, 
   isLoading = false, 
   error = null, 
-  health 
+  health,
+  criticalUnavailable
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -163,7 +165,30 @@ export const Login: React.FC<LoginProps> = ({
   const [showReset, setShowReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  const isMaintenance = !health.firebase;
+  // Support Flow State
+  const [showSupport, setShowSupport] = useState(false);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [isSendingSupport, setIsSendingSupport] = useState(false);
+  const [supportSent, setSupportSent] = useState(false);
+
+  const isMaintenance = !health.firebase || criticalUnavailable;
+
+  const handleSendSupport = async () => {
+    if (!supportMessage.trim()) return;
+    setIsSendingSupport(true);
+    try {
+      const response = await fetch('/api/support/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email || 'usuario@aimee.link', message: supportMessage })
+      });
+      if (response.ok) setSupportSent(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSendingSupport(false);
+    }
+  };
 
   useEffect(() => {
     if (rememberMe && email) {
@@ -227,7 +252,40 @@ export const Login: React.FC<LoginProps> = ({
       {/* Bottom Interface */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-50">
         <AnimatePresence mode="wait">
-          {step === 'options' && (
+          {isMaintenance ? (
+            <motion.div
+              key="maintenance"
+              variants={menuVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="bg-neutral-900/60 backdrop-blur-3xl border border-rose-500/20 p-8 rounded-[3rem] text-center space-y-6 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500/0 via-rose-500/40 to-rose-500/0" />
+              
+              <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto">
+                <Globe className="w-8 h-8 text-rose-500" />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Sistema Indisponível</h2>
+                <p className="text-xs text-neutral-400 font-medium leading-relaxed px-4">
+                  Desculpe, o sistema está temporariamente offline para manutenção ou devido a instabilidades de conexão.
+                </p>
+              </div>
+
+              <div className="pt-4 space-y-3">
+                <button
+                  onClick={() => setShowSupport(true)}
+                  className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-white/5 active:scale-95 transition-all"
+                >
+                  Contatar Administrador
+                </button>
+                <p className="text-[10px] text-neutral-600 font-black uppercase tracking-widest">Aimee Core v3.0</p>
+              </div>
+            </motion.div>
+          ) : step === 'options' && (
             <motion.div
               key="options"
               variants={menuVariants}
@@ -437,6 +495,85 @@ export const Login: React.FC<LoginProps> = ({
                     <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Verifique sua caixa de entrada.</p>
                   </div>
                   <button onClick={() => { setShowReset(false); setResetSent(false); }} className="w-full py-5 bg-white text-black rounded-3xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl transition-all active:scale-95">Ok, entendi</button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+ 
+      {/* Modal Suporte/Indisponibilidade */}
+      <AnimatePresence>
+        {showSupport && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center px-6 backdrop-blur-2xl bg-black/80">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+              className="bg-neutral-950 border border-white/10 p-8 rounded-[3rem] w-full max-w-sm relative shadow-2xl"
+            >
+              <button 
+                onClick={() => { setShowSupport(false); setSupportSent(false); }}
+                className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h2 className="text-xl font-black text-white mb-2 tracking-tighter uppercase">Suporte Direto</h2>
+              
+              {!supportSent ? (
+                <div className="space-y-6">
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest leading-relaxed">
+                    Sua mensagem será enviada diretamente ao administrador principal. Max 100 caracteres.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <textarea
+                        autoFocus
+                        value={supportMessage}
+                        onChange={(e) => setSupportMessage(e.target.value.substring(0, 100))}
+                        placeholder="O que está acontecendo?"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500/50 font-bold resize-none h-32"
+                      />
+                      <div className="absolute bottom-4 right-4 text-[10px] font-black text-neutral-700">
+                        {supportMessage.length}/100
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={handleSendSupport}
+                      disabled={isSendingSupport || !supportMessage.trim()}
+                      className="w-full py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isSendingSupport ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Mail className="w-3 h-3" />
+                          <span>Enviar Agora</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center space-y-6">
+                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-8 h-8 text-green-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-white font-black uppercase tracking-tight">Enviado com Sucesso</p>
+                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest leading-relaxed">
+                      O administrador foi notificado. Responderemos via e-mail o mais rápido possível.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => { setShowSupport(false); setSupportSent(false); setSupportMessage(''); }}
+                    className="w-full py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transition-all active:scale-95"
+                  >
+                    Entendi
+                  </button>
                 </div>
               )}
             </motion.div>

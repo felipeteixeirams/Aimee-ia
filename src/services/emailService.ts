@@ -130,6 +130,32 @@ export async function sendRejectionEmail(userEmail: string, userName: string) {
   return sendEmail(mailOptions);
 }
 
+export async function sendSupportEmail(userEmail: string, message: string) {
+  const adminEmail = config.email.adminEmail || 'felipeteixeirams@gmail.com';
+  const mailOptions = {
+    from: '"Aimee Support" <' + config.email.user + '>',
+    to: adminEmail,
+    subject: `🚨 ALERTA DE SISTEMA: Mensagem de Suporte de ${userEmail}`,
+    html: `
+      <div style="${styles}">
+        <h1 style="${headerStyle}">Nova Mensagem de Suporte 🆘</h1>
+        <p>O sistema detectou um problema de dependência crítica ou um usuário solicitou suporte através do fluxo de indisponibilidade.</p>
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+          <p style="margin: 0; font-weight: 600; color: #374151;">Mensagem:</p>
+          <p style="margin: 10px 0 0 0; font-size: 16px;">"${message}"</p>
+        </div>
+        <p><strong>Usuário:</strong> ${userEmail}</p>
+        <p><strong>Timestamp:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+        <div style="${footerStyle}">
+          Este e-mail foi gerado automaticamente pelo núcleo de resiliência da Aimee.
+        </div>
+      </div>
+    `,
+  };
+
+  return sendEmail(mailOptions);
+}
+
 export async function sendBlockedEmail(userEmail: string, userName: string, days: number) {
   const mailOptions = {
     from: '"Aimee" <' + config.email.user + '>',

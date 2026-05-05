@@ -6,7 +6,8 @@ import {
   sendRegistrationRequestEmail, 
   sendApprovalEmail, 
   sendRejectionEmail, 
-  sendBlockedEmail 
+  sendBlockedEmail,
+  sendSupportEmail
 } from "../../services/emailService.ts";
 import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator.ts";
 import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.ts";
@@ -214,6 +215,20 @@ router.delete("/calendar/events/:id", async (req, res) => {
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Support Route
+router.post("/support/message", async (req, res) => {
+  const { email, message } = req.body;
+  if (!email || !message) return res.status(400).json({ error: "Email e mensagem são obrigatórios." });
+
+  try {
+    await sendSupportEmail(email, message.substring(0, 100));
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error("Support API Error", { error: error.message });
+    res.status(500).json({ error: "Erro ao enviar mensagem de suporte." });
   }
 });
 
