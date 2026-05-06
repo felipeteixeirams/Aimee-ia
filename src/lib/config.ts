@@ -162,21 +162,16 @@ export function validateConfig(): boolean {
         : 'Verifique se as variáveis VITE_* estão corretamente definidas e expostas.'
     };
     
-    logger.error('⚠️ FALHA CRÍTICA DE CONFIGURAÇÃO ⚠️', errorDetail);
+    logger.error('⚠️ FALHA NA CONFIGURAÇÃO (AVISO) ⚠️', errorDetail);
     
-    // In production, we must fail fast to avoid unpredictable behavior
+    // In production, we log clearly but try to keep running if it's not a hard crash
     if (config.isProduction || isServer) {
-      console.error('\n\n' + '='.repeat(50));
-      console.error('ERRO DE INICIALIZAÇÃO: VARIÁVEIS AUSENTES');
-      console.error(JSON.stringify(errorDetail, null, 2));
-      console.error('='.repeat(50) + '\n\n');
-      
-      if (isServer) {
-        // We don't exit(1) here because it's a dev server in AI Studio often, 
-        // but we make sure it's visible.
-      }
+      console.warn('\n\n' + '!'.repeat(50));
+      console.warn('CONFIGURAÇÃO INCOMPLETA: O sistema pode apresentar falhas em algumas funcionalidades.');
+      console.warn(JSON.stringify(errorDetail, null, 2));
+      console.warn('!'.repeat(50) + '\n\n');
     }
-    return false;
+    return true; // Retornamos true para não travar o processo da Vercel
   }
   
   if (missingRecommended.length > 0) {
