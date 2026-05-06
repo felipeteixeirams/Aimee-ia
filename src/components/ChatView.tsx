@@ -1,14 +1,204 @@
 import { ChatMessage, UserProfile } from '../types';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square } from 'lucide-react';
+import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square, RefreshCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { AimeeAvatar } from './AimeeAvatar';
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback, useMemo } from 'react';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { AudioVisualizer } from './AudioVisualizer';
 import { ReactiveFeed } from './ReactiveFeed';
+import { ChatRole } from '../types';
+
+interface ChatMessageItemProps {
+  msg: ChatMessage;
+  index: number;
+  profile: UserProfile | null;
+  user: User | null;
+  GLOBAL_AIMEE_AVATAR: string;
+  editingMessage: ChatMessage | null;
+  editValue: string;
+  setEditValue: (text: string) => void;
+  setEditingMessage: (msg: ChatMessage | null) => void;
+  handleEditMessage: (msg: ChatMessage) => void;
+  copyToClipboard: (text: string, id: string) => void;
+  copiedId: string | null;
+  handleSendMessage: (overrideText?: string, skipAddDoc?: boolean) => void;
+  handleRetry: (index: number) => void;
+}
+
+const ChatMessageItem = memo(({
+  msg,
+  index,
+  profile,
+  user,
+  GLOBAL_AIMEE_AVATAR,
+  editingMessage,
+  editValue,
+  setEditValue,
+  setEditingMessage,
+  handleEditMessage,
+  copyToClipboard,
+  copiedId,
+  handleSendMessage,
+  handleRetry
+}: ChatMessageItemProps) => {
+  return (
+    <motion.div 
+      key={msg.id || index} 
+      id={`msg-${msg.id}`}
+      layout
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      className={cn(
+        "flex group gap-2.5 max-w-2xl mx-auto w-full", 
+        msg.role === 'user' ? "flex-row-reverse" : "flex-row"
+      )}
+    >
+      <div className={cn(
+        "shrink-0 flex flex-col justify-end pb-0.5",
+        msg.role === 'user' ? "items-end" : "items-start"
+      )}>
+        {msg.role === 'assistant' ? (
+          <AimeeAvatar 
+            src={GLOBAL_AIMEE_AVATAR} 
+            size="sm" 
+            className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-xl overflow-hidden bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
+            {(profile?.avatarUrl || profile?.photoUrl || user?.photoURL) ? (
+              <img 
+                src={profile?.avatarUrl || profile?.photoUrl || user?.photoURL || ''} 
+                className="w-full h-full object-cover" 
+                alt="User" 
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <span className="text-[10px] font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || user?.displayName?.charAt(0) || 'U'}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className={cn(
+        "relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%]",
+        msg.role === 'user' ? "items-end" : "items-start"
+      )}>
+        <div className={cn(
+          "relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap",
+          msg.role === 'user' 
+            ? "bg-brand text-brand-foreground rounded-tr-none font-medium" 
+            : msg.status === 'error'
+              ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100 rounded-tl-none shadow-sm"
+              : msg.isInsight
+                ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-tl-none shadow-sm ring-1 ring-amber-500/10 ai-bubble"
+                : "bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble"
+        )}>
+          {msg.isInsight && msg.status !== 'error' && (
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
+              <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Insight Premium</span>
+            </div>
+          )}
+          {msg.status === 'error' && (
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-red-200/50 dark:border-red-800/50">
+              <X className="w-3 h-3 text-red-600 dark:text-red-400" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">Falha no Envio</span>
+            </div>
+          )}
+          {editingMessage?.id === msg.id ? (
+            <div className="flex flex-col gap-3 min-w-[200px]">
+              <textarea
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="w-full bg-transparent border-none focus:ring-0 resize-none text-[15px] p-0 text-white placeholder:text-white/50"
+                autoFocus
+                rows={3}
+              />
+              <div className="flex justify-end gap-2 border-t border-white/20 pt-2">
+                <button onClick={() => setEditingMessage(null)} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-xs font-bold">
+                  Cancelar
+                </button>
+                <button onClick={() => handleEditMessage(msg)} className="px-3 py-1 bg-white text-brand rounded-lg transition-colors text-xs font-bold">
+                  Salvar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <span className="block">{msg.content}</span>
+              {msg.status === 'error' && (
+                <button 
+                  onClick={() => handleRetry(index)}
+                  className="mt-4 flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-red-600/20"
+                >
+                  <RefreshCcw className="w-3 h-3" />
+                  Tentar Novamente
+                </button>
+              )}
+              <div className={cn(
+                "absolute top-4 opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-1",
+                msg.role === 'user' ? "right-full mr-3" : "left-full ml-3"
+              )}>
+                <button 
+                  onClick={() => copyToClipboard(msg.content, msg.id || index.toString())}
+                  className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors relative"
+                  title="Copiar"
+                >
+                  {copiedId === (msg.id || index.toString()) ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+                {msg.role === 'user' && (
+                  <button 
+                    onClick={() => {
+                      setEditingMessage(msg);
+                      setEditValue(msg.content);
+                    }}
+                    className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors"
+                    title="Editar"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+          {msg.actions && msg.actions.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-brand/5 dark:border-white/5">
+              {msg.actions.map((action) => (
+                <button
+                  key={action.id}
+                  onClick={() => handleSendMessage(action.value, true)}
+                  className={cn(
+                    "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] transition-all active:scale-95 border",
+                    msg.role === 'user' 
+                      ? "bg-white/10 text-white border-white/20 hover:bg-white/20" 
+                      : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10 dark:bg-brand/20 dark:text-brand-foreground"
+                  )}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <span className={cn(
+          "text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2",
+          msg.role === 'user' ? "text-right" : "text-left"
+        )}>
+          {format(new Date(msg.timestamp), 'HH:mm')}
+        </span>
+      </div>
+    </motion.div>
+  );
+});
+
+ChatMessageItem.displayName = 'ChatMessageItem';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -38,7 +228,7 @@ interface ChatViewProps {
   GLOBAL_AIMEE_AVATAR: string;
 }
 
-export const ChatView = ({
+export const ChatView = memo(({
   messages,
   scrollRef,
   handleScroll,
@@ -67,12 +257,76 @@ export const ChatView = ({
 }: ChatViewProps) => {
   const { isRecording, startRecording, stopRecording, getFrequencyData } = useVoiceRecorder();
 
-  const onStopRecording = async () => {
+  const onStopRecording = useCallback(async () => {
     const blob = await stopRecording();
     if (blob) {
       await handleSendVoiceMessage(blob);
     }
-  };
+  }, [stopRecording, handleSendVoiceMessage]);
+
+  const handleRetry = useCallback((index: number) => {
+    // Find the last user message before this error
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i].role === ChatRole.USER) {
+        handleSendMessage(messages[i].content, true);
+        return;
+      }
+    }
+  }, [messages, handleSendMessage]);
+
+  const renderedMessages = useMemo(() => {
+    return messages.reduce((acc: any[], msg, i) => {
+      const dateStr = msg.timestamp.split('T')[0];
+      const prevDateStr = i > 0 ? messages[i-1].timestamp.split('T')[0] : null;
+      
+      if (dateStr !== prevDateStr) {
+        acc.push(
+          <div key={`sep-${dateStr}`} className="flex justify-center my-6">
+            <span className="px-3 py-1 bg-neutral-100/50 dark:bg-neutral-900/50 text-[9px] text-neutral-400 font-bold rounded-full uppercase tracking-[0.15em] border border-neutral-200/50 dark:border-neutral-800/50">
+              {formatDateSeparator(msg.timestamp)}
+            </span>
+          </div>
+        );
+      }
+      
+      acc.push(
+        <ChatMessageItem 
+          key={msg.id || i}
+          msg={msg}
+          index={i}
+          profile={profile}
+          user={user}
+          GLOBAL_AIMEE_AVATAR={GLOBAL_AIMEE_AVATAR}
+          editingMessage={editingMessage}
+          editValue={editValue}
+          setEditValue={setEditValue}
+          setEditingMessage={setEditingMessage}
+          handleEditMessage={handleEditMessage}
+          copyToClipboard={copyToClipboard}
+          copiedId={copiedId}
+          handleSendMessage={handleSendMessage}
+          handleRetry={handleRetry}
+        />
+      );
+      return acc;
+    }, []);
+  }, [
+    messages, 
+    profile, 
+    user, 
+    GLOBAL_AIMEE_AVATAR, 
+    editingMessage, 
+    editValue, 
+    setEditValue, 
+    setEditingMessage, 
+    handleEditMessage, 
+    copyToClipboard, 
+    copiedId, 
+    handleSendMessage, 
+    handleRetry,
+    formatDateSeparator
+  ]);
+
   return (
     <motion.div 
       key="chat"
@@ -99,157 +353,7 @@ export const ChatView = ({
             <p className="text-neutral-400 text-sm">Como posso te ajudar hoje?</p>
           </div>
         )}
-        {messages.reduce((acc: any[], msg, i) => {
-          const dateStr = msg.timestamp.split('T')[0];
-          const prevDateStr = i > 0 ? messages[i-1].timestamp.split('T')[0] : null;
-          
-          if (dateStr !== prevDateStr) {
-            acc.push(
-              <div key={`sep-${dateStr}`} className="flex justify-center my-6">
-                <span className="px-3 py-1 bg-neutral-100/50 dark:bg-neutral-900/50 text-[9px] text-neutral-400 font-bold rounded-full uppercase tracking-[0.15em] border border-neutral-200/50 dark:border-neutral-800/50">
-                  {formatDateSeparator(msg.timestamp)}
-                </span>
-              </div>
-            );
-          }
-          
-          acc.push(
-            <motion.div 
-              key={msg.id || i} 
-              id={`msg-${msg.id}`}
-              layout
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={cn(
-                "flex group gap-2.5 max-w-2xl mx-auto w-full", 
-                msg.role === 'user' ? "flex-row-reverse" : "flex-row"
-              )}
-            >
-              <div className={cn(
-                "shrink-0 flex flex-col justify-end pb-0.5",
-                msg.role === 'user' ? "items-end" : "items-start"
-              )}>
-                {msg.role === 'assistant' ? (
-                  <AimeeAvatar 
-                    src={GLOBAL_AIMEE_AVATAR} 
-                    size="sm" 
-                    className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-xl overflow-hidden bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
-                    {(profile?.avatarUrl || profile?.photoUrl || user?.photoURL) ? (
-                      <img 
-                        src={profile?.avatarUrl || profile?.photoUrl || user?.photoURL || ''} 
-                        className="w-full h-full object-cover" 
-                        alt="User" 
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <span className="text-[10px] font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || user?.displayName?.charAt(0) || 'U'}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className={cn(
-                "relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%]",
-                msg.role === 'user' ? "items-end" : "items-start"
-              )}>
-                <div className={cn(
-                  "relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap",
-                  msg.role === 'user' 
-                    ? "bg-brand text-brand-foreground rounded-tr-none font-medium" 
-                    : msg.isInsight
-                      ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-tl-none shadow-sm ring-1 ring-amber-500/10 ai-bubble"
-                      : "bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble"
-                )}>
-                  {msg.isInsight && (
-                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
-                      <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Insight Premium</span>
-                    </div>
-                  )}
-                  {editingMessage?.id === msg.id ? (
-                    <div className="flex flex-col gap-3 min-w-[200px]">
-                      <textarea
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="w-full bg-transparent border-none focus:ring-0 resize-none text-[15px] p-0 text-white placeholder:text-white/50"
-                        autoFocus
-                        rows={3}
-                      />
-                      <div className="flex justify-end gap-2 border-t border-white/20 pt-2">
-                        <button onClick={() => setEditingMessage(null)} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-xs font-bold">
-                          Cancelar
-                        </button>
-                        <button onClick={() => handleEditMessage(msg)} className="px-3 py-1 bg-white text-brand rounded-lg transition-colors text-xs font-bold">
-                          Salvar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="block">{msg.content}</span>
-                      <div className={cn(
-                        "absolute top-4 opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-1",
-                        msg.role === 'user' ? "right-full mr-3" : "left-full ml-3"
-                      )}>
-                        <button 
-                          onClick={() => copyToClipboard(msg.content, msg.id || i.toString())}
-                          className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors relative"
-                          title="Copiar"
-                        >
-                          {copiedId === (msg.id || i.toString()) ? (
-                            <Check className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                        {msg.role === 'user' && (
-                          <button 
-                            onClick={() => {
-                              setEditingMessage(msg);
-                              setEditValue(msg.content);
-                            }}
-                            className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors"
-                            title="Editar"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  )}
-                  {msg.actions && msg.actions.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-brand/5 dark:border-white/5">
-                      {msg.actions.map((action) => (
-                        <button
-                          key={action.id}
-                          onClick={() => handleSendMessage(action.value, true)}
-                          className={cn(
-                            "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] transition-all active:scale-95 border",
-                            msg.role === 'user' 
-                              ? "bg-white/10 text-white border-white/20 hover:bg-white/20" 
-                              : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10 dark:bg-brand/20 dark:text-brand-foreground"
-                          )}
-                        >
-                          {action.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2",
-                  msg.role === 'user' ? "text-right" : "text-left"
-                )}>
-                  {format(new Date(msg.timestamp), 'HH:mm')}
-                </span>
-              </div>
-            </motion.div>
-          );
-          return acc;
-        }, [])}
+        {renderedMessages}
         {typingContent && (
           <motion.div 
             layout
@@ -300,7 +404,6 @@ export const ChatView = ({
         )}
       </div>
 
-      {/* Scroll to Bottom Button */}
       <AnimatePresence>
         {showScrollButton && (
           <motion.button
@@ -367,4 +470,7 @@ export const ChatView = ({
       </div>
     </motion.div>
   );
-};
+});
+
+ChatView.displayName = 'ChatView';
+

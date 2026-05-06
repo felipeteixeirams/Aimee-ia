@@ -144,6 +144,8 @@ export interface ChatMessage {
   agentType?: string;
   isInsight?: boolean;
   read?: boolean;
+  status?: 'sending' | 'sent' | 'error';
+  error?: string;
   actions?: {
     id: string;
     label: string;

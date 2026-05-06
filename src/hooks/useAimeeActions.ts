@@ -50,6 +50,13 @@ export function useAimeeActions(
     if (!text.trim() && !audio) return;
     if (!user) return;
 
+    if (!navigator.onLine) {
+      showToast('Sem conexão com a internet. Verifique sua rede.', 'error');
+      return;
+    }
+
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     logger.info('Sending message', { userId: user.uid, activeSpace, textLength: text.length, hasAudio: !!audio });
 
     if (!skipAddUserDoc) {
@@ -57,7 +64,8 @@ export function useAimeeActions(
         await chatRepository.create({
           role: ChatRole.USER,
           content: audio ? "[Mensagem de Áudio]" : text,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          status: 'sent'
         }, user.uid);
       } catch (error) {
         logger.error('Error saving user message', { error });
@@ -65,22 +73,60 @@ export function useAimeeActions(
     }
 
     setTyping(true);
-    try {
-      const response = await orchestrator(
-        text, 
-        aimeeData.messages, 
-        user.uid, 
-        aimeeData.shoppingList, 
-        aimeeData.transactions, 
-        aimeeData.goals,
-        aimeeData.tasks,
-        aimeeData.events,
-        profile?.selectedPersona || 'analytical', 
-        aimeeData.globalConfig.aiProvider,
-        activeSpace || undefined,
-        audio
-      );
+    
+    let retryCount = 0;
+    const maxRetries = 2;
+    let lastError: any = null;
+    let response = null;
 
+    while (retryCount <= maxRetries) {
+      try {
+        response = await orchestrator(
+          text, 
+          aimeeData.messages, 
+          user.uid, 
+          aimeeData.shoppingList, 
+          aimeeData.transactions, 
+          aimeeData.goals,
+          aimeeData.tasks,
+          aimeeData.events,
+          profile?.selectedPersona || 'analytical', 
+          aimeeData.globalConfig.aiProvider,
+          activeSpace || undefined,
+          audio
+        );
+        break; // Success!
+      } catch (error: any) {
+        lastError = error;
+        retryCount++;
+        if (retryCount <= maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000;
+          logger.warn(`Orchestrator failed, retrying in ${delay}ms...`, { attempt: retryCount });
+          await wait(delay);
+        }
+      }
+    }
+
+    if (!response) {
+      logger.error('Orchestrator failed after retries', { error: lastError?.message, userId: user.uid });
+      setTyping(false);
+      setTypingContent(null);
+      
+      try {
+        await chatRepository.create({
+          role: ChatRole.ASSISTANT,
+          content: "Desculpe, tive um problema técnico ao processar sua mensagem. Você pode tentar novamente?",
+          timestamp: new Date().toISOString(),
+          status: 'error',
+          error: lastError?.message || 'Erro desconhecido'
+        }, user.uid);
+      } catch (e) {
+        logger.error('Error saving failure message', { error: e });
+      }
+      return;
+    }
+
+    try {
       const blocks = response.split('\n\n').filter(b => b.trim());
 
       for (let i = 0; i < blocks.length; i++) {
@@ -109,6 +155,7 @@ export function useAimeeActions(
           timestamp: new Date().toISOString(),
           isInsight,
           read: isInsight ? false : undefined,
+          status: 'sent',
           actions: actions.length > 0 ? actions : undefined
         };
         
@@ -127,15 +174,10 @@ export function useAimeeActions(
         }
       }
     } catch (error: any) {
-      logger.error('Orchestrator error', { error: error.message, userId: user.uid });
+      // This catch is now only for processing errors after the AI response is received
+      logger.error('Processing error', { error: error.message, userId: user.uid });
       setTyping(false);
       setTypingContent(null);
-      // Fallback message
-      await chatRepository.create({
-        role: ChatRole.ASSISTANT,
-        content: "Desculpe, tive um problema técnico ao processar sua mensagem. Poderia tentar novamente em breve?",
-        timestamp: new Date().toISOString()
-      }, user.uid);
     } finally {
       setTyping(false);
     }
