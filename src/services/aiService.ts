@@ -10,7 +10,7 @@ import { withRetry } from "../lib/retryUtils";
 import { config } from "../lib/config";
 
 // Initialize AI on frontend
-const geminiApiKey = process.env.GEMINI_API_KEY;
+const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
 const genAI = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
 if (!genAI) {
@@ -156,7 +156,7 @@ Compras: ${JSON.stringify(shoppingList.slice(0, 10))}
         }
 
         const response: GenerateContentResponse = await genAI.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-flash-latest",
           contents: [
             ...formattedHistory,
             { role: "user", parts }

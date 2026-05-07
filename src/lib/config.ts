@@ -86,10 +86,10 @@ export const config: AppConfig = {
   isProduction: getEnv('NODE_ENV') === 'production',
   isDevelopment: getEnv('NODE_ENV') !== 'production',
   
-  geminiApiKey: getEnv('GEMINI_API_KEY'),
-  deepseekApiKey: getEnv('DEEPSEEK_API_KEY'),
-  openaiApiKey: getEnv('OPENAI_API_KEY'),
-  anthropicApiKey: getEnv('ANTHROPIC_API_KEY'),
+  geminiApiKey: getEnv('GEMINI_API_KEY')?.trim(),
+  deepseekApiKey: getEnv('DEEPSEEK_API_KEY')?.trim(),
+  openaiApiKey: getEnv('OPENAI_API_KEY')?.trim(),
+  anthropicApiKey: getEnv('ANTHROPIC_API_KEY')?.trim(),
   
   firebase: {
     apiKey: getViteEnv('FIREBASE_API_KEY') || localFirebaseConfig.apiKey || '',

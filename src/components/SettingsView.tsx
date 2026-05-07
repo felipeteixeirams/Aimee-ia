@@ -117,12 +117,29 @@ export const SettingsView = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [availableProviderIds, setAvailableProviderIds] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch('/api/config/ai');
+        const data = await res.json();
+        if (data.availableProviders) {
+          setAvailableProviderIds(data.availableProviders);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar configuração de IA:", err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
   const aiProviders = [
     { id: AIProvider.GEMINI, name: 'Google Gemini 2.0', icon: Sparkles, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
     { id: AIProvider.DEEPSEEK, name: 'DeepSeek R1', icon: Zap, color: 'text-brand', bgColor: 'bg-brand/10' },
-  ];
+  ].filter(p => availableProviderIds.includes(p.id));
 
-  const currentProvider = aiProviders.find(p => p.id === globalConfig.aiProvider) || aiProviders[0];
+  const currentProvider = aiProviders.find(p => p.id === globalConfig.aiProvider) || aiProviders[0] || { id: 'none', name: 'Nenhum Ativo', icon: Shield, color: 'text-neutral-400', bgColor: 'bg-neutral-400/10' };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

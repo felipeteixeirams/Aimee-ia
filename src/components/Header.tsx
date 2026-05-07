@@ -18,6 +18,7 @@ interface HeaderProps {
   globalConfig: GlobalConfig;
   updateGlobalConfig: (updates: Partial<GlobalConfig>) => void;
   health: { firebase: boolean; ai: boolean };
+  availableAIProviders?: string[];
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
 }
@@ -35,6 +36,7 @@ export function Header({
   globalConfig,
   updateGlobalConfig,
   health,
+  availableAIProviders = [],
   activeTab,
   setActiveTab
 }: HeaderProps) {
@@ -171,7 +173,17 @@ export function Header({
                 {isSuperAdmin && (
                   <>
                     <span className="w-0.5 h-0.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-                    {globalConfig.aiProvider === AIProvider.GEMINI ? 'Gemini 3.0' : 'DeepSeek R1'}
+                    {(() => {
+                      const selected = globalConfig.aiProvider;
+                      const isAvailable = availableAIProviders.includes(selected);
+                      const fallback = availableAIProviders.find(p => p !== selected);
+                      
+                      if (!isAvailable && fallback) {
+                        return `${fallback === 'deepseek' ? 'DeepSeek' : 'Gemini'} (Fallback)`;
+                      }
+                      
+                      return selected === AIProvider.GEMINI ? 'Gemini 3.0' : 'DeepSeek R1';
+                    })()}
                   </>
                 )}
               </p>

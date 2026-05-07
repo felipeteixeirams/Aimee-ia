@@ -147,6 +147,18 @@ export default function App() {
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   const [showAIDropdown, setShowAIDropdown] = useState(false);
   const [shoppingFilter, setShoppingFilter] = useState<'list' | 'stock'>('list');
+  const [availableAIProviders, setAvailableAIProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/config/ai')
+      .then(res => res.json())
+      .then(data => {
+        if (data.availableProviders) {
+          setAvailableAIProviders(data.availableProviders);
+        }
+      })
+      .catch(err => console.error("Erro ao carregar provedores de IA:", err));
+  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollPos = useRef<number>(0);
@@ -668,8 +680,11 @@ export default function App() {
         updateGlobalConfig={updateGlobalConfig}
         health={{
           firebase: health.firebase,
-          ai: globalConfig.aiProvider === AIProvider.GEMINI ? health.gemini : health.deepseek
+          ai: globalConfig.aiProvider === AIProvider.GEMINI 
+            ? (health.gemini || health.deepseek) // If Gemini fails, Deepseek fallback makes it "online"
+            : health.deepseek
         }}
+        availableAIProviders={availableAIProviders}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />

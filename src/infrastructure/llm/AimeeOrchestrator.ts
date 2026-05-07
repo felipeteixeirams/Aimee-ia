@@ -93,7 +93,7 @@ export class AimeeOrchestrator {
     }
 
     const response: GenerateContentResponse = await this.genAI.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-flash-latest",
       contents: [
         ...history,
         { role: "user", parts }

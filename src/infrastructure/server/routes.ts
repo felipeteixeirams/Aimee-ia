@@ -114,6 +114,17 @@ export default async function (fastify: FastifyInstance) {
     }
   });
 
+  // AI Configuration Route (to show available providers in UI)
+  fastify.get("/config/ai", async () => {
+    const orchestrator = container.resolve(AimeeOrchestrator);
+    const health = await orchestrator.checkHealth();
+    
+    return {
+      availableProviders: health.providers,
+      defaultProvider: health.providers.includes('deepseek') ? 'deepseek' : (health.providers[0] || null)
+    };
+  });
+
   // AI Route
   fastify.post("/ai", { preHandler: validateRequest(aiRequestSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
     const { prompt, history, persona, context, audio, provider } = req.body as any;
