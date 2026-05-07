@@ -7,10 +7,10 @@ import dotenv from "dotenv";
 import middie from "@fastify/middie";
 import fastifyStatic from "@fastify/static";
 import cors from "@fastify/cors";
-import { logger } from "./src/lib/logger.js";
-import { validateConfig } from "./src/lib/config.js";
-import { requestLogger, globalErrorHandler } from "./src/infrastructure/server/middlewares.js";
-import apiRoutes from "./src/infrastructure/server/routes.js";
+import { logger } from "./src/lib/logger";
+import { validateConfig } from "./src/lib/config";
+import { requestLogger, globalErrorHandler } from "./src/infrastructure/server/middlewares";
+import apiRoutes from "./src/infrastructure/server/routes";
 
 dotenv.config();
 

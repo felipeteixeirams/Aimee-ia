@@ -1,4 +1,4 @@
-import { logger } from './logger.js';
+import { logger } from './logger';
 import localFirebaseConfig from '../../firebase-applet-config.json';
 
 /**

@@ -107,10 +107,14 @@ const TypingHero = () => {
     const handleTyping = () => {
       if (!isDeleting) {
         setDisplayText(phrase.substring(0, displayText.length + 1));
-        setTypingSpeed(60); // Mais rápido (era 100)
+        setTypingSpeed(60); 
         
-        if (navigator.vibrate) {
-          navigator.vibrate(10);
+        try {
+          if (navigator.vibrate) {
+            navigator.vibrate(10);
+          }
+        } catch (e) {
+          // Ignore vibration failures/blocks
         }
 
         if (displayText === phrase) {
@@ -162,6 +166,7 @@ export const Login: React.FC<LoginProps> = ({
   const [step, setStep] = useState<'options' | 'email' | 'password'>('options');
   const [rememberMe, setRememberMe] = useState(true);
   const [lastUser, setLastUser] = useState<string | null>(localStorage.getItem('aimee_last_email'));
+  const [lastAuthProvider, setLastAuthProvider] = useState<string | null>(localStorage.getItem('aimee_auth_provider'));
   const [isNewUser, setIsNewUser] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [showReset, setShowReset] = useState(false);
@@ -208,9 +213,13 @@ export const Login: React.FC<LoginProps> = ({
 
   const handleContinueAsLastUser = () => {
     if (lastUser) {
-      setEmail(lastUser);
-      setIsNewUser(false);
-      setStep('password');
+      if (lastAuthProvider === 'google') {
+        onLogin();
+      } else {
+        setEmail(lastUser);
+        setIsNewUser(false);
+        setStep('password');
+      }
     }
   };
 
@@ -254,7 +263,11 @@ export const Login: React.FC<LoginProps> = ({
       <FireBackground />
       
       {/* Subtle Grain Overlay for cinematic feel */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-10" />
+      {/* Grainy Noise Overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-10" 
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+      />
 
       {/* Hero Section */}
       <TypingHero />

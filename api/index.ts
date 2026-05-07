@@ -1,12 +1,13 @@
+import "reflect-metadata";
 import { fileURLToPath } from "url";
 import path from "path";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import middie from "@fastify/middie";
-import { logger } from "../src/lib/logger.js";
-import { validateConfig } from "../src/lib/config.js";
-import { requestLogger, globalErrorHandler } from "../src/infrastructure/server/middlewares.js";
-import apiRoutes from "../src/infrastructure/server/routes.js";
+import { logger } from "../src/lib/logger";
+import { validateConfig } from "../src/lib/config";
+import { requestLogger, globalErrorHandler } from "../src/infrastructure/server/middlewares";
+import apiRoutes from "../src/infrastructure/server/routes";
 
 // Initialize config
 validateConfig();

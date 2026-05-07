@@ -276,6 +276,10 @@ export default function App() {
       const token = credential?.accessToken;
       
       if (token) {
+        localStorage.setItem('aimee_auth_provider', 'google');
+        if (result.user.email) {
+          localStorage.setItem('aimee_last_email', result.user.email);
+        }
         sessionStorage.setItem('google_access_token', token);
         const userRef = doc(db, 'users', result.user.uid);
         const snap = await getDoc(userRef);
@@ -296,6 +300,8 @@ export default function App() {
     setAuthError(null);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
+      localStorage.setItem('aimee_auth_provider', 'password');
+      localStorage.setItem('aimee_last_email', email);
     } catch (error: any) {
       logger.error('Email login failed', { error: error.code });
       setAuthError(formatAuthError(error.code));
@@ -309,6 +315,8 @@ export default function App() {
     setAuthError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, pass);
+      localStorage.setItem('aimee_auth_provider', 'password');
+      localStorage.setItem('aimee_last_email', email);
       // Profile creation will be handled by the onAuthStateChanged -> isRegistering flow
     } catch (error: any) {
       logger.error('Email registration failed', { error: error.code });

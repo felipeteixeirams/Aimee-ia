@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import nodemailer from 'nodemailer';
 import { singleton } from 'tsyringe';
-import { logger } from '../lib/logger.js';
-import { config } from '../lib/config.js';
+import { logger } from '../lib/logger';
+import { config } from '../lib/config';
 
 @singleton()
 export class EmailService {
