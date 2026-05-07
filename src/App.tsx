@@ -155,6 +155,11 @@ export default function App() {
       .then(data => {
         if (data.availableProviders) {
           setAvailableAIProviders(data.availableProviders);
+          
+          // Se o provedor atual não estiver disponível, troca para o padrão
+          if (!data.availableProviders.includes(globalConfig.aiProvider) && data.defaultProvider) {
+            updateGlobalConfig({ aiProvider: data.defaultProvider });
+          }
         }
       })
       .catch(err => console.error("Erro ao carregar provedores de IA:", err));

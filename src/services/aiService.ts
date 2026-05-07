@@ -11,10 +11,15 @@ import { config } from "../lib/config";
 
 // Initialize AI on frontend
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-const genAI = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Only use direct Frontend AI if specifically configured and not in production environment ideally
+// or if we have a valid-looking key.
+const isValidKey = (key?: string) => key && key.length > 20 && !key.includes('your-');
+const genAI = isValidKey(geminiApiKey) ? new GoogleGenAI({ apiKey: geminiApiKey! }) : null;
 
 if (!genAI) {
-  console.warn('⚠️ Aimee (Gemini) API Key não encontrada no ambiente do cliente.');
+  console.log('[Aimee] API Key de Frontend ausente ou inválida. Operando via Backend somente.');
 }
 
 const getSystemInstruction = (persona: string = 'funny', currentDate: string): string => {

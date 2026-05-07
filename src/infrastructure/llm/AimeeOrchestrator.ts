@@ -31,9 +31,9 @@ export class AimeeOrchestrator {
 
   async checkHealth(): Promise<{ providers: string[]; ok: boolean }> {
     const providers = [];
-    if (this.genAI) providers.push('gemini');
-    if (this.deepseek) providers.push('deepseek');
-    if (this.openai) providers.push('openai');
+    if (this.genAI && config.geminiApiKey) providers.push('gemini');
+    if (this.deepseek && config.deepseekApiKey) providers.push('deepseek');
+    if (this.openai && config.openaiApiKey) providers.push('openai');
 
     return {
       providers,

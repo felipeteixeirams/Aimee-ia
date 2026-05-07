@@ -81,15 +81,29 @@ function getViteEnv(key: string, defaultValue = ''): string {
   return (import.meta as any).env[viteKey] || defaultValue;
 }
 
+// Helper to filter out placeholder keys
+const isValidKey = (key?: string) => {
+  if (!key) return false;
+  const k = key.trim();
+  const lowerK = k.toLowerCase();
+  // Validates length and ensures it's not a known placeholder
+  return k.length > 10 && !lowerK.includes('your-') && !lowerK.includes('chave-') && !lowerK.includes('placeholder');
+};
+
+const rawGeminiKey = getEnv('GEMINI_API_KEY')?.trim();
+const rawDeepseekKey = getEnv('DEEPSEEK_API_KEY')?.trim();
+const rawOpenaiKey = getEnv('OPENAI_API_KEY')?.trim();
+const rawAnthropicKey = getEnv('ANTHROPIC_API_KEY')?.trim();
+
 export const config: AppConfig = {
   env: getEnv('NODE_ENV', 'development'),
   isProduction: getEnv('NODE_ENV') === 'production',
   isDevelopment: getEnv('NODE_ENV') !== 'production',
   
-  geminiApiKey: getEnv('GEMINI_API_KEY')?.trim(),
-  deepseekApiKey: getEnv('DEEPSEEK_API_KEY')?.trim(),
-  openaiApiKey: getEnv('OPENAI_API_KEY')?.trim(),
-  anthropicApiKey: getEnv('ANTHROPIC_API_KEY')?.trim(),
+  geminiApiKey: isValidKey(rawGeminiKey) ? rawGeminiKey! : '',
+  deepseekApiKey: isValidKey(rawDeepseekKey) ? rawDeepseekKey! : '',
+  openaiApiKey: isValidKey(rawOpenaiKey) ? rawOpenaiKey! : '',
+  anthropicApiKey: isValidKey(rawAnthropicKey) ? rawAnthropicKey! : '',
   
   firebase: {
     apiKey: getViteEnv('FIREBASE_API_KEY') || localFirebaseConfig.apiKey || '',
