@@ -1,13 +1,13 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { logger } from "../../lib/logger";
-import { config } from "../../lib/config";
-import { NotificationType, type NotificationPayload } from "../../types/index";
-import { EmailService } from "../../services/EmailService";
-import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator";
-import { container } from "../../infrastructure/container";
-import { validateRequest } from "./middlewares";
-import { aiRequestSchema, notificationSchema, supportSchema } from "../../types/schemas";
-import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth";
+import { logger } from "../../lib/logger.js";
+import { config } from "../../lib/config.js";
+import { NotificationType, type NotificationPayload } from "../../types/index.js";
+import { EmailService } from "../../services/EmailService.js";
+import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator.js";
+import { container } from "../../infrastructure/container.js";
+import { validateRequest } from "./middlewares.js";
+import { aiRequestSchema, notificationSchema, supportSchema } from "../../types/schemas.js";
+import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.js";
 import { google } from "googleapis";
 
 export default async function (fastify: FastifyInstance) {

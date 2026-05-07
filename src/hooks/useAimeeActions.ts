@@ -490,6 +490,8 @@ export function useAimeeActions(
           status: task.status || 'todo' as any,
           assignedTo: task.assignedTo || null,
           category: (task.category as any) || 'cleaning',
+          isAllDay: task.isAllDay ?? false,
+          createdAt: new Date().toISOString()
         };
 
         if (task.recurrence) {

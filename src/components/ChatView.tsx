@@ -327,6 +327,16 @@ export const ChatView = memo(({
     formatDateSeparator
   ]);
 
+  // Filter out any typing content that might already be in the messages to avoid duplication
+  const filteredTypingContent = useMemo(() => {
+    if (!typingContent) return null;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === ChatRole.ASSISTANT && lastMessage.content === typingContent) {
+      return null;
+    }
+    return typingContent;
+  }, [typingContent, messages]);
+
   return (
     <motion.div 
       key="chat"
@@ -354,7 +364,7 @@ export const ChatView = memo(({
           </div>
         )}
         {renderedMessages}
-        {typingContent && (
+        {filteredTypingContent && (
           <motion.div 
             layout
             initial={{ opacity: 0, y: 10, scale: 0.98 }}
@@ -371,7 +381,7 @@ export const ChatView = memo(({
 
             <div className="relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%] items-start">
               <div className="relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble">
-                {typingContent}
+                {filteredTypingContent}
               </div>
               <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2 text-left">
                 Digitando...
@@ -379,7 +389,7 @@ export const ChatView = memo(({
             </div>
           </motion.div>
         )}
-        {isTyping && (
+        {isTyping && !filteredTypingContent && (
           <motion.div 
             layout
             initial={{ opacity: 0, y: 5 }}
@@ -411,7 +421,7 @@ export const ChatView = memo(({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom('smooth')}
-            className="absolute bottom-24 right-6 p-4 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
+            className="absolute bottom-28 right-6 p-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
           >
             <ChevronDown className="w-5 h-5" />
           </motion.button>

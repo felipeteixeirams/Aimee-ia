@@ -94,15 +94,15 @@ export const HouseholdTaskSchema = z.object({
   status: z.nativeEnum(TaskStatus),
   dueDate: z.string().optional(),
   time: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/, "Formato de hora inválido (HH:mm)").optional(),
-  isAllDay: z.boolean(),
-  assignedTo: z.string().optional(),
+  isAllDay: z.boolean().optional().default(false),
+  assignedTo: z.string().optional().nullable(),
   recurrence: z.object({
     type: z.nativeEnum(RecurrenceType),
-    interval: z.number().optional(),
-    daysOfWeek: z.array(z.number().min(0).max(6)).optional(),
-    isInfinite: z.boolean().optional()
-  }).optional(),
-  createdAt: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Data de criação da tarefa inválida" })
+    interval: z.number().optional().nullable(),
+    daysOfWeek: z.array(z.number().min(0).max(6)).optional().nullable(),
+    isInfinite: z.boolean().optional().nullable()
+  }).optional().nullable(),
+  createdAt: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Data de criação da tarefa inválida" }).optional()
 });
 
 // Export inferred types if needed
