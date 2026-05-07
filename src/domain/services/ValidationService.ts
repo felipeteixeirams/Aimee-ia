@@ -14,7 +14,8 @@ export class ValidationService {
       return null;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return error.issues[0].message;
+        const issue = error.issues[0];
+        return `Erro no campo ${issue.path.join('.')}: ${issue.message}`;
       }
       return "Dados da transação inválidos";
     }
@@ -29,7 +30,8 @@ export class ValidationService {
       return null;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return error.issues[0].message;
+        const issue = error.issues[0];
+        return `Erro no campo ${issue.path.join('.')}: ${issue.message}`;
       }
       return "Dados da tarefa inválidos";
     }
@@ -44,7 +46,8 @@ export class ValidationService {
       return null;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return error.issues[0].message;
+        const issue = error.issues[0];
+        return `Erro no campo ${issue.path.join('.')}: ${issue.message}`;
       }
       return "Dados do item inválidos";
     }

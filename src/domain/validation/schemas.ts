@@ -25,7 +25,7 @@ export const FinancialGoalSchema = z.object({
   currentAmount: z.number().min(0, "Valor atual não pode ser negativo"),
   deadline: z.string().optional(),
   category: z.nativeEnum(FinancialGoalCategory),
-  createdAt: z.string().datetime()
+  createdAt: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Data de criação inválida" })
 });
 
 // User Profile Schema
@@ -40,8 +40,8 @@ export const UserProfileSchema = z.object({
   role: z.nativeEnum(UserRole).optional(),
   status: z.nativeEnum(UserStatus),
   selectedPersona: z.nativeEnum(AIRecommendedPersona).optional(),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
-  photoUrl: z.string().url().optional().or(z.literal('')),
+  avatarUrl: z.string().optional().or(z.literal('')),
+  photoUrl: z.string().optional().or(z.literal('')),
   theme: z.enum(['light', 'dark', 'system']).optional(),
   themeColor: z.enum(['blue', 'rose', 'emerald', 'violet', 'amber', 'neutral']).optional(),
   preferences: z.object({
@@ -65,7 +65,7 @@ export const TransactionSchema = z.object({
   type: z.nativeEnum(TransactionType),
   category: z.string().min(1, "Categoria é obrigatória"),
   description: z.string().max(200),
-  date: z.string().datetime()
+  date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Formato de data inválido" })
 });
 
 // Shopping Item Schema
@@ -102,7 +102,7 @@ export const HouseholdTaskSchema = z.object({
     daysOfWeek: z.array(z.number().min(0).max(6)).optional(),
     isInfinite: z.boolean().optional()
   }).optional(),
-  createdAt: z.string().datetime()
+  createdAt: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Data de criação da tarefa inválida" })
 });
 
 // Export inferred types if needed
@@ -111,3 +111,17 @@ export type UserProfileInput = z.infer<typeof UserProfileSchema>;
 export type TransactionInput = z.infer<typeof TransactionSchema>;
 export type ShoppingItemInput = z.infer<typeof ShoppingItemSchema>;
 export type HouseholdTaskInput = z.infer<typeof HouseholdTaskSchema>;
+
+// Family Event Schema
+export const FamilyEventSchema = z.object({
+  id: z.string().optional(),
+  userId: z.string(),
+  title: z.string().min(1, "Título do evento é obrigatório"),
+  description: z.string().optional(),
+  date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Data do evento inválida" }),
+  type: z.nativeEnum(EventType),
+  googleEventId: z.string().optional(),
+  createdAt: z.string().optional()
+});
+
+export type FamilyEventInput = z.infer<typeof FamilyEventSchema>;

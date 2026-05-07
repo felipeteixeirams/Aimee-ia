@@ -77,10 +77,12 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
     if (this.schema) {
       try {
         // Validation might need to allow partials or handle server-side fields
-        this.schema.parse({ ...data, userId, createdAt: new Date().toISOString() });
+        const validatedData = this.schema.parse({ ...data, userId, createdAt: new Date().toISOString() });
+        // Use validated data if it was modified (e.g. default values or normalization)
+        // But for Firestore we usually want to keep the original merged object
       } catch (error) {
         if (error instanceof z.ZodError) {
-          throw new Error(`Validation Error: ${error.issues.map(e => `${e.path}: ${e.message}`).join(', ')}`);
+          throw new Error(`Erro de Validação: ${error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`);
         }
         throw error;
       }
@@ -107,12 +109,11 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
 
     if (this.schema) {
       try {
-        // For updates, we use partial validation if possible, or just skip if it's too complex
-        // Here we just validate the fields present in 'data'
+        // For updates, we use partial validation if possible
         (this.schema as any).partial().parse(data);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          throw new Error(`Validation Error: ${error.issues.map(e => `${e.path}: ${e.message}`).join(', ')}`);
+          throw new Error(`Erro de Validação (Update): ${error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`);
         }
         throw error;
       }
