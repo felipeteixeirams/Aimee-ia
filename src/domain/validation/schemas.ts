@@ -60,28 +60,30 @@ export const UserProfileSchema = z.object({
 // Transaction Schema
 export const TransactionSchema = z.object({
   id: z.string().optional(),
-  userId: z.string(),
-  amount: z.number().positive("Valor deve ser positivo"),
+  userId: z.string().optional(),
+  amount: z.number().min(0, "O valor não pode ser negativo").optional().default(0),
   type: z.nativeEnum(TransactionType),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  description: z.string().max(200),
-  date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Formato de data inválido" })
+  category: z.string().min(1, "Categoria é obrigatória").optional().default('others'),
+  description: z.string().max(200).optional().or(z.literal('')),
+  date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Formato de data inválido" }).optional(),
+  createdAt: z.string().optional()
 });
 
 // Shopping Item Schema
 export const ShoppingItemSchema = z.object({
   id: z.string().optional(),
-  userId: z.string(),
+  userId: z.string().optional(),
   name: z.string().min(1, "Nome é obrigatório"),
-  quantity: z.number().min(0.01, "Quantidade mínima é 0.01"),
-  unit: z.string().optional(),
-  category: z.string(),
-  purchased: z.boolean(),
-  urgency: z.nativeEnum(ItemUrgency).optional(),
-  isStock: z.boolean().optional(),
+  quantity: z.number().min(0).optional().default(1),
+  unit: z.string().optional().default('un'),
+  category: z.string().optional().default('grocery'),
+  purchased: z.boolean().optional().default(false),
+  urgency: z.nativeEnum(ItemUrgency).optional().default(ItemUrgency.MEDIUM),
+  isStock: z.boolean().optional().default(false),
   frequency: z.number().optional(),
   latitude: z.number().optional(),
-  longitude: z.number().optional()
+  longitude: z.number().optional(),
+  createdAt: z.string().optional()
 });
 
 // Household Task Schema

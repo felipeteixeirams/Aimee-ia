@@ -161,17 +161,14 @@ export function useAimeeActions(
         };
         
         try {
+          setTypingContent(null);
           await chatRepository.create(aiMsg, user.uid);
         } catch (error) {
           logger.error('Error saving AI message', { error });
         }
         
-        if (i === blocks.length - 1) {
-          await new Promise(r => setTimeout(r, 600));
-          setTypingContent(null);
-        } else {
+        if (i < blocks.length - 1) {
           await new Promise(r => setTimeout(r, 400));
-          setTypingContent(null);
         }
       }
     } catch (error: any) {

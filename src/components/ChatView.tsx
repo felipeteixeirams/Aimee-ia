@@ -421,7 +421,7 @@ export const ChatView = memo(({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom('smooth')}
-            className="absolute bottom-28 right-6 p-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
+            className="absolute bottom-36 right-6 p-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
           >
             <ChevronDown className="w-5 h-5" />
           </motion.button>

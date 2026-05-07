@@ -2,9 +2,9 @@ import "reflect-metadata";
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import OpenAI from "openai";
 import { singleton } from "tsyringe";
-import { logger } from "../../lib/logger";
-import { allAimeeTools } from "../tools/AimeeTools";
-import { config } from "../../lib/config";
+import { logger } from "../../lib/logger.js";
+import { allAimeeTools } from "../tools/AimeeTools.js";
+import { config } from "../../lib/config.js";
 
 @singleton()
 export class AimeeOrchestrator {
