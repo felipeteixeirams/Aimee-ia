@@ -2,10 +2,11 @@ import { BaseRepository } from './BaseRepository';
 import { UserProfile } from '../../types';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { UserProfileSchema } from '../../domain/validation/schemas';
 
 export class ProfileRepository extends BaseRepository<UserProfile & { id?: string }> {
   constructor() {
-    super('users');
+    super('users', UserProfileSchema);
   }
 
   async getProfile(uid: string): Promise<UserProfile | null> {

@@ -19,7 +19,7 @@
     "sync-env": "tsx scripts/sync-env.ts",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",

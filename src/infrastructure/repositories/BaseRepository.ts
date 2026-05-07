@@ -14,6 +14,8 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase';
 
+import { z, ZodTypeAny } from 'zod';
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -36,9 +38,11 @@ export interface FirestoreErrorInfo {
 
 export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?: any; userId?: string }> {
   protected collectionPath: string;
+  protected schema?: ZodTypeAny;
 
-  constructor(collectionPath: string) {
+  constructor(collectionPath: string, schema?: ZodTypeAny) {
     this.collectionPath = collectionPath;
+    this.schema = schema;
   }
 
   protected handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
@@ -70,6 +74,18 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
     const userId = customUserId || auth.currentUser?.uid;
     if (!userId) throw new Error("Usuário não autenticado para criar documento.");
 
+    if (this.schema) {
+      try {
+        // Validation might need to allow partials or handle server-side fields
+        this.schema.parse({ ...data, userId, createdAt: new Date().toISOString() });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new Error(`Validation Error: ${error.issues.map(e => `${e.path}: ${e.message}`).join(', ')}`);
+        }
+        throw error;
+      }
+    }
+
     const path = this.collectionPath.replace('{userId}', userId);
     try {
       const docRef = await addDoc(collection(db, path), {
@@ -88,6 +104,19 @@ export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?
   async update(id: string, data: Partial<T>, customUserId?: string): Promise<void> {
     const userId = customUserId || auth.currentUser?.uid;
     if (!userId) throw new Error("Usuário não autenticado para atualizar documento.");
+
+    if (this.schema) {
+      try {
+        // For updates, we use partial validation if possible, or just skip if it's too complex
+        // Here we just validate the fields present in 'data'
+        (this.schema as any).partial().parse(data);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new Error(`Validation Error: ${error.issues.map(e => `${e.path}: ${e.message}`).join(', ')}`);
+        }
+        throw error;
+      }
+    }
 
     const path = this.collectionPath.replace('{userId}', userId);
     const docRef = doc(db, path, id);

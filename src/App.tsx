@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import React from 'react';
+import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { logger } from './lib/logger';
 import { 
   auth, 
@@ -48,10 +47,17 @@ import { Register } from './components/Register';
 import { StatusScreen } from './components/StatusScreen';
 import { AdminPanel } from './components/AdminPanel';
 import { ChatView } from './components/ChatView';
-import { FinanceView } from './components/FinanceView';
-import { ShoppingView } from './components/ShoppingView';
-import { RoutinesView } from './components/RoutinesView';
-import { SettingsView } from './components/SettingsView';
+const FinanceView = lazy(() => import('./components/FinanceView').then(m => ({ default: m.FinanceView })));
+const ShoppingView = lazy(() => import('./components/ShoppingView').then(m => ({ default: m.ShoppingView })));
+const RoutinesView = lazy(() => import('./components/RoutinesView').then(m => ({ default: m.RoutinesView })));
+const SettingsView = lazy(() => import('./components/SettingsView').then(m => ({ default: m.SettingsView })));
+
+// Loading component for Suspense
+const ViewLoader = () => (
+  <div className="flex-1 flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 import { AimeeAvatar } from './components/AimeeAvatar';
 import { NetworkStatus } from './components/NetworkStatus';
 import { Header } from './components/Header';
@@ -734,91 +740,93 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'finance' && (
-            <FinanceView 
-              profile={profile}
-              transactions={transactions}
-              transactionsByPeriod={transactionsByPeriod}
-              financePeriod={financePeriod}
-              setFinancePeriod={setFinancePeriod}
-              financeStartDate={financeStartDate}
-              setFinanceStartDate={setFinanceStartDate}
-              financeEndDate={financeEndDate}
-              setFinanceEndDate={setFinanceEndDate}
-              financeCategory={financeCategory}
-              setFinanceCategory={setFinanceCategory}
-              totalIncome={totalIncome}
-              totalExpense={totalExpense}
-              chartData={chartData}
-              categoryData={categoryData}
-              behaviorData={behaviorData}
-              goals={goals}
-              categories={categories}
-              isDarkMode={isDarkMode}
-              filteredTransactions={filteredTransactions}
-            />
-          )}
+          <Suspense fallback={<ViewLoader />}>
+            {activeTab === 'finance' && (
+              <FinanceView 
+                profile={profile}
+                transactions={transactions}
+                transactionsByPeriod={transactionsByPeriod}
+                financePeriod={financePeriod}
+                setFinancePeriod={setFinancePeriod}
+                financeStartDate={financeStartDate}
+                setFinanceStartDate={setFinanceStartDate}
+                financeEndDate={financeEndDate}
+                setFinanceEndDate={setFinanceEndDate}
+                financeCategory={financeCategory}
+                setFinanceCategory={setFinanceCategory}
+                totalIncome={totalIncome}
+                totalExpense={totalExpense}
+                chartData={chartData}
+                categoryData={categoryData}
+                behaviorData={behaviorData}
+                goals={goals}
+                categories={categories}
+                isDarkMode={isDarkMode}
+                filteredTransactions={filteredTransactions}
+              />
+            )}
 
-          {activeTab === 'shopping' && (
-            <ShoppingView 
-              shoppingFilter={shoppingFilter}
-              setShoppingFilter={setShoppingFilter}
-              shoppingList={shoppingList}
-              handleToggleShoppingItem={(item, extra) => manageShopping.toggle(item, activeSpace || user!.uid, extra)}
-              handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
-              handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
-              handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
-              handleFinishShopping={() => manageShopping.finish(activeSpace || user!.uid)}
-              profile={profile}
-            />
-          )}
+            {activeTab === 'shopping' && (
+              <ShoppingView 
+                shoppingFilter={shoppingFilter}
+                setShoppingFilter={setShoppingFilter}
+                shoppingList={shoppingList}
+                handleToggleShoppingItem={(item, extra) => manageShopping.toggle(item, activeSpace || user!.uid, extra)}
+                handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
+                handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
+                handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
+                handleFinishShopping={() => manageShopping.finish(activeSpace || user!.uid)}
+                profile={profile}
+              />
+            )}
 
-          {activeTab === 'routines' && (
-            <RoutinesView 
-              events={events}
-              tasks={tasks}
-              insights={messages.filter(m => m.isInsight)}
-              shares={shares}
-              isSuperAdmin={isSuperAdmin}
-              isSyncing={isSyncing}
-              calendarBlocked={calendarBlocked}
-              syncError={syncError}
-              handleSyncCalendar={handleSyncCalendar}
-              globalConfig={globalConfig}
-              handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
-              handleCreateTask={(task) => manageTasks.create(task, activeSpace || user!.uid)}
-              handleUpdateTask={(id, updates, scope) => manageTasks.update(id, updates, activeSpace || user!.uid, scope)}
-              handleDeleteTask={(id, scope) => manageTasks.delete(id, activeSpace || user!.uid, scope)}
-              handleDeleteEvent={async (id) => {
-                await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
-              }}
-              isGoogleEmail={isGoogleEmail}
-            />
-          )}
+            {activeTab === 'routines' && (
+              <RoutinesView 
+                events={events}
+                tasks={tasks}
+                insights={messages.filter(m => m.isInsight)}
+                shares={shares}
+                isSuperAdmin={isSuperAdmin}
+                isSyncing={isSyncing}
+                calendarBlocked={calendarBlocked}
+                syncError={syncError}
+                handleSyncCalendar={handleSyncCalendar}
+                globalConfig={globalConfig}
+                handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
+                handleCreateTask={(task) => manageTasks.create(task, activeSpace || user!.uid)}
+                handleUpdateTask={(id, updates, scope) => manageTasks.update(id, updates, activeSpace || user!.uid, scope)}
+                handleDeleteTask={(id, scope) => manageTasks.delete(id, activeSpace || user!.uid, scope)}
+                handleDeleteEvent={async (id) => {
+                  await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
+                }}
+                isGoogleEmail={isGoogleEmail}
+              />
+            )}
 
-          {activeTab === 'settings' && user && (
-            <SettingsView 
-              profile={profile}
-              isDarkMode={isDarkMode}
-              setIsDarkMode={setIsDarkMode}
-              isSuperAdmin={isSuperAdmin}
-              globalConfig={globalConfig}
-              updateGlobalConfig={updateGlobalConfig}
-              shares={shares}
-              activeSpace={activeSpace}
-              setActiveSpace={setActiveSpace}
-              inviteEmail={inviteEmail}
-              setInviteEmail={setInviteEmail}
-              invitePerms={invitePerms}
-              setInvitePerms={setInvitePerms}
-              handleInvite={handleInvite}
-              handleAcceptInvite={handleAcceptInvite}
-              handleDeclineInvite={handleDeclineInvite}
-              handleRequestUpgrade={handleRequestUpgrade}
-              user={user}
-              updateProfile={updateProfile}
-            />
-          )}
+            {activeTab === 'settings' && user && (
+              <SettingsView 
+                profile={profile}
+                isDarkMode={isDarkMode}
+                setIsDarkMode={setIsDarkMode}
+                isSuperAdmin={isSuperAdmin}
+                globalConfig={globalConfig}
+                updateGlobalConfig={updateGlobalConfig}
+                shares={shares}
+                activeSpace={activeSpace}
+                setActiveSpace={setActiveSpace}
+                inviteEmail={inviteEmail}
+                setInviteEmail={setInviteEmail}
+                invitePerms={invitePerms}
+                setInvitePerms={setInvitePerms}
+                handleInvite={handleInvite}
+                handleAcceptInvite={handleAcceptInvite}
+                handleDeclineInvite={handleDeclineInvite}
+                handleRequestUpgrade={handleRequestUpgrade}
+                user={user}
+                updateProfile={updateProfile}
+              />
+            )}
+          </Suspense>
         </AnimatePresence>
         </div>
       </main>
