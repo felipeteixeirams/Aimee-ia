@@ -112,6 +112,30 @@ export class AimeeOrchestrator {
     };
   }
 
+  private normalizeSchema(schema: any): any {
+    if (!schema || typeof schema !== 'object') return schema;
+
+    const newSchema = { ...schema };
+
+    if (typeof newSchema.type === 'string') {
+      newSchema.type = newSchema.type.toLowerCase();
+    }
+
+    if (newSchema.properties) {
+      const newProps: any = {};
+      for (const [key, value] of Object.entries(newSchema.properties)) {
+        newProps[key] = this.normalizeSchema(value);
+      }
+      newSchema.properties = newProps;
+    }
+
+    if (newSchema.items) {
+      newSchema.items = this.normalizeSchema(newSchema.items);
+    }
+
+    return newSchema;
+  }
+
   private async processWithOpenAICompatible(client: OpenAI, model: string, prompt: string, history: any[], persona: string) {
     const systemMessage = {
       role: "system",
@@ -132,7 +156,7 @@ export class AimeeOrchestrator {
         function: {
           name: tool.name,
           description: tool.description,
-          parameters: tool.parameters
+          parameters: this.normalizeSchema(tool.parameters)
         }
       })) as any,
       tool_choice: "auto"
