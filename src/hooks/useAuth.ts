@@ -70,18 +70,23 @@ export function useAuth() {
           setCriticalUnavailable(false);
           retryCount = 0;
         } else {
+          logger.warn('❌ Falha na conexão com Firebase (Database Offline)', { 
+            error: fbStatus.error,
+            databaseId: config.firebase.databaseId,
+            attempt: retryCount + 1
+          });
+          
           if (retryCount < MAX_RETRIES) {
             retryCount++;
             const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-            logger.warn(`Firebase connection failed. Retry ${retryCount}/${MAX_RETRIES} in ${delay}ms...`);
             timeoutId = setTimeout(performHealthCheck, delay);
           } else {
-            logger.error('System Health: Critical Failure (Database Offline)');
+            logger.error('System Health: Critical Failure (Database Offline)', { error: fbStatus.error });
             setCriticalUnavailable(true);
           }
         }
       } catch (err) {
-        logger.error('Health check process failed', err);
+        logger.error('Health check process failed unexpectedly', { error: err });
         timeoutId = setTimeout(performHealthCheck, 5000);
       }
     }

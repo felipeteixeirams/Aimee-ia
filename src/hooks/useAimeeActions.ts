@@ -333,9 +333,16 @@ export function useAimeeActions(
   const manageShopping = {
     addItem: async (item: Partial<ShoppingItem>, targetId: string) => {
       try {
-        await shoppingRepository.create(item as any, targetId);
+        await shoppingRepository.create({
+          ...item,
+          userId: targetId,
+          purchased: false,
+          isStock: false,
+          createdAt: new Date().toISOString()
+        } as any, targetId);
         showToast(`${item.name} adicionado à lista`, 'success', 2000);
-      } catch (err) {
+      } catch (err: any) {
+        logger.error('Error adding shopping item', { error: err });
         showToast('Erro ao adicionar item', 'error');
       }
     },
@@ -469,6 +476,26 @@ export function useAimeeActions(
     }
   };
 
+  const manageFinance = {
+    addTransaction: async (data: Partial<Transaction>, targetId: string) => {
+      try {
+        await transactionRepository.create({
+          ...data,
+          userId: targetId,
+          date: data.date || new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        } as any, targetId);
+        showToast('Transação registrada', 'success', 2000);
+        
+        // Trigger insight after manual finance update
+        triggerInsightSweep(targetId, 'finance_update');
+      } catch (err: any) {
+        logger.error('Error adding transaction', { error: err });
+        showToast('Erro ao registrar transação', 'error');
+      }
+    }
+  };
+
   const manageTasks = {
     toggle: async (taskId: string, currentStatus: string, targetId: string) => {
       try {
@@ -569,6 +596,7 @@ export function useAimeeActions(
     syncGoogleCalendar,
     handleAdminAction,
     manageShopping,
+    manageFinance,
     manageTasks
   };
 }

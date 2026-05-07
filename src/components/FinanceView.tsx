@@ -28,6 +28,7 @@ interface FinanceViewProps {
   setFinanceStartDate: (date: string) => void;
   financeEndDate: string;
   setFinanceEndDate: (date: string) => void;
+  handleAddTransaction: (data: Partial<Transaction>) => void;
 }
 
 const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
@@ -52,8 +53,31 @@ export const FinanceView = ({
   goals,
   categories,
   isDarkMode,
-  filteredTransactions
+  filteredTransactions,
+  handleAddTransaction
 }: FinanceViewProps) => {
+  const [showAddForm, setShowAddForm] = React.useState(false);
+  const [amount, setAmount] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [type, setType] = React.useState<'income' | 'expense'>('expense');
+  const [category, setCategory] = React.useState('others');
+
+  const onAddTx = () => {
+    const numAmount = parseFloat(amount.replace(',', '.'));
+    if (isNaN(numAmount) || !description.trim()) return;
+    
+    handleAddTransaction({
+      amount: numAmount,
+      description,
+      type,
+      category,
+      date: new Date().toISOString()
+    });
+    
+    setAmount('');
+    setDescription('');
+    setShowAddForm(false);
+  };
   const getGoalIcon = (category: string) => {
     switch (category) {
       case 'travel': return <Plane className="w-5 h-5" />;
@@ -459,11 +483,101 @@ export const FinanceView = ({
         <div className="flex items-center justify-between px-2">
           <h3 className="text-lg font-black tracking-tight">Transações Recentes</h3>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider bg-neutral-100 dark:bg-neutral-800 px-3 py-1 rounded-full">
-              {filteredTransactions.length} itens
-            </span>
+            <button 
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-4 py-2 bg-brand text-brand-foreground rounded-xl flex items-center gap-2 shadow-lg shadow-brand/20 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest"
+            >
+              <Plus className={cn("w-4 h-4 transition-transform", showAddForm && "rotate-45")} />
+              Novo Registro
+            </button>
           </div>
         </div>
+
+        <AnimatePresence>
+          {showAddForm && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mx-2 p-6 bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-brand/20 shadow-xl shadow-brand/5 space-y-5">
+                <div className="flex p-1 bg-neutral-50 dark:bg-neutral-800 rounded-2xl w-full">
+                  <button 
+                    onClick={() => setType('expense')}
+                    className={cn(
+                      "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
+                      type === 'expense' ? "bg-rose-500 text-white shadow-lg" : "text-neutral-400"
+                    )}
+                  >
+                    Gasto
+                  </button>
+                  <button 
+                    onClick={() => setType('income')}
+                    className={cn(
+                      "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
+                      type === 'income' ? "bg-emerald-500 text-white shadow-lg" : "text-neutral-400"
+                    )}
+                  >
+                    Ganho
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-neutral-400 uppercase tracking-widest px-1">Descrição</label>
+                    <input 
+                      type="text" 
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Onde ou como?"
+                      className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-neutral-400 uppercase tracking-widest px-1">Valor</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-neutral-400">R$</span>
+                      <input 
+                        type="text" 
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0,00"
+                        className="w-full px-10 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 space-y-1">
+                    <label className="text-[9px] font-black text-neutral-400 uppercase tracking-widest px-1">Categoria</label>
+                    <select 
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                    >
+                      <option value="others">Outros</option>
+                      <option value="food">Alimentação</option>
+                      <option value="transport">Transporte</option>
+                      <option value="leisure">Lazer</option>
+                      <option value="health">Saúde</option>
+                      <option value="housing">Moradia</option>
+                      <option value="income">Renda</option>
+                    </select>
+                  </div>
+                  <button 
+                    onClick={onAddTx}
+                    className="mt-5 px-8 py-3 bg-brand text-brand-foreground rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-24">
           {filteredTransactions.map((t, i) => (
             <motion.div 

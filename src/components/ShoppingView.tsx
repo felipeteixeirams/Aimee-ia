@@ -14,6 +14,7 @@ interface ShoppingViewProps {
   handleMoveToList: (item: ShoppingItem) => void;
   handleDeleteShoppingItem: (item: ShoppingItem) => void;
   handleFinishShopping: () => void;
+  handleAddItem: (item: Partial<ShoppingItem>) => void;
   profile: UserProfile | null;
 }
 
@@ -26,11 +27,25 @@ export const ShoppingView = ({
   handleMoveToList,
   handleDeleteShoppingItem,
   handleFinishShopping,
+  handleAddItem,
   profile
 }: ShoppingViewProps) => {
   const [nearbyMarkets, setNearbyMarkets] = useState<MarketLocation[]>([]);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('grocery');
+
+  const onAddItem = () => {
+    if (!newItemName.trim()) return;
+    handleAddItem({
+      name: newItemName,
+      category: newItemCategory,
+    });
+    setNewItemName('');
+    setShowAddForm(false);
+  };
 
   const handleFindMarkets = async () => {
     setIsLocating(true);
@@ -214,11 +229,63 @@ export const ShoppingView = ({
               <Zap className="w-5 h-5" />
             </button>
           )}
-          <button className="w-10 h-10 bg-brand text-brand-foreground rounded-xl flex items-center justify-center shadow-lg">
-            <Plus className="w-5 h-5" />
+          <button 
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="w-10 h-10 bg-brand text-brand-foreground rounded-xl flex items-center justify-center shadow-lg transition-transform active:scale-95"
+          >
+            <Plus className={cn("w-5 h-5 transition-transform", showAddForm && "rotate-45")} />
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showAddForm && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="p-5 bg-white dark:bg-neutral-900 rounded-[2rem] border border-brand/20 shadow-xl shadow-brand/5 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-brand uppercase tracking-widest px-1">Nome do Item</label>
+                <input 
+                  type="text" 
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  placeholder="Ex: Leite, Pão, Maçã..."
+                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                  onKeyDown={(e) => e.key === 'Enter' && onAddItem()}
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1 space-y-1">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Categoria</label>
+                  <select 
+                    value={newItemCategory}
+                    onChange={(e) => setNewItemCategory(e.target.value)}
+                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                  >
+                    <option value="grocery">Mercado</option>
+                    <option value="pharmacy">Farmácia</option>
+                    <option value="bakery">Padaria</option>
+                    <option value="cleaning">Limpeza</option>
+                    <option value="pet">Pet</option>
+                    <option value="meat">Açougue</option>
+                    <option value="others">Outros</option>
+                  </select>
+                </div>
+                <button 
+                  onClick={onAddItem}
+                  className="mt-5 px-6 bg-brand text-brand-foreground rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 active:scale-95 transition-all"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex p-1 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
         <button 

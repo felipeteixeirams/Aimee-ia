@@ -117,6 +117,7 @@ export default function App() {
     syncGoogleCalendar,
     handleAdminAction,
     manageShopping,
+    manageFinance,
     manageTasks
   } = useAimeeActions(user, profile, aimeeData);
 
@@ -763,6 +764,7 @@ export default function App() {
                 categories={categories}
                 isDarkMode={isDarkMode}
                 filteredTransactions={filteredTransactions}
+                handleAddTransaction={(data) => manageFinance.addTransaction(data, activeSpace || user!.uid)}
               />
             )}
 
@@ -776,6 +778,7 @@ export default function App() {
                 handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
                 handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
                 handleFinishShopping={() => manageShopping.finish(activeSpace || user!.uid)}
+                handleAddItem={(item) => manageShopping.addItem(item, activeSpace || user!.uid)}
                 profile={profile}
               />
             )}

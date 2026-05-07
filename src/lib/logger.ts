@@ -29,6 +29,18 @@ class Logger {
   }
 
   private log(entry: Omit<LogEntry, 'timestamp'>) {
+    const context = entry.context || {};
+    
+    // Better Error serialization
+    if (context.error instanceof Error) {
+      context.error = {
+        message: context.error.message,
+        stack: context.error.stack,
+        name: context.error.name,
+        code: (context.error as any).code
+      };
+    }
+
     const fullEntry = {
       severity: entry.level.toUpperCase(), // Google Cloud standard
       level: entry.level,
@@ -36,7 +48,7 @@ class Logger {
       timestamp: new Date().toISOString(),
       traceId: entry.traceId || this.generateTraceId(),
       userId: entry.userId,
-      ...entry.context
+      ...context
     };
 
     if (this.isDevelopment) {
@@ -49,6 +61,7 @@ class Logger {
       
       console.log(
         `${color}[${entry.level.toUpperCase()}]\x1b[0m [${fullEntry.timestamp}] ${entry.message}`,
+        entry.context ? '\nContext:' : '',
         entry.context || ''
       );
     } else {
