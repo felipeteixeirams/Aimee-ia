@@ -16,6 +16,7 @@ import {
 import { User } from 'firebase/auth';
 import { orchestrator } from '../services/aiService';
 import { fetchGoogleCalendarEvents } from '../services/calendarService';
+import { generateRecurrenceInstances } from '../lib/recurrenceUtils';
 import { logger } from '../lib/logger';
 import { useToast } from '../components/ToastProvider';
 import { notificationSchema } from '../types/schemas';
@@ -484,8 +485,6 @@ export function useAimeeActions(
     },
     create: async (task: Partial<HouseholdTask>, targetId: string) => {
       try {
-        const { generateRecurrenceInstances } = await import('../lib/recurrenceUtils');
-        
         const baseTask = {
           ...task,
           status: task.status || 'todo' as any,

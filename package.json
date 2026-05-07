@@ -19,7 +19,7 @@
     "sync-env": "tsx scripts/sync-env.ts",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "prepare": "husky || true"
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production' && !process.env.CI) { try { require('child_process').execSync('husky', { stdio: 'inherit' }) } catch (e) {} }\""
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",

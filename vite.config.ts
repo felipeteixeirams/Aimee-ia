@@ -57,5 +57,23 @@ export default defineConfig(({mode}) => {
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('firebase')) return 'vendor-firebase';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('lucide-react')) return 'vendor-ui';
+              if (id.includes('motion')) return 'vendor-ui';
+              if (id.includes('@google/genai')) return 'vendor-ai';
+              if (id.includes('openai')) return 'vendor-ai';
+              return 'vendor-core';
+            }
+          }
+        }
+      }
+    }
   };
 });
