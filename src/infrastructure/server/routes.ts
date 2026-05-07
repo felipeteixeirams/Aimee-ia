@@ -1,25 +1,43 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { logger } from "../../lib/logger";
-import { config } from "../../lib/config";
-import { NotificationType, type NotificationPayload } from "../../types/index";
-import { EmailService } from "../../services/EmailService";
-import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator";
-import { container } from "../../infrastructure/container";
-import { validateRequest } from "./middlewares";
-import { aiRequestSchema, notificationSchema, supportSchema } from "../../types/schemas";
-import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth";
+import { logger } from "../../lib/logger.js";
+import { config } from "../../lib/config.js";
+import { NotificationType, type NotificationPayload } from "../../types/index.js";
+import { EmailService } from "../../services/EmailService.js";
+import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator.js";
+import { container } from "../../infrastructure/container.js";
+import { validateRequest } from "./middlewares.js";
+import { aiRequestSchema, notificationSchema, supportSchema } from "../../types/schemas.js";
+import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.js";
 import { google } from "googleapis";
 
 export default async function (fastify: FastifyInstance) {
   // Health check endpoint
-  fastify.get("/health", async () => {
-    const orchestrator = container.resolve(AimeeOrchestrator);
-    const health = await orchestrator.checkHealth();
-    return { 
-      status: health.ok ? "healthy" : "unhealthy", 
-      providers: health.providers,
-      timestamp: new Date().toISOString() 
-    };
+  fastify.get("/health", async (req, reply) => {
+    try {
+      logger.info("Health check requested");
+      const orchestrator = container.resolve(AimeeOrchestrator);
+      const health = await orchestrator.checkHealth();
+      return { 
+        status: health.ok ? "healthy" : "unhealthy", 
+        providers: health.providers,
+        env: config.env,
+        timestamp: new Date().toISOString() 
+      };
+    } catch (error: any) {
+      logger.error("Health Check Failure", { 
+        message: error.message, 
+        stack: error.stack,
+        config: {
+          env: config.env,
+          hasGemini: !!config.geminiApiKey,
+          hasFirebase: !!config.firebase.projectId
+        }
+      });
+      reply.status(500).send({ 
+        error: "Internal Server Error during health check",
+        details: error.message 
+      });
+    }
   });
 
   // Google OAuth Configuration
