@@ -41,7 +41,7 @@ class Logger {
       };
     }
 
-    const fullEntry = {
+    const fullEntry: any = {
       severity: entry.level.toUpperCase(), // Google Cloud standard
       level: entry.level,
       message: entry.message,
@@ -66,7 +66,18 @@ class Logger {
       );
     } else {
       // Direct JSON output for Google Cloud Logging
-      console.log(JSON.stringify(fullEntry));
+      try {
+        console.log(JSON.stringify(fullEntry));
+      } catch (err) {
+        // Fallback for circular references or non-serializable objects
+        console.log(JSON.stringify({
+          severity: 'ERROR',
+          level: 'error',
+          message: 'Failed to stringify log entry',
+          timestamp: new Date().toISOString(),
+          originalMessage: entry.message
+        }));
+      }
     }
   }
 

@@ -9,12 +9,14 @@ import { validateConfig } from "../src/lib/config.js";
 import { requestLogger, globalErrorHandler } from "../src/infrastructure/server/middlewares.js";
 import apiRoutes from "../src/infrastructure/server/routes.js";
 
-// Initialize config
+// Initialize config - move inside startServer for better cold boot handling if needed
+// but validateConfig is safe to run once at module level
 validateConfig();
 
 const startServer = async () => {
   const fastify = Fastify({
     logger: false,
+    disableRequestLogging: true
   });
 
   await fastify.register(cors);
@@ -30,9 +32,21 @@ const startServer = async () => {
   return fastify;
 };
 
-const serverPromise = startServer();
+let fastifyInstance: any = null;
 
 export default async (req: any, res: any) => {
-  const fastify = await serverPromise;
-  fastify.server.emit('request', req, res);
+  try {
+    if (!fastifyInstance) {
+      fastifyInstance = await startServer();
+    }
+    fastifyInstance.server.emit('request', req, res);
+  } catch (error: any) {
+    console.error("CRITICAL: Vercel Function Failed to Initialize", error);
+    res.statusCode = 500;
+    res.end(JSON.stringify({ 
+      error: "Vercel Function Error", 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    }));
+  }
 };

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NotificationType } from './index';
+import { NotificationType } from './index.js';
 
 // Schema para Notificações (Envio de E-mail)
 export const notificationSchema = z.object({
