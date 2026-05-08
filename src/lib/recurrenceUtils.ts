@@ -1,5 +1,5 @@
 import { addDays, addWeeks, addMonths, addYears, isAfter, format, endOfMonth, setDate, isValid, parseISO } from 'date-fns';
-import { RecurrenceType, TaskRecurrence } from '../types';
+import { RecurrenceType, TaskRecurrence } from '../types/index.js';
 
 export interface GeneratedInstance {
   dueDate: string;

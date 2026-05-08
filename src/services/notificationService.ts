@@ -1,4 +1,4 @@
-import { UserProfile } from '../types';
+import { UserProfile } from '../types/index.js';
 
 class NotificationService {
   private hasPermission: boolean = false;

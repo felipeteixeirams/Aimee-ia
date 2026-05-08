@@ -13,8 +13,8 @@ import {
   Calendar,
   X
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { UserProfile } from '../types';
+import { cn } from '../lib/utils.js';
+import { UserProfile } from '../types/index.js';
 
 interface AdminPanelProps {
   pendingUsers: UserProfile[];

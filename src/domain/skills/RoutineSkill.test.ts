@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { RoutineSkill } from './RoutineSkill';
-import { taskRepository } from '../../infrastructure/repositories';
-import { generateRecurrenceInstances } from '../../lib/recurrenceUtils';
+import { RoutineSkill } from './RoutineSkill.js';
+import { taskRepository } from '../../infrastructure/repositories/index.js';
+import { generateRecurrenceInstances } from '../../lib/recurrenceUtils.js';
 
-vi.mock('../../infrastructure/repositories', () => ({
+vi.mock('../../infrastructure/repositories/index.js', () => ({
   taskRepository: {
     create: vi.fn(),
     update: vi.fn(),
@@ -18,11 +18,11 @@ vi.mock('../../infrastructure/repositories', () => ({
   }
 }));
 
-vi.mock('../../lib/recurrenceUtils', () => ({
+vi.mock('../../lib/recurrenceUtils.js', () => ({
   generateRecurrenceInstances: vi.fn()
 }));
 
-vi.mock('../../lib/logger', () => ({
+vi.mock('../../lib/logger.js', () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn()
@@ -131,7 +131,7 @@ describe('RoutineSkill', () => {
     });
 
     it('should add/update/remove events', async () => {
-        const { eventRepository } = await import('../../infrastructure/repositories');
+        const { eventRepository } = await import('../../infrastructure/repositories/index.js');
         await routineSkill.addEvent('user-1', { title: 'E1' });
         expect(eventRepository.create).toHaveBeenCalled();
 

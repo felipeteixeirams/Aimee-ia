@@ -5,16 +5,16 @@ import {
   onAuthStateChanged, 
   User,
   testConnection
-} from '../lib/firebase';
+} from '../lib/firebase.js';
 import { 
   doc, 
   onSnapshot 
 } from 'firebase/firestore';
-import { UserProfile, AIProvider } from '../types';
-import { logger } from '../lib/logger';
-import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
-import { checkAIHealth } from '../services/aiService';
-import { config } from '../lib/config';
+import { UserProfile, AIProvider } from '../types/index.js';
+import { logger } from '../lib/logger.js';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils.js';
+import { checkAIHealth } from '../services/aiService.js';
+import { config } from '../lib/config.js';
 
 export interface SystemHealth {
   firebase: boolean;

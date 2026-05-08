@@ -2,8 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { logger } from './logger';
-import { config } from './config';
+import { logger } from './logger.js';
+import { config } from './config.js';
 
 const firebaseConfig = {
   apiKey: config.firebase.apiKey,

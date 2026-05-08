@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { User } from 'firebase/auth';
 import { motion } from 'motion/react';
 import { Camera, Mail, User as UserIcon, AtSign, ChevronRight, Sparkles } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '../lib/utils.js';
 
 interface RegisterProps {
   user: User;

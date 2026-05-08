@@ -1,5 +1,5 @@
-import { auth } from './firebase';
-import { logger } from './logger';
+import { auth } from './firebase.js';
+import { logger } from './logger.js';
 
 export const OperationType = {
   CREATE: 'create',

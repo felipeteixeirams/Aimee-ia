@@ -1,15 +1,15 @@
-import { ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent, ShoppingItem, Transaction } from "../types";
+import { ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent, ShoppingItem, Transaction } from "../types/index.js";
 import { 
   financeSkill,
   routineSkill,
   shoppingSkill
-} from "../domain/skills";
+} from "../domain/skills/index.js";
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
-import { allAimeeTools } from "../infrastructure/tools/AimeeTools";
-import { withRetry } from "../lib/retryUtils";
-import { config } from "../lib/config";
-import { usageRepository } from "../infrastructure/repositories/UsageRepository";
-import { logger } from "../lib/logger";
+import { allAimeeTools } from "../infrastructure/tools/AimeeTools.js";
+import { withRetry } from "../lib/retryUtils.js";
+import { config } from "../lib/config.js";
+import { usageRepository } from "../infrastructure/repositories/UsageRepository.js";
+import { logger } from "../lib/logger.js";
 
 // Initialize AI on frontend
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();

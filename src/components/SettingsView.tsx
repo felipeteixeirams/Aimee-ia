@@ -1,11 +1,11 @@
 import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile, X, Calendar, Bell, BellOff, Download, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, Share, GlobalConfig, AIProvider, PermissionLevel, AIRecommendedPersona } from '../types';
-import { cn } from '../lib/utils';
-import { AimeeAvatar } from './AimeeAvatar';
+import { UserProfile, Share, GlobalConfig, AIProvider, PermissionLevel, AIRecommendedPersona } from '../types/index.js';
+import { cn } from '../lib/utils.js';
+import { AimeeAvatar } from './AimeeAvatar.js';
 import React, { useState, useRef, useEffect } from 'react';
-import { calendarService } from '../services/calendarService';
-import { notificationService } from '../services/notificationService';
+import { calendarService } from '../services/calendarService.js';
+import { notificationService } from '../services/notificationService.js';
 
 interface SettingsViewProps {
   profile: UserProfile | null;

@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FinanceSkill } from './FinanceSkill';
-import { transactionRepository } from '../../infrastructure/repositories';
-import { logger } from '../../lib/logger';
+import { FinanceSkill } from './FinanceSkill.js';
+import { transactionRepository } from '../../infrastructure/repositories/index.js';
+import { logger } from '../../lib/logger.js';
 
 // Mock dependencies
-vi.mock('../../infrastructure/repositories', () => ({
+vi.mock('../../infrastructure/repositories/index.js', () => ({
   transactionRepository: {
     create: vi.fn(),
     list: vi.fn()
   }
 }));
 
-vi.mock('../../lib/logger', () => ({
+vi.mock('../../lib/logger.js', () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn()

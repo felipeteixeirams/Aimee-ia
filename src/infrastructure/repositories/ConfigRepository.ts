@@ -1,6 +1,6 @@
-import { BaseRepository } from './BaseRepository';
-import { GlobalConfig } from '../../types';
-import { db } from '../../lib/firebase';
+import { BaseRepository } from './BaseRepository.js';
+import { GlobalConfig } from '../../types/index.js';
+import { db } from '../../lib/firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
 
 export class ConfigRepository extends BaseRepository<GlobalConfig> {

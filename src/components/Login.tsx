@@ -12,12 +12,12 @@ import {
   Check,
   Loader2
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { SystemHealth } from '../hooks/useAuth';
+import { cn } from '../lib/utils.js';
+import { SystemHealth } from '../hooks/useAuth.js';
 import { fetchSignInMethodsForEmail } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth } from '../lib/firebase.js';
 
-import { supportSchema } from '../types/schemas';
+import { supportSchema } from '../types/schemas.js';
 
 interface LoginProps {
   onLogin: () => void;

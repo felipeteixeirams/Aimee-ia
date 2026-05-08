@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateRecurrenceInstances } from './recurrenceUtils';
+import { generateRecurrenceInstances } from './recurrenceUtils.js';
 
 describe('recurrenceUtils', () => {
   describe('generateRecurrenceInstances', () => {

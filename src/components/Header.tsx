@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { LogOut, Users, ChevronDown, Sparkles, Zap, Shield, Check, Menu, MessageSquare, Wallet, ShoppingCart, Calendar, Settings } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { AimeeAvatar } from './AimeeAvatar';
-import { UserProfile, GlobalConfig, AIProvider, Tab } from '../types';
+import { cn } from '../lib/utils.js';
+import { AimeeAvatar } from './AimeeAvatar.js';
+import { UserProfile, GlobalConfig, AIProvider, Tab } from '../types/index.js';
 import { useState, useRef, useEffect } from 'react';
 
 interface HeaderProps {

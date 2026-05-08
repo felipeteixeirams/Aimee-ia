@@ -3,8 +3,8 @@ import { TrendingUp, TrendingDown, Shield, Plus, Target, Plane, GraduationCap, H
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Transaction, FinancialGoal, UserProfile, Period, Tab } from '../types';
-import { cn } from '../lib/utils';
+import { Transaction, FinancialGoal, UserProfile, Period, Tab } from '../types/index.js';
+import { cn } from '../lib/utils.js';
 import React, { useMemo } from 'react';
 
 interface FinanceViewProps {

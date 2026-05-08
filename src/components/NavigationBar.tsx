@@ -1,8 +1,8 @@
 import { motion } from 'motion/react';
 import { MessageSquare, Wallet, ShoppingCart, CheckSquare, Settings } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '../lib/utils.js';
 
-import { Tab } from '../types';
+import { Tab } from '../types/index.js';
 
 interface NavigationBarProps {
   activeTab: Tab;

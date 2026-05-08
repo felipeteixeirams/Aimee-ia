@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
-import { logger } from './lib/logger';
+import { logger } from './lib/logger.js';
 import { 
   auth, 
   db, 
@@ -14,7 +14,7 @@ import {
   sendPasswordResetEmail,
   updateProfile as updateAuthProfile,
   testConnection
-} from './lib/firebase';
+} from './lib/firebase.js';
 import { 
   collection, 
   query, 
@@ -33,24 +33,24 @@ import {
   getDocFromServer,
   getDocs
 } from 'firebase/firestore';
-import { orchestrator } from './services/aiService';
-import { fetchGoogleCalendarEvents } from './services/calendarService';
+import { orchestrator } from './services/aiService.js';
+import { fetchGoogleCalendarEvents } from './services/calendarService.js';
 import { 
   ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, 
   HouseholdTask, FamilyEvent, GlobalConfig, Tab, Period,
   AIProvider, UserRole, UserStatus, ChatRole, PermissionLevel, ShareStatus, TaskStatus,
   AIRecommendedPersona
-} from './types';
-import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
-import { StatusScreen } from './components/StatusScreen';
-import { AdminPanel } from './components/AdminPanel';
-import { ChatView } from './components/ChatView';
-const FinanceView = lazy(() => import('./components/FinanceView').then(m => ({ default: m.FinanceView })));
-const ShoppingView = lazy(() => import('./components/ShoppingView').then(m => ({ default: m.ShoppingView })));
-const RoutinesView = lazy(() => import('./components/RoutinesView').then(m => ({ default: m.RoutinesView })));
-const SettingsView = lazy(() => import('./components/SettingsView').then(m => ({ default: m.SettingsView })));
+} from './types/index.js';
+import { handleFirestoreError, OperationType } from './lib/firestoreUtils.js';
+import { Login } from './components/Login.js';
+import { Register } from './components/Register.js';
+import { StatusScreen } from './components/StatusScreen.js';
+import { AdminPanel } from './components/AdminPanel.js';
+import { ChatView } from './components/ChatView.js';
+const FinanceView = lazy(() => import('./components/FinanceView.js').then(m => ({ default: m.FinanceView })));
+const ShoppingView = lazy(() => import('./components/ShoppingView.js').then(m => ({ default: m.ShoppingView })));
+const RoutinesView = lazy(() => import('./components/RoutinesView.js').then(m => ({ default: m.RoutinesView })));
+const SettingsView = lazy(() => import('./components/SettingsView.js').then(m => ({ default: m.SettingsView })));
 
 // Loading component for Suspense
 const ViewLoader = () => (
@@ -58,11 +58,11 @@ const ViewLoader = () => (
     <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
   </div>
 );
-import { AimeeAvatar } from './components/AimeeAvatar';
-import { NetworkStatus } from './components/NetworkStatus';
-import { Header } from './components/Header';
-import { NavigationBar } from './components/NavigationBar';
-import { InsightsModal } from './components/InsightsModal';
+import { AimeeAvatar } from './components/AimeeAvatar.js';
+import { NetworkStatus } from './components/NetworkStatus.js';
+import { Header } from './components/Header.js';
+import { NavigationBar } from './components/NavigationBar.js';
+import { InsightsModal } from './components/InsightsModal.js';
 import { 
   Users,
   Target,
@@ -72,12 +72,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from './lib/utils';
+import { cn } from './lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAuth } from './hooks/useAuth';
-import { useAimeeData } from './hooks/useAimeeData';
-import { useAimeeActions } from './hooks/useAimeeActions';
+import { useAuth } from './hooks/useAuth.js';
+import { useAimeeData } from './hooks/useAimeeData.js';
+import { useAimeeActions } from './hooks/useAimeeActions.js';
 
 const GLOBAL_AIMEE_AVATAR = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop";
 

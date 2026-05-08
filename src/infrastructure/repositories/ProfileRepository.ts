@@ -1,8 +1,8 @@
-import { BaseRepository } from './BaseRepository';
-import { UserProfile } from '../../types';
+import { BaseRepository } from './BaseRepository.js';
+import { UserProfile } from '../../types/index.js';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { UserProfileSchema } from '../../domain/validation/schemas';
+import { db } from '../../lib/firebase.js';
+import { UserProfileSchema } from '../../domain/validation/schemas.js';
 
 export class ProfileRepository extends BaseRepository<UserProfile & { id?: string }> {
   constructor() {

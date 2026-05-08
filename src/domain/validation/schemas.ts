@@ -14,7 +14,7 @@ import {
   RecurrenceType, 
   EventType, 
   AIProvider 
-} from '../../types/index';
+} from '../../types/index.js';
 
 // Financial Goal Schema
 export const FinancialGoalSchema = z.object({

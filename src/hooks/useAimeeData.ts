@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   db 
-} from '../lib/firebase';
+} from '../lib/firebase.js';
 import { 
   collection, 
   query, 
@@ -16,8 +16,8 @@ import {
   ChatMessage, Transaction, ShoppingItem, FinancialGoal, 
   HouseholdTask, FamilyEvent, GlobalConfig, Share,
   AIProvider
-} from '../types';
-import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+} from '../types/index.js';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils.js';
 import { User } from 'firebase/auth';
 
 export function useAimeeData(user: User | null, activeSpace: string | null, isApproved: boolean) {

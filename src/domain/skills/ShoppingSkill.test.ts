@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ShoppingSkill } from './ShoppingSkill';
-import { shoppingRepository } from '../../infrastructure/repositories';
-import { logger } from '../../lib/logger';
+import { ShoppingSkill } from './ShoppingSkill.js';
+import { shoppingRepository } from '../../infrastructure/repositories/index.js';
+import { logger } from '../../lib/logger.js';
 
-vi.mock('../../infrastructure/repositories', () => ({
+vi.mock('../../infrastructure/repositories/index.js', () => ({
   shoppingRepository: {
     create: vi.fn(),
     update: vi.fn(),
@@ -11,7 +11,7 @@ vi.mock('../../infrastructure/repositories', () => ({
   }
 }));
 
-vi.mock('../../lib/logger', () => ({
+vi.mock('../../lib/logger.js', () => ({
   logger: {
     info: vi.fn(),
     warn: vi.fn(),

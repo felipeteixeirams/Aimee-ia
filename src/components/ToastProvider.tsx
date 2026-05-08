@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { AlertCircle, CheckCircle, Info, X, AlertTriangle } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '../lib/utils.js';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 

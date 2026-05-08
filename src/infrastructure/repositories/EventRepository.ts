@@ -1,6 +1,6 @@
-import { BaseRepository } from './BaseRepository';
-import { FamilyEvent } from '../../types';
-import { FamilyEventSchema } from '../../domain/validation/schemas';
+import { BaseRepository } from './BaseRepository.js';
+import { FamilyEvent } from '../../types/index.js';
+import { FamilyEventSchema } from '../../domain/validation/schemas.js';
 
 export class EventRepository extends BaseRepository<FamilyEvent> {
   constructor() {

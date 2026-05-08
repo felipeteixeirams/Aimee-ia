@@ -1,15 +1,15 @@
-import { ChatMessage, UserProfile } from '../types';
+import { ChatMessage, UserProfile } from '../types/index.js';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square, RefreshCcw } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '../lib/utils.js';
 import { format } from 'date-fns';
-import { AimeeAvatar } from './AimeeAvatar';
+import { AimeeAvatar } from './AimeeAvatar.js';
 import React, { useState, memo, useCallback, useMemo } from 'react';
-import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
-import { AudioVisualizer } from './AudioVisualizer';
-import { ReactiveFeed } from './ReactiveFeed';
-import { ChatRole } from '../types';
+import { useVoiceRecorder } from '../hooks/useVoiceRecorder.js';
+import { AudioVisualizer } from './AudioVisualizer.js';
+import { ReactiveFeed } from './ReactiveFeed.js';
+import { ChatRole } from '../types/index.js';
 import Markdown from 'react-markdown';
 
 interface ChatMessageItemProps {

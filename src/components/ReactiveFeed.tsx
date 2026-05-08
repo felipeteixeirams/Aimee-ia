@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, X, ChevronRight, TrendingUp, AlertTriangle, Lightbulb } from 'lucide-react';
-import { ChatMessage } from '../types';
-import { cn } from '../lib/utils';
+import { ChatMessage } from '../types/index.js';
+import { cn } from '../lib/utils.js';
 
 interface ReactiveFeedProps {
   insights: ChatMessage[];

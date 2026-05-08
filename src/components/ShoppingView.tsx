@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, Plus, CheckCircle2, Circle, Leaf, Package, Trash2, Apple, MapPin, Navigation, Star, Search, X, Zap } from 'lucide-react';
-import { ShoppingItem, UserProfile } from '../types';
-import { cn } from '../lib/utils';
+import { ShoppingItem, UserProfile } from '../types/index.js';
+import { cn } from '../lib/utils.js';
 import React, { useState } from 'react';
-import { locationService, MarketLocation } from '../services/locationService';
+import { locationService, MarketLocation } from '../services/locationService.js';
 
 interface ShoppingViewProps {
   shoppingFilter: 'list' | 'stock';

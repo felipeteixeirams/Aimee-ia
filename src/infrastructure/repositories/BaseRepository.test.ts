@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository } from './BaseRepository.js';
 import * as firestore from 'firebase/firestore';
-import { auth } from '../../lib/firebase';
+import { auth } from '../../lib/firebase.js';
 
 // Mock Firebase
 vi.mock('firebase/firestore', () => ({
@@ -17,7 +17,7 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: vi.fn(() => 'server-time'),
 }));
 
-vi.mock('../../lib/firebase', () => ({
+vi.mock('../../lib/firebase.js', () => ({
   db: {},
   auth: {
     currentUser: { uid: 'test-user-123', email: 'test@aimee.ai' }

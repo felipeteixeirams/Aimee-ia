@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getFriendlyErrorMessage, handleFirestoreError, OperationType } from './firestoreUtils';
-import { logger } from './logger';
+import { getFriendlyErrorMessage, handleFirestoreError, OperationType } from './firestoreUtils.js';
+import { logger } from './logger.js';
 
-vi.mock('./firebase', () => ({
+vi.mock('./firebase.js', () => ({
   auth: {
     currentUser: {
       uid: 'user-123',
@@ -16,7 +16,7 @@ vi.mock('./firebase', () => ({
   }
 }));
 
-vi.mock('./logger', () => ({
+vi.mock('./logger.js', () => ({
   logger: {
     warn: vi.fn(),
     error: vi.fn()

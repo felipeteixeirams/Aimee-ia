@@ -1,10 +1,10 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
+import App from './App.js';
 import './index.css';
-import { validateConfig } from './lib/config';
-import { testConnection } from './lib/firebase';
-import { logger } from './lib/logger';
+import { validateConfig } from './lib/config.js';
+import { testConnection } from './lib/firebase.js';
+import { logger } from './lib/logger.js';
 
 // Centralized configuration validation
 validateConfig();
@@ -25,8 +25,8 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-import { ToastProvider } from './components/ToastProvider';
-import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+import { ToastProvider } from './components/ToastProvider.js';
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary.js';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

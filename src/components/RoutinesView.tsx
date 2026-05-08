@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info, Users, RotateCcw } from 'lucide-react';
-import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage, RecurrenceType, Share } from '../types';
-import { cn } from '../lib/utils';
+import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage, RecurrenceType, Share } from '../types/index.js';
+import { cn } from '../lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useState, useMemo } from 'react';

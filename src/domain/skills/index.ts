@@ -1,3 +1,3 @@
-export * from './FinanceSkill';
-export * from './RoutineSkill';
-export * from './ShoppingSkill';
+export * from './FinanceSkill.js';
+export * from './RoutineSkill.js';
+export * from './ShoppingSkill.js';

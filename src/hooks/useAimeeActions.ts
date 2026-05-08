@@ -1,9 +1,9 @@
-import { auth, signOut, googleProvider, signInWithPopup } from '../lib/firebase';
+import { auth, signOut, googleProvider, signInWithPopup } from '../lib/firebase.js';
 import { 
   ChatMessage, UserProfile, Share, ShoppingItem, 
   GlobalConfig, ChatRole, UserStatus,
   Transaction, FinancialGoal, HouseholdTask, FamilyEvent
-} from '../types';
+} from '../types/index.js';
 import { 
   taskRepository, 
   transactionRepository, 
@@ -12,15 +12,15 @@ import {
   profileRepository, 
   eventRepository,
   configRepository 
-} from '../infrastructure/repositories';
+} from '../infrastructure/repositories/index.js';
 import { User } from 'firebase/auth';
-import { orchestrator } from '../services/aiService';
-import { fetchGoogleCalendarEvents } from '../services/calendarService';
-import { generateRecurrenceInstances } from '../lib/recurrenceUtils';
-import { logger } from '../lib/logger';
-import { useToast } from '../components/ToastProvider';
-import { notificationSchema } from '../types/schemas';
-import { notificationService } from '../services/notificationService';
+import { orchestrator } from '../services/aiService.js';
+import { fetchGoogleCalendarEvents } from '../services/calendarService.js';
+import { generateRecurrenceInstances } from '../lib/recurrenceUtils.js';
+import { logger } from '../lib/logger.js';
+import { useToast } from '../components/ToastProvider.js';
+import { notificationSchema } from '../types/schemas.js';
+import { notificationService } from '../services/notificationService.js';
 
 interface AimeeData {
   messages: ChatMessage[];

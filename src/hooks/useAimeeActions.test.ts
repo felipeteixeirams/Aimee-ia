@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useAimeeActions } from './useAimeeActions';
-import { chatRepository } from '../infrastructure/repositories';
-import { orchestrator } from '../services/aiService';
+import { useAimeeActions } from './useAimeeActions.js';
+import { chatRepository } from '../infrastructure/repositories/index.js';
+import { orchestrator } from '../services/aiService.js';
 
 // Mock dependencies
-vi.mock('../lib/firebase', () => ({
+vi.mock('../lib/firebase.js', () => ({
   auth: { currentUser: { uid: 'user-1' } },
   signOut: vi.fn(),
   googleProvider: {},
   signInWithPopup: vi.fn()
 }));
 
-vi.mock('../infrastructure/repositories', () => ({
+vi.mock('../infrastructure/repositories/index.js', () => ({
   chatRepository: { create: vi.fn().mockResolvedValue('msg-id') },
   taskRepository: {},
   transactionRepository: {},
@@ -22,15 +22,15 @@ vi.mock('../infrastructure/repositories', () => ({
   configRepository: {}
 }));
 
-vi.mock('../services/aiService', () => ({
+vi.mock('../services/aiService.js', () => ({
   orchestrator: vi.fn().mockResolvedValue('Olá!')
 }));
 
-vi.mock('../components/ToastProvider', () => ({
+vi.mock('../components/ToastProvider.js', () => ({
   useToast: () => ({ showToast: vi.fn() })
 }));
 
-vi.mock('../lib/logger', () => ({
+vi.mock('../lib/logger.js', () => ({
   logger: { info: vi.fn(), error: vi.fn() }
 }));
 
@@ -100,7 +100,7 @@ describe('useAimeeActions', () => {
 
   it.skip('should manage tasks toggle', async () => {
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
-    const { taskRepository } = await import('../infrastructure/repositories');
+    const { taskRepository } = await import('../infrastructure/repositories/index.js');
     (taskRepository.update as any) = vi.fn().mockResolvedValue({});
     
     await result.current.manageTasks.toggle('task-1', 'todo', 'user-1');
@@ -110,7 +110,7 @@ describe('useAimeeActions', () => {
 
   it.skip('should manage shopping addItem', async () => {
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
-    const { shoppingRepository } = await import('../infrastructure/repositories');
+    const { shoppingRepository } = await import('../infrastructure/repositories/index.js');
     (shoppingRepository.create as any) = vi.fn().mockResolvedValue({});
 
     await result.current.manageShopping.addItem({ name: 'Leite', purchased: false }, 'user-1');

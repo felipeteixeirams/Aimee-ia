@@ -9,8 +9,8 @@ import {
   Sparkles,
   Lock
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { UserProfile } from '../types';
+import { cn } from '../lib/utils.js';
+import { UserProfile } from '../types/index.js';
 
 interface StatusScreenProps {
   status: 'pending' | 'rejected' | 'blocked' | 'loading';

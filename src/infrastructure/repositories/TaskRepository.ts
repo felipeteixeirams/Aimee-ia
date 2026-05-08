@@ -1,6 +1,6 @@
-import { BaseRepository } from './BaseRepository';
-import { HouseholdTask } from '../../types';
-import { HouseholdTaskSchema } from '../../domain/validation/schemas';
+import { BaseRepository } from './BaseRepository.js';
+import { HouseholdTask } from '../../types/index.js';
+import { HouseholdTaskSchema } from '../../domain/validation/schemas.js';
 
 export class TaskRepository extends BaseRepository<HouseholdTask> {
   constructor() {

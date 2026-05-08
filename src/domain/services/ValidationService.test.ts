@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ValidationService } from './ValidationService';
+import { ValidationService } from './ValidationService.js';
 
 describe('ValidationService', () => {
   describe('validateTransaction', () => {

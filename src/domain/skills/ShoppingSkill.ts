@@ -1,7 +1,7 @@
-import { shoppingRepository } from '../../infrastructure/repositories';
-import { ShoppingItem } from '../../types';
-import { logger } from '../../lib/logger';
-import { ValidationService } from '../services/ValidationService';
+import { shoppingRepository } from '../../infrastructure/repositories/index.js';
+import { ShoppingItem } from '../../types/index.js';
+import { logger } from '../../lib/logger.js';
+import { ValidationService } from '../services/ValidationService.js';
 
 export class ShoppingSkill {
   /**

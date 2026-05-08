@@ -1,5 +1,5 @@
-import { BaseRepository } from './BaseRepository';
-import { ChatMessage } from '../../types';
+import { BaseRepository } from './BaseRepository.js';
+import { ChatMessage } from '../../types/index.js';
 
 export class ChatRepository extends BaseRepository<ChatMessage> {
   constructor() {
