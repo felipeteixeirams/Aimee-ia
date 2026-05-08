@@ -6,3 +6,4 @@ export * from './ChatRepository';
 export * from './ProfileRepository';
 export * from './EventRepository';
 export * from './ConfigRepository';
+export * from './UsageRepository';

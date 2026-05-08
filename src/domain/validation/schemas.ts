@@ -127,3 +127,17 @@ export const FamilyEventSchema = z.object({
 });
 
 export type FamilyEventInput = z.infer<typeof FamilyEventSchema>;
+
+// LLM Usage Schema
+export const LLMUsageSchema = z.object({
+  id: z.string().optional(),
+  userId: z.string(),
+  model: z.string(),
+  promptTokens: z.number().int().min(0),
+  completionTokens: z.number().int().min(0),
+  totalTokens: z.number().int().min(0),
+  timestamp: z.string(),
+  context: z.string().optional()
+});
+
+export type LLMUsageInput = z.infer<typeof LLMUsageSchema>;

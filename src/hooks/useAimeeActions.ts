@@ -94,7 +94,8 @@ export function useAimeeActions(
           profile?.selectedPersona || 'analytical', 
           aimeeData.globalConfig.aiProvider,
           activeSpace || undefined,
-          audio
+          audio,
+          'chat'
         );
         break; // Success!
       } catch (error: any) {
@@ -145,9 +146,31 @@ export function useAimeeActions(
           }
         }
 
+        // Extract suggestions if present
+        const suggestionMatch = block.match(/\[SUGGESTION: ([\s\S]*)\]/);
+        if (suggestionMatch) {
+          try {
+            const suggestion = JSON.parse(suggestionMatch[1]);
+            block = block.replace(/\[SUGGESTION: [\s\S]*\]/g, '').trim();
+            // Store suggestion in profile metadata
+            if (user) {
+              const currentSuggestions = profile?.aimeeMetadata?.suggestions || [];
+              const updatedSuggestions = [suggestion, ...currentSuggestions].slice(0, 5); // Keep last 5
+              profileRepository.updateProfile(user.uid, {
+                aimeeMetadata: {
+                  ...profile?.aimeeMetadata,
+                  suggestions: updatedSuggestions
+                }
+              } as any).catch(err => logger.error('Error saving suggestion', { err }));
+            }
+          } catch (e) {
+            logger.error('Error parsing AI suggestion', { error: e });
+          }
+        }
+
         await typeText(block); 
         
-        const isInsight = /notei que|alerta|previsão|economia|média|comparando|insight/i.test(block);
+        const isInsight = /insight premium|análise estratégica|saúde financeira|alerta de impacto/i.test(block);
 
         const aiMsg: ChatMessage = {
           userId: user.uid,
@@ -417,28 +440,44 @@ export function useAimeeActions(
   const triggerInsightSweep = async (targetId: string, trigger: string) => {
     logger.info('Triggering insight sweep', { targetId, trigger });
     
-    // Check for recent insights to avoid spam
-    const lastInsight = aimeeData.messages.find(m => m.isInsight);
-    if (lastInsight) {
-      const lastDate = new Date(lastInsight.timestamp);
-      const diffMinutes = (new Date().getTime() - lastDate.getTime()) / (1000 * 60);
-      if (diffMinutes < 30) return; // Wait 30m between proactive insights
+    // 1. Check for data historical depth (minimum 30 days of transactions)
+    const sortedTransactions = [...aimeeData.transactions].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    let hasEnoughData = false;
+    if (sortedTransactions.length > 0) {
+      const firstDate = new Date(sortedTransactions[0].date);
+      const diffDays = (new Date().getTime() - firstDate.getTime()) / (1000 * 3600 * 24);
+      if (diffDays >= 30) hasEnoughData = true;
+    }
+
+    // 2. Check for recent insights to avoid spam (Strategic insights only every 7 days)
+    const lastStrategicAt = profile?.aimeeMetadata?.lastStrategicInsightAt;
+    if (lastStrategicAt) {
+      const lastDate = new Date(lastStrategicAt);
+      const diffDays = (new Date().getTime() - lastDate.getTime()) / (1000 * 3600 * 24);
+      if (diffDays < 7) return; // Wait 7 days between strategic insights
+    }
+
+    if (!hasEnoughData) {
+      logger.info('Not enough data for strategic insight yet', { targetId });
+      return;
     }
 
     let prompt = "";
     if (trigger === 'shopping_finish') {
-      const total = aimeeData.shoppingList.filter(i => i.purchased).length;
-      prompt = `O usuário acabou de finalizar uma compra de ${total} itens. Analise o histórico e dê um insight curto (1 frase) sobre economia ou saúde. Se for algo que exija confirmação (ex: categoria errada), sugira ações.`;
+      prompt = `O usuário finalizou compras. Analise o impacto no orçamento mensal e traga um insight estratégico sobre fôlego financeiro ou desvio de metas.`;
     } else if (trigger === 'finance_update') {
-      prompt = `O usuário adicionou transações financeiras. Analise o saldo e dê um insight proativo sobre fôlego financeiro ou gastos por categoria.`;
+      prompt = `Novas transações adicionadas. Analise se há padrões de alto impacto no histórico de 90 dias ou falta de reserva de emergência conforme as metas.`;
     }
 
     if (!prompt) return;
 
     try {
       let insight = await orchestrator(
-        `[SISTEMA: GERE UM INSIGHT PROATIVO] ${prompt}`,
-        [], // No context for pure insight
+        `[SISTEMA: GERE UM INSIGHT PREMIUM ESTRATÉGICO] ${prompt}`,
+        [], 
         targetId,
         aimeeData.shoppingList,
         aimeeData.transactions,
@@ -446,7 +485,10 @@ export function useAimeeActions(
         aimeeData.tasks,
         aimeeData.events,
         profile?.selectedPersona || 'analytical',
-        aimeeData.globalConfig.aiProvider
+        aimeeData.globalConfig.aiProvider,
+        undefined, // targetUserId
+        undefined, // audio
+        'insight_sweep'
       );
 
       // Extract actions if present
@@ -461,7 +503,7 @@ export function useAimeeActions(
         }
       }
 
-      // Save insight
+      // Save insight and update metadata
       await chatRepository.create({
           role: ChatRole.ASSISTANT,
           content: insight,
@@ -470,6 +512,13 @@ export function useAimeeActions(
           read: false,
           actions: actions.length > 0 ? actions : undefined
       }, targetId);
+
+      await profileRepository.updateProfile(targetId, {
+        aimeeMetadata: {
+          ...profile?.aimeeMetadata,
+          lastStrategicInsightAt: new Date().toISOString()
+        }
+      } as any);
 
     } catch (err) {
       logger.error('Proactive insight failure', { err });

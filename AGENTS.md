@@ -1,0 +1,14 @@
+# Diretrizes de Desenvolvimento Aimee
+
+## Auditoria de Tokens LLM (Rastreabilidade)
+Toda interação com LLM deve ser auditada para controle de custos e monitoramento de performance.
+- **Repositório**: `UsageRepository` salva em `llm_usage` (coleção global).
+- **Dados Capturados**: `userId`, `model`, `promptTokens`, `completionTokens`, `totalTokens`, `context` (ex: chat, insight).
+- **Boas Práticas**:
+  - O orquestrador (`AimeeOrchestrator` no backend e `orchestrator` no frontend) cuida do log automaticamente.
+  - Ao adicionar novos provedores ou fluxos de IA, garanta que os metadados de `usage` sejam extraídos e passados para o repositório.
+
+## UI/UX
+- Seguir o estilo Apple Music para sugestões ("Para Você").
+- Usar `lucide-react` para ícones.
+- Animações com `motion/react`.

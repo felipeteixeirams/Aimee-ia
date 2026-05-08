@@ -48,7 +48,13 @@ export class GeminiAdapter implements ILLMProvider {
     return {
       content: response.text(),
       functionCalls,
-      provider: this.id
+      provider: this.id,
+      usage: response.usageMetadata ? {
+        promptTokens: response.usageMetadata.promptTokenCount || 0,
+        completionTokens: response.usageMetadata.candidatesTokenCount || 0,
+        totalTokens: response.usageMetadata.totalTokenCount || 0,
+        model: "gemini-flash-latest"
+      } : undefined
     };
   }
 

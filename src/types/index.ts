@@ -84,6 +84,19 @@ export interface UserProfile {
   };
   calendarConnected?: boolean;
   googleCalendarEmail?: string;
+  aimeeMetadata?: {
+    lastStrategicInsightAt?: string;
+    suggestions: AimeeSuggestion[];
+  };
+}
+
+export interface AimeeSuggestion {
+  id: string;
+  type: 'shopping' | 'finance' | 'routine';
+  title: string;
+  description?: string;
+  actionValue: string;
+  icon?: string;
 }
 
 export const TransactionType = {
@@ -280,4 +293,15 @@ export interface GlobalConfig {
   calendarIntegrationEnabled?: boolean;
   updatedAt: string;
   updatedBy: string;
+}
+
+export interface LLMUsage {
+  id?: string;
+  userId: string;
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  timestamp: string;
+  context?: string;
 }

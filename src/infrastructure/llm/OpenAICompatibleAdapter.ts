@@ -67,7 +67,13 @@ export class OpenAICompatibleAdapter implements ILLMProvider {
     return {
       content: choice.content || "",
       functionCalls,
-      provider: this.id
+      provider: this.id,
+      usage: response.usage ? {
+        promptTokens: response.usage.prompt_tokens,
+        completionTokens: response.usage.completion_tokens,
+        totalTokens: response.usage.total_tokens,
+        model: this.modelName
+      } : undefined
     };
   }
 

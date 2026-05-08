@@ -378,6 +378,52 @@ export const ShoppingView = ({
             </div>
           </div>
         ))}
+
+        {/* Apple Music Style Suggestions at the end of List */}
+        {shoppingFilter === 'list' && profile?.aimeeMetadata?.suggestions && profile.aimeeMetadata.suggestions.length > 0 && (
+          <div className="pt-8 pb-4">
+            <h4 className="text-xs font-black text-brand uppercase tracking-[0.2em] mb-4 pl-4 flex items-center gap-2">
+              <Star className="w-3 h-3 fill-current" />
+              Para Você
+            </h4>
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
+              {profile.aimeeMetadata.suggestions
+                .filter(s => s.type === 'shopping')
+                .map((suggestion) => (
+                <motion.div 
+                  key={suggestion.id}
+                  whileTap={{ scale: 0.95 }}
+                  className="shrink-0 w-40 aspect-square bg-gradient-to-br from-brand to-brand-light p-5 rounded-[2.5rem] flex flex-col justify-between relative overflow-hidden shadow-lg shadow-brand/20 group"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-3xl -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700" />
+                  
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-black text-white leading-tight mb-1">{suggestion.title}</p>
+                    <p className="text-[9px] text-white/70 font-bold uppercase tracking-wider line-clamp-1">{suggestion.description || 'Pode interessar'}</p>
+                  </div>
+
+                  <button 
+                    onClick={() => {
+                      // Custom prompt to process the suggestion
+                      // For now, it just adds the item blindly or triggers the chat
+                      // Best way: handleAddItem if it's simple or sendMessage
+                      handleAddItem({
+                        name: suggestion.title,
+                        category: 'others'
+                      });
+                    }}
+                    className="absolute inset-0 z-10 opacity-0"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {shoppingList.filter(i => shoppingFilter === 'stock' ? i.isStock : !i.isStock).length === 0 && (
           <div className="text-center py-20">
             {shoppingFilter === 'list' ? (
@@ -392,37 +438,7 @@ export const ShoppingView = ({
         )}
       </div>
 
-      <div className="bg-brand p-6 rounded-3xl text-brand-foreground shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-xs font-bold uppercase tracking-widest opacity-60">Sugestões da Aimee</h4>
-          <div className="flex items-center gap-2 px-2 py-1 bg-white/10 rounded-lg">
-            <Apple className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-bold uppercase">{profile?.healthGoals?.dietType === 'balanced' ? 'Dieta Balanceada' : 'Foco em Saúde'}</span>
-          </div>
-        </div>
-        <div className="space-y-3">
-          {shoppingList
-            .filter(i => i.frequency && i.frequency > 3 && i.isStock)
-            .slice(0, 2)
-            .map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-brand-foreground/10 rounded-xl">
-                <div>
-                  <p className="text-sm font-bold">{item.name}</p>
-                  <p className="text-[10px] opacity-60">Previsão: Acaba em 2 dias.</p>
-                </div>
-                <button 
-                  onClick={() => handleMoveToList(item)}
-                  className="p-2 hover:bg-brand-foreground/20 rounded-lg transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          {shoppingList.filter(i => i.frequency && i.frequency > 3 && i.isStock).length === 0 && (
-            <p className="text-xs opacity-60 italic">Continue usando para receber previsões de consumo e dicas nutricionais.</p>
-          )}
-        </div>
-      </div>
+      {/* Bloco de sugestões removido para dar lugar ao novo Para Você acima */}
 
       <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
         <div className="flex items-center justify-between">

@@ -127,7 +127,7 @@ export default async function (fastify: FastifyInstance) {
 
   // AI Route
   fastify.post("/ai", { preHandler: validateRequest(aiRequestSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const { prompt, history, persona, context, audio, provider } = req.body as any;
+    const { prompt, history, persona, context, audio, provider, userId, contextType } = req.body as any;
 
     try {
       const orchestrator = container.resolve(AimeeOrchestrator);
@@ -139,7 +139,7 @@ Compras: ${JSON.stringify(context.shopping || [])}
 `;
       
       const fullPrompt = `${prompt}\n\n${contextString}`;
-      const result = await orchestrator.processRequest(fullPrompt, history, persona, audio, provider);
+      const result = await orchestrator.processRequest(fullPrompt, history, persona, audio, provider, userId, contextType);
       return result;
     } catch (error: any) {
       logger.error("Server AI Error", { 

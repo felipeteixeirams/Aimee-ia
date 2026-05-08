@@ -5,7 +5,21 @@ vi.mock('../../lib/config.js', () => ({
   config: {
     geminiApiKey: 'gemini-key',
     openaiApiKey: 'openai-key',
-    deepseekApiKey: 'deepseek-key'
+    deepseekApiKey: 'deepseek-key',
+    firebase: {
+      apiKey: 'test-key',
+      authDomain: 'test-domain',
+      projectId: 'test-project',
+      storageBucket: 'test-bucket',
+      messagingSenderId: 'test-id',
+      appId: 'test-app'
+    }
+  }
+}));
+
+vi.mock('../repositories/UsageRepository.js', () => ({
+  usageRepository: {
+    logUsage: vi.fn().mockResolvedValue('audit-id')
   }
 }));
 

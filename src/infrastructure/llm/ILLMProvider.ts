@@ -15,6 +15,12 @@ export interface LLMResponse {
     args: any;
   }>;
   provider: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    model: string;
+  };
 }
 
 export interface ILLMProvider {

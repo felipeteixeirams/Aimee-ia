@@ -1,11 +1,12 @@
 import "reflect-metadata";
-import { singleton } from "tsyringe";
+import { singleton, container } from "tsyringe";
 import { logger } from "../../lib/logger.js";
 import { allAimeeTools } from "../tools/AimeeTools.js";
 import { config } from "../../lib/config.js";
-import { ILLMProvider, LLMRequest } from "./ILLMProvider.js";
+import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider.js";
 import { GeminiAdapter } from "./GeminiAdapter.js";
 import { OpenAICompatibleAdapter } from "./OpenAICompatibleAdapter.js";
+import { usageRepository } from "../repositories/UsageRepository.js";
 
 @singleton()
 export class AimeeOrchestrator {
@@ -54,8 +55,10 @@ export class AimeeOrchestrator {
     history: any[] = [], 
     persona: string = "funny", 
     audio?: { data: string; mimeType: string }, 
-    preferredProvider?: string
-  ): Promise<{ content: string; functionCalls?: any[] }> {
+    preferredProvider?: string,
+    userId: string = 'system',
+    contextType: string = 'chat'
+  ): Promise<{ content: string; functionCalls?: any[]; usage?: any }> {
     
     const providersToTry = this.getOrderedProviders(preferredProvider);
 
@@ -79,14 +82,24 @@ export class AimeeOrchestrator {
           tools: allAimeeTools
         };
 
-        // Note: Currently only the original code supported direct audio in Gemini.
-        // If we want audio support in adapters, we'd add it to LLMRequest.
-        // For now, we maintain the previous logic where only Gemini handles audio if passed.
-        const response = await provider.generateResponse(request);
+        const response: LLMResponse = await provider.generateResponse(request);
         
+        // Audit usage
+        if (response.usage) {
+          usageRepository.logUsage({
+            userId,
+            model: response.usage.model,
+            promptTokens: response.usage.promptTokens,
+            completionTokens: response.usage.completionTokens,
+            totalTokens: response.usage.totalTokens,
+            context: contextType
+          }).catch(err => logger.error('Falha ao registrar auditoria de tokens', { err }));
+        }
+
         return {
           content: response.content,
-          functionCalls: response.functionCalls
+          functionCalls: response.functionCalls,
+          usage: response.usage
         };
       } catch (error: any) {
         lastError = error;

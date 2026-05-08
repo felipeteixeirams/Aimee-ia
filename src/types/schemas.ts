@@ -15,6 +15,8 @@ export const aiRequestSchema = z.object({
   history: z.array(z.any()).default([]),
   persona: z.string().default('funny'),
   provider: z.enum(['gemini', 'deepseek', 'openai']).optional(),
+  userId: z.string().optional(),
+  contextType: z.string().optional(),
   context: z.object({
     tasks: z.array(z.any()).optional(),
     events: z.array(z.any()).optional(),
