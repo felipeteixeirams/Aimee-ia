@@ -1,7 +1,7 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider";
-import { config } from "../../lib/config";
-import { logger } from "../../lib/logger";
+import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider.js";
+import { config } from "../../lib/config.js";
+import { logger } from "../../lib/logger.js";
 
 export class GeminiAdapter implements ILLMProvider {
   readonly id = 'gemini';

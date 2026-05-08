@@ -39,7 +39,7 @@ describe('RoutineSkill', () => {
 
   describe('addTask', () => {
     it('should create a single task without recurrence', async () => {
-      const task = { title: 'Lavar louça' };
+      const task = { title: 'Lavar louça', category: 'cleaning', status: 'todo', userId: 'user-1' } as any;
       await routineSkill.addTask('user-1', task);
 
       expect(taskRepository.create).toHaveBeenCalledWith(
@@ -49,7 +49,13 @@ describe('RoutineSkill', () => {
     });
 
     it('should create multiple tasks with recurrence', async () => {
-      const task = { title: 'Medicamento', recurrence: 'daily' as any };
+      const task = { 
+        title: 'Medicamento', 
+        category: 'errand', 
+        status: 'todo',
+        userId: 'user-1',
+        recurrence: { type: 'daily' } 
+      } as any;
       vi.mocked(generateRecurrenceInstances).mockReturnValue([
           { dueDate: '2024-01-01', originalDueDate: '2024-01-01' },
           { dueDate: '2024-01-02', originalDueDate: '2024-01-02' }

@@ -51,10 +51,10 @@ describe('FinanceSkill', () => {
     });
 
     it('should throw error if validation fails', async () => {
-      const invalidData = { amount: -10 };
+      const invalidData = { amount: -10, type: 'expense' as const };
 
       await expect(financeSkill.recordTransaction('user-1', invalidData))
-        .rejects.toThrow('O valor da transação deve ser maior que zero.');
+        .rejects.toThrow('amount');
       
       expect(transactionRepository.create).not.toHaveBeenCalled();
     });
@@ -108,7 +108,7 @@ describe('FinanceSkill', () => {
         expect.objectContaining({
           amount: 10,
           type: 'income',
-          category: 'Geral'
+          category: 'others'
         }),
         'user-1'
       );

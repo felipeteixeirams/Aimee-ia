@@ -6,11 +6,10 @@ export class ValidationService {
   /**
    * Valida uma transação financeira
    */
-  static validateTransaction(data: Partial<Transaction>): string | null {
+  static validateTransaction(data: any): string | null {
     try {
-      // For skill validation, treat as partial to avoid issues with missing fields during AI processing
-      TransactionSchema.partial().parse(data);
-      if (data.amount !== undefined && data.amount <= 0) return "O valor da transação deve ser maior que zero.";
+      TransactionSchema.parse(data);
+      if (data.amount <= 0) return "O valor da transação deve ser maior que zero.";
       return null;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -24,9 +23,9 @@ export class ValidationService {
   /**
    * Valida uma tarefa doméstica
    */
-  static validateTask(data: Partial<HouseholdTask>): string | null {
+  static validateTask(data: any): string | null {
     try {
-      HouseholdTaskSchema.partial().parse(data);
+      HouseholdTaskSchema.parse(data);
       return null;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -40,9 +39,10 @@ export class ValidationService {
   /**
    * Valida um item de compra
    */
-  static validateShoppingItem(data: Partial<ShoppingItem>): string | null {
+  static validateShoppingItem(data: any): string | null {
     try {
-      ShoppingItemSchema.partial().parse(data);
+      ShoppingItemSchema.parse(data);
+      if (data.quantity < 0) return "A quantidade não pode ser negativa.";
       return null;
     } catch (error) {
       if (error instanceof z.ZodError) {

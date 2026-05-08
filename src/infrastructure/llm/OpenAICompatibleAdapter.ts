@@ -1,6 +1,6 @@
 import OpenAI from "openai";
-import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider";
-import { logger } from "../../lib/logger";
+import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider.js";
+import { logger } from "../../lib/logger.js";
 
 export class OpenAICompatibleAdapter implements ILLMProvider {
   private client: OpenAI | null = null;

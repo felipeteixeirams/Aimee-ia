@@ -90,7 +90,7 @@ export const ShoppingItemSchema = z.object({
 export const HouseholdTaskSchema = z.object({
   id: z.string().optional(),
   userId: z.string(),
-  title: z.string().min(1, "Título é obrigatório"),
+  title: z.string().min(1, "Título é obrigatório").max(200, "O título deve ter no máximo 200 caracteres"),
   description: z.string().optional(),
   category: z.nativeEnum(TaskCategory),
   status: z.nativeEnum(TaskStatus),

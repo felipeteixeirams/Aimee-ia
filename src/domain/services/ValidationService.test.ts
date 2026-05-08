@@ -13,14 +13,13 @@ describe('ValidationService', () => {
     });
 
     it('should error on missing or zero amount', () => {
-      expect(ValidationService.validateTransaction({ amount: 0 })).toContain('maior que zero');
-      expect(ValidationService.validateTransaction({})).toContain('maior que zero');
-      expect(ValidationService.validateTransaction({ amount: -10 })).toContain('maior que zero');
+      expect(ValidationService.validateTransaction({ amount: 0, type: 'expense' })).toContain('maior que zero');
+      expect(ValidationService.validateTransaction({ amount: 10, type: 'expense' })).toBeNull();
+      expect(ValidationService.validateTransaction({ amount: -10, type: 'expense' })).toContain('negativo');
     });
 
-    it('should error on missing description', () => {
-      expect(ValidationService.validateTransaction({ amount: 10 })).toContain('descrição');
-      expect(ValidationService.validateTransaction({ amount: 10, description: ' ' })).toContain('descrição');
+    it('should error on missing type', () => {
+      expect(ValidationService.validateTransaction({ amount: 10 })).toContain('type');
     });
 
     it('should error on invalid type', () => {
@@ -28,23 +27,30 @@ describe('ValidationService', () => {
         amount: 10, 
         description: 'Test', 
         type: 'invalid' as any 
-      })).toContain('income');
+      })).toContain('type');
     });
   });
 
   describe('validateTask', () => {
     it('should return null for a valid task', () => {
-      expect(ValidationService.validateTask({ title: 'Limpar casa' })).toBeNull();
+      expect(ValidationService.validateTask({ 
+        title: 'Limpar casa', 
+        userId: 'u1', 
+        category: 'cleaning', 
+        status: 'todo' 
+      })).toBeNull();
     });
 
     it('should error on empty title', () => {
-      expect(ValidationService.validateTask({})).toContain('não pode estar vazio');
-      expect(ValidationService.validateTask({ title: ' ' })).toContain('não pode estar vazio');
+      expect(ValidationService.validateTask({ userId: 'u1', category: 'cleaning', status: 'todo' })).toContain('title');
+      expect(ValidationService.validateTask({ title: '', userId: 'u1', category: 'cleaning', status: 'todo' })).toContain('title');
     });
 
     it('should error on title too long', () => {
-      const longTitle = 'a'.repeat(201);
-      expect(ValidationService.validateTask({ title: longTitle })).toContain('máximo 200');
+      const longTitle = 'a'.repeat(210);
+      const result = ValidationService.validateTask({ title: longTitle, userId: 'u1', category: 'cleaning', status: 'todo' });
+      expect(result).not.toBeNull();
+      expect(result).toContain('title');
     });
   });
 
@@ -54,12 +60,12 @@ describe('ValidationService', () => {
     });
 
     it('should error on empty name', () => {
-      expect(ValidationService.validateShoppingItem({})).toContain('obrigatório');
-      expect(ValidationService.validateShoppingItem({ name: '' })).toContain('obrigatório');
+      expect(ValidationService.validateShoppingItem({})).toContain('name');
+      expect(ValidationService.validateShoppingItem({ name: '' })).toContain('name');
     });
 
     it('should error on negative quantity', () => {
-      expect(ValidationService.validateShoppingItem({ name: 'Leite', quantity: -1 })).toContain('negativa');
+      expect(ValidationService.validateShoppingItem({ name: 'Leite', quantity: -1 })).toContain('quantity');
     });
   });
 });

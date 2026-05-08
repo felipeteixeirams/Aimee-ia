@@ -19,7 +19,7 @@ export class FinanceSkill {
       amount: data.amount || 0,
       type: data.type || 'expense',
       description: data.description || 'Sem descrição',
-      category: data.category || 'Geral',
+      category: data.category || 'others',
       date: new Date().toISOString(),
     } as any, userId);
 
