@@ -10,6 +10,7 @@ import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { AudioVisualizer } from './AudioVisualizer';
 import { ReactiveFeed } from './ReactiveFeed';
 import { ChatRole } from '../types';
+import Markdown from 'react-markdown';
 
 interface ChatMessageItemProps {
   msg: ChatMessage;
@@ -128,7 +129,9 @@ const ChatMessageItem = memo(({
             </div>
           ) : (
             <>
-              <span className="block">{msg.content}</span>
+              <div className="markdown-body">
+                <Markdown>{msg.content}</Markdown>
+              </div>
               {msg.status === 'error' && (
                 <button 
                   onClick={() => handleRetry(index)}
@@ -226,6 +229,7 @@ interface ChatViewProps {
   profile: UserProfile | null;
   user: User | null;
   GLOBAL_AIMEE_AVATAR: string;
+  availableAIProviders: string[];
 }
 
 export const ChatView = memo(({
@@ -253,16 +257,25 @@ export const ChatView = memo(({
   GLOBAL_AIMEE_AVATAR,
   unreadInsights,
   handleGoToInsight,
-  handleDismissInsight
+  handleDismissInsight,
+  availableAIProviders
 }: ChatViewProps) => {
-  const { isRecording, startRecording, stopRecording, getFrequencyData } = useVoiceRecorder();
+  const { 
+    isRecording, 
+    isSupported, 
+    startRecording, 
+    stopRecording, 
+    getFrequencyData, 
+    transcript 
+  } = useVoiceRecorder((text) => {
+    setInputText(inputText + (inputText.endsWith(' ') || inputText === '' ? '' : ' ') + text);
+  });
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const onStopRecording = useCallback(async () => {
-    const blob = await stopRecording();
-    if (blob) {
-      await handleSendVoiceMessage(blob);
-    }
-  }, [stopRecording, handleSendVoiceMessage]);
+    await stopRecording();
+    // No longer auto-sending audio blob, we rely on the transcript in the input field
+  }, [stopRecording]);
 
   const handleRetry = useCallback((index: number) => {
     // Find the last user message before this error
@@ -380,8 +393,10 @@ export const ChatView = memo(({
             </div>
 
             <div className="relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%] items-start">
-              <div className="relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble">
-                {filteredTypingContent}
+              <div className="relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble">
+                <div className="markdown-body">
+                  <Markdown>{filteredTypingContent}</Markdown>
+                </div>
               </div>
               <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2 text-left">
                 Digitando...
@@ -450,26 +465,35 @@ export const ChatView = memo(({
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder={isRecording ? "Solte para enviar..." : "Fale com sua Aimee..."}
-              disabled={isRecording}
+              placeholder={isRecording ? "Solte para enviar..." : isTranscribing ? "Aimee está ouvindo..." : "Fale com sua Aimee..."}
+              disabled={isRecording || isTranscribing}
               className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-[2rem] pl-6 pr-24 py-4 text-sm focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all outline-none dark:text-white shadow-xl shadow-black/5 disabled:opacity-50"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               <button
                 onClick={isRecording ? onStopRecording : startRecording}
+                disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
+                title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada neste navegador" : "Clique para falar"}
                 className={cn(
                   "w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90",
                   isRecording 
                     ? "bg-red-500 text-white shadow-lg shadow-red-500/40" 
-                    : "text-neutral-400 hover:text-brand bg-neutral-50 dark:bg-neutral-800"
+                    : "text-neutral-400 hover:text-brand bg-neutral-50 dark:bg-neutral-800",
+                  (isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))) && "opacity-50 cursor-not-allowed"
                 )}
               >
-                {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {isTranscribing ? (
+                  <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+                ) : isRecording ? (
+                  <Square className="w-4 h-4" />
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
               </button>
               
               <button 
                 onClick={() => handleSendMessage()}
-                disabled={!inputText.trim() || isTyping || isRecording}
+                disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
                 className="w-10 h-10 bg-brand text-brand-foreground rounded-full flex items-center justify-center shadow-lg shadow-brand/20 active:scale-90 transition-all disabled:opacity-30 disabled:scale-100 group shrink-0"
               >
                 <Send className="w-4 h-4" />

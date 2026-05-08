@@ -2,23 +2,56 @@ import { useState, useRef, useCallback } from 'react';
 
 export interface UseVoiceRecorderReturn {
   isRecording: boolean;
+  isSupported: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<Blob | null>;
   audioURL: string | null;
   getFrequencyData: () => Uint8Array;
+  transcript: string;
 }
 
-export function useVoiceRecorder(): UseVoiceRecorderReturn {
+export function useVoiceRecorder(onTranscript?: (text: string) => void): UseVoiceRecorderReturn {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState('');
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
+
+  const isSupported = !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   const startRecording = useCallback(async () => {
+    setTranscript(''); // Reset on start
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Setup Web Speech API
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              const text = event.results[i][0].transcript;
+              setTranscript(prev => prev + text);
+              if (onTranscript) onTranscript(text);
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+      }
       
       // Setup AudioContext for visualization
       const audioContext = new AudioContext();
@@ -67,6 +100,11 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         if (audioContextRef.current) {
           audioContextRef.current.close();
         }
+
+        // Stop speech recognition
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
         
         setIsRecording(false);
         resolve(audioBlob);
@@ -85,9 +123,11 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
   return {
     isRecording,
+    isSupported,
     startRecording,
     stopRecording,
     audioURL,
     getFrequencyData,
+    transcript,
   };
 }

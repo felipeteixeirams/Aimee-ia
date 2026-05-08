@@ -727,26 +727,9 @@ export default function App() {
                 setTimeout(() => scrollToBottom('smooth'), 100);
                 await sendMessage(content, activeSpace, setIsTyping, (txt) => typeText(txt, 8), setTypingContent, skip);
               }}
-              handleSendVoiceMessage={async (blob) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = async () => {
-                  const base64data = reader.result as string;
-                  const base64Content = base64data.split(',')[1];
-                  
-                  // Use a default prompt for voice messages
-                  const voicePrompt = "Transcreva e processe este áudio.";
-                  
-                  await sendMessage(
-                    voicePrompt, 
-                    activeSpace, 
-                    setIsTyping, 
-                    (txt) => typeText(txt, 8), 
-                    setTypingContent, 
-                    false, // don't skip doc
-                    { data: base64Content, mimeType: blob.type }
-                  );
-                };
+              availableAIProviders={availableAIProviders}
+              handleSendVoiceMessage={async () => {
+                // Not used anymore as we transcribe in real-time
               }}
               isTyping={isTyping}
               typingContent={typingContent}
