@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider";
-import { logger } from "../logger";
+import { logger } from "../../lib/logger";
 
 export class OpenAICompatibleAdapter implements ILLMProvider {
   private client: OpenAI | null = null;
@@ -54,10 +54,15 @@ export class OpenAICompatibleAdapter implements ILLMProvider {
     });
 
     const choice = response.choices[0].message;
-    const functionCalls = choice.tool_calls?.map(tc => ({
-      name: tc.function.name,
-      args: JSON.parse(tc.function.arguments)
-    }));
+    const functionCalls = choice.tool_calls?.map(tc => {
+      if (tc.type === 'function') {
+        return {
+          name: tc.function.name,
+          args: JSON.parse(tc.function.arguments)
+        };
+      }
+      return null;
+    }).filter((f): f is { name: string; args: any } => !!f);
 
     return {
       content: choice.content || "",

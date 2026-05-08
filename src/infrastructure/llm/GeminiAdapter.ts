@@ -1,7 +1,7 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider";
 import { config } from "../../lib/config";
-import { logger } from "../logger";
+import { logger } from "../../lib/logger";
 
 export class GeminiAdapter implements ILLMProvider {
   readonly id = 'gemini';
@@ -9,7 +9,7 @@ export class GeminiAdapter implements ILLMProvider {
 
   constructor() {
     if (config.geminiApiKey) {
-      this.genAI = new GoogleGenAI(config.geminiApiKey);
+      this.genAI = new GoogleGenAI({ apiKey: config.geminiApiKey });
     }
   }
 
