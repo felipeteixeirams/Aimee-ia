@@ -1,10 +1,11 @@
-import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile, X, Calendar } from 'lucide-react';
+import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, ShoppingCart, Home, Shield, Sparkles, Moon, Sun, LayoutGrid, Zap, ChevronDown, Monitor, Globe, Mail, Palette, Brain, Smile, X, Calendar, Bell, BellOff, Download, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Share, GlobalConfig, AIProvider, PermissionLevel, AIRecommendedPersona } from '../types';
 import { cn } from '../lib/utils';
 import { AimeeAvatar } from './AimeeAvatar';
 import React, { useState, useRef, useEffect } from 'react';
 import { calendarService } from '../services/calendarService';
+import { notificationService } from '../services/notificationService';
 
 interface SettingsViewProps {
   profile: UserProfile | null;
@@ -118,6 +119,32 @@ export const SettingsView = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [availableProviderIds, setAvailableProviderIds] = useState<string[]>([]);
+  const [notificationStatus, setNotificationStatus] = useState(notificationService.getPermissionStatus());
+
+  const handleToggleNotifications = async () => {
+    if (notificationStatus !== 'granted') {
+      const granted = await notificationService.requestPermission();
+      setNotificationStatus(granted ? 'granted' : 'denied');
+      if (profile) {
+        updateProfile({ 
+          preferences: { 
+            ...(profile.preferences || { currency: 'BRL' }), 
+            notificationsEnabled: granted 
+          } 
+        } as any);
+      }
+    } else {
+      const newValue = !profile?.preferences?.notificationsEnabled;
+      if (profile) {
+        updateProfile({ 
+          preferences: { 
+            ...(profile.preferences || { currency: 'BRL' }), 
+            notificationsEnabled: newValue 
+          } 
+        } as any);
+      }
+    }
+  };
   
   useEffect(() => {
     const fetchConfig = async () => {
@@ -554,6 +581,74 @@ export const SettingsView = ({
                         Conectar
                       </button>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* System & Notifications Settings */}
+              <div className="pt-8 border-t border-neutral-100 dark:border-neutral-800 space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-brand/10 rounded-2xl flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-brand" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-neutral-800 dark:text-white uppercase tracking-[0.2em] mb-0.5">Sistema e Alertas</h4>
+                    <p className="text-[10px] text-neutral-400 font-medium tracking-tight">Gerencie notificações e performance.</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 rounded-3xl space-y-4">
+                  {/* Notifications Toggle */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white dark:bg-neutral-900 rounded-xl flex items-center justify-center shadow-sm">
+                        {profile?.preferences?.notificationsEnabled ? (
+                          <Bell className="w-5 h-5 text-brand" />
+                        ) : (
+                          <BellOff className="w-5 h-5 text-neutral-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-neutral-800 dark:text-white uppercase tracking-widest leading-none mb-1">Notificações Push</p>
+                        <p className="text-[9px] text-neutral-400 font-medium tracking-tight italic">
+                          {notificationStatus === 'denied' 
+                            ? "Bloqueado no navegador" 
+                            : profile?.preferences?.notificationsEnabled 
+                              ? "Ativado: alertas fora do app" 
+                              : "Desativado"}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={handleToggleNotifications}
+                      disabled={notificationStatus === 'denied'}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-all relative",
+                        profile?.preferences?.notificationsEnabled ? "bg-brand" : "bg-neutral-200 dark:bg-neutral-700",
+                        notificationStatus === 'denied' && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all",
+                        profile?.preferences?.notificationsEnabled ? "left-7" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+
+                  {/* Cache & Performance Status */}
+                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-700/30 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white dark:bg-neutral-900 rounded-xl flex items-center justify-center shadow-sm">
+                        <Zap className="w-5 h-5 text-brand" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-neutral-800 dark:text-white uppercase tracking-widest leading-none mb-1">Abertura Rápida (PWA)</p>
+                        <p className="text-[9px] text-neutral-400 font-medium tracking-tight italic">Otimizado para carregamento instantâneo.</p>
+                      </div>
+                    </div>
+                    <div className="px-3 py-1 bg-brand/10 rounded-lg">
+                      <span className="text-[8px] font-black text-brand uppercase tracking-widest">Ativo</span>
+                    </div>
                   </div>
                 </div>
               </div>

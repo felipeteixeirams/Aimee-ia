@@ -20,6 +20,7 @@ import { generateRecurrenceInstances } from '../lib/recurrenceUtils';
 import { logger } from '../lib/logger';
 import { useToast } from '../components/ToastProvider';
 import { notificationSchema } from '../types/schemas';
+import { notificationService } from '../services/notificationService';
 
 interface AimeeData {
   messages: ChatMessage[];
@@ -186,6 +187,13 @@ export function useAimeeActions(
         try {
           setTypingContent(null);
           await chatRepository.create(aiMsg, user.uid);
+          
+          // Trigger local notification if enabled and insight
+          if (profile?.preferences?.notificationsEnabled && isInsight) {
+            notificationService.notify('Novo Insight da Aimee 🧠', {
+              body: block.substring(0, 100) + '...'
+            });
+          }
         } catch (error) {
           logger.error('Error saving AI message', { error });
         }
@@ -513,6 +521,12 @@ export function useAimeeActions(
           actions: actions.length > 0 ? actions : undefined
       }, targetId);
 
+      if (profile?.preferences?.notificationsEnabled) {
+        notificationService.notify('Alerta Estratégico 🚀', {
+          body: insight.substring(0, 120) + '...'
+        });
+      }
+
       await profileRepository.updateProfile(targetId, {
         aimeeMetadata: {
           ...profile?.aimeeMetadata,
@@ -552,6 +566,12 @@ export function useAimeeActions(
           status: currentStatus === 'done' ? 'todo' : 'done' as any
         }, targetId);
         showToast(currentStatus === 'done' ? 'Tarefa aberta' : 'Tarefa concluída', 'success', 2000);
+
+        if (profile?.preferences?.notificationsEnabled && currentStatus !== 'done') {
+            notificationService.notify('Tarefa Concluída! ✅', {
+              body: 'Mais um passo rumo ao sucesso familiar.'
+            });
+        }
       } catch (err) {
         showToast('Erro ao atualizar tarefa', 'error');
       }
