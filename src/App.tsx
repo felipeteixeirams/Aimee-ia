@@ -794,7 +794,7 @@ export default function App() {
                 handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
                 handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
                 handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
-                handleFinishShopping={() => manageShopping.finish(activeSpace || user!.uid)}
+                handleFinishShopping={(cartTotal, recordedPrices, recordedQuantities) => manageShopping.finish(cartTotal, recordedPrices, recordedQuantities, activeSpace || user!.uid)}
                 handleAddItem={(item) => manageShopping.addItem(item, activeSpace || user!.uid)}
                 profile={profile}
               />

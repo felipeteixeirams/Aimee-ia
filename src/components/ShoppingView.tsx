@@ -13,7 +13,7 @@ interface ShoppingViewProps {
   handleMoveToStock: (item: ShoppingItem) => void;
   handleMoveToList: (item: ShoppingItem) => void;
   handleDeleteShoppingItem: (item: ShoppingItem) => void;
-  handleFinishShopping: () => void;
+  handleFinishShopping: (cartTotal: number, recordedPrices: Record<string, number>, recordedQuantities: Record<string, number>) => void;
   handleAddItem: (item: Partial<ShoppingItem>) => void;
   profile: UserProfile | null;
 }
@@ -36,14 +36,18 @@ export const ShoppingView = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('grocery');
+  const [newItemQuantity, setNewItemQuantity] = useState('1');
 
   const onAddItem = () => {
     if (!newItemName.trim()) return;
+    const qty = parseInt(newItemQuantity, 10);
     handleAddItem({
       name: newItemName,
       category: newItemCategory,
+      quantity: isNaN(qty) || qty < 1 ? 1 : qty,
     });
     setNewItemName('');
+    setNewItemQuantity('1');
     setShowAddForm(false);
   };
 
@@ -64,21 +68,56 @@ export const ShoppingView = ({
     }
   };
 
-  const [isShoppingMode, setIsShoppingMode] = useState(false);
-  const [recordedPrices, setRecordedPrices] = useState<Record<string, number>>({});
+  const [isShoppingMode, setIsShoppingMode] = useState(() => {
+    const saved = localStorage.getItem('aimee_shopping_mode');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  const [recordedPrices, setRecordedPrices] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('aimee_recorded_prices');
+    return saved ? JSON.parse(saved) : {};
+  });
 
-  const cartTotal = Object.values(recordedPrices).reduce((acc, price) => acc + price, 0);
+  const [recordedQuantities, setRecordedQuantities] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('aimee_recorded_quantities');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('aimee_shopping_mode', JSON.stringify(isShoppingMode));
+  }, [isShoppingMode]);
+
+  React.useEffect(() => {
+    localStorage.setItem('aimee_recorded_prices', JSON.stringify(recordedPrices));
+  }, [recordedPrices]);
+
+  React.useEffect(() => {
+    localStorage.setItem('aimee_recorded_quantities', JSON.stringify(recordedQuantities));
+  }, [recordedQuantities]);
+
+  const cartTotal = Object.entries(recordedPrices).reduce((acc, [id, price]) => {
+    const qty = recordedQuantities[id] || 1;
+    return acc + (price * qty);
+  }, 0);
 
   const toggleShoppingMode = () => {
     setIsShoppingMode(!isShoppingMode);
     if (!isShoppingMode) {
       setRecordedPrices({});
+      setRecordedQuantities({});
+      
+      // Initialize quantities for all unpurchased items
+      const initialQtys: Record<string, number> = {};
+      shoppingList.filter(i => !i.isStock && !i.purchased).forEach(item => {
+        if (item.id) initialQtys[item.id] = item.quantity || 1;
+      });
+      setRecordedQuantities(initialQtys);
     }
   };
 
   const handlePriceChange = (itemId: string, price: string) => {
     const numPrice = parseFloat(price.replace(',', '.'));
-    if (!isNaN(numPrice)) {
+    if (!isNaN(numPrice) && numPrice > 0) {
       setRecordedPrices(prev => ({ ...prev, [itemId]: numPrice }));
     } else if (price === '') {
       const newPrices = { ...recordedPrices };
@@ -87,13 +126,23 @@ export const ShoppingView = ({
     }
   };
 
+  const updateQuantity = (itemId: string, delta: number) => {
+    setRecordedQuantities(prev => {
+      const current = prev[itemId] || 1;
+      const next = Math.max(1, current + delta);
+      return { ...prev, [itemId]: next };
+    });
+  };
+
   const onToggleWithLocation = async (item: ShoppingItem) => {
     let extra: Partial<ShoppingItem> = {};
     
-    // Only capture if marking as purchased
     if (!item.purchased && isShoppingMode) {
       if (item.id && recordedPrices[item.id]) {
         extra.lastPrice = recordedPrices[item.id];
+      }
+      if (item.id && recordedQuantities[item.id]) {
+        extra.quantity = recordedQuantities[item.id];
       }
       
       try {
@@ -165,17 +214,29 @@ export const ShoppingView = ({
                 )}>
                   {item.name}
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{item.quantity} {item.unit}</span>
-                </div>
+                {!item.purchased && item.id ? (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => updateQuantity(item.id!, -1)} className="w-5 h-5 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-500 font-bold">-</button>
+                    <span className="text-[10px] text-neutral-700 dark:text-neutral-300 font-bold w-4 text-center">{recordedQuantities[item.id] || item.quantity || 1}</span>
+                    <button onClick={() => updateQuantity(item.id!, 1)} className="w-5 h-5 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-500 font-bold">+</button>
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{item.unit}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{item.quantity} {item.unit}</span>
+                  </div>
+                )}
               </div>
 
               {!item.purchased && (
-                <div className="relative w-24">
+                <div className="relative w-24 shrink-0">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">R$</span>
                   <input 
-                    type="text"
-                    placeholder="0,00"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={item.id && recordedPrices[item.id] ? recordedPrices[item.id] : ''}
                     onChange={(e) => item.id && handlePriceChange(item.id, e.target.value)}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl pl-8 pr-3 py-2 text-xs font-black text-neutral-800 dark:text-white focus:ring-2 focus:ring-brand/30 outline-none"
                   />
@@ -191,7 +252,7 @@ export const ShoppingView = ({
             animate={{ scale: 1, opacity: 1 }}
             className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/40 active:scale-95 transition-all text-sm mx-auto block"
             onClick={() => {
-              handleFinishShopping();
+              handleFinishShopping(cartTotal, recordedPrices, recordedQuantities);
               toggleShoppingMode();
             }}
           >
@@ -259,6 +320,16 @@ export const ShoppingView = ({
                 />
               </div>
               <div className="flex gap-2">
+                <div className="w-20 space-y-1">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Qtd</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    value={newItemQuantity}
+                    onChange={(e) => setNewItemQuantity(e.target.value)}
+                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-brand/50 transition-all dark:text-white"
+                  />
+                </div>
                 <div className="flex-1 space-y-1">
                   <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Categoria</label>
                   <select 

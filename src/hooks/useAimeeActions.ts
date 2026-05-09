@@ -423,18 +423,36 @@ export function useAimeeActions(
         showToast('Erro ao remover item', 'error');
       }
     },
-    finish: async (targetId: string) => {
+    finish: async (cartTotal: number, recordedPrices: Record<string, number>, recordedQuantities: Record<string, number>, targetId: string) => {
       const itemsToMove = aimeeData.shoppingList.filter(i => i.purchased && !i.isStock);
-      if (itemsToMove.length === 0) return;
+      if (itemsToMove.length === 0 && cartTotal === 0) return;
 
       try {
-        await Promise.all(itemsToMove.map(item => 
-          shoppingRepository.update(item.id!, {
-            isStock: true,
-            purchased: false
-          }, targetId)
-        ));
-        showToast(`${itemsToMove.length} itens movidos para o estoque`, 'success', 2000);
+        if (itemsToMove.length > 0) {
+          await Promise.all(itemsToMove.map(item => 
+            shoppingRepository.update(item.id!, {
+              isStock: true,
+              purchased: false,
+              lastPrice: recordedPrices[item.id!] ?? item.lastPrice,
+              quantity: recordedQuantities[item.id!] ?? item.quantity
+            }, targetId)
+          ));
+        }
+
+        if (cartTotal > 0) {
+          await transactionRepository.create({
+            description: 'Compra de Supermercado',
+            amount: cartTotal,
+            type: 'expense',
+            category: 'Mercado',
+            date: new Date().toISOString(),
+            userId: targetId,
+            createdAt: new Date().toISOString(),
+          } as any, targetId);
+          showToast(`Gasto de R$ ${cartTotal.toFixed(2)} registrado e ${itemsToMove.length} itens movidos`, 'success', 3000);
+        } else if (itemsToMove.length > 0) {
+          showToast(`${itemsToMove.length} itens movidos para o estoque`, 'success', 2000);
+        }
         
         // E.1: Trigger insight after shopping
         triggerInsightSweep(targetId, 'shopping_finish');
