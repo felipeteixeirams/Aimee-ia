@@ -393,7 +393,7 @@ export const Login: React.FC<LoginProps> = ({
 
               <div className="mb-10">
                 <h2 className="text-3xl font-black text-white tracking-tighter">
-                  {step === 'email' ? 'E-mail' : 'Senha'}
+                  {step === 'email' ? 'E-mail' : (isNewUser ? 'Criar Senha' : 'Senha')}
                 </h2>
                 {step === 'password' && <p className="text-neutral-500 text-xs mt-2 font-medium truncate opacity-60">{email}</p>}
                 {error && (
@@ -414,7 +414,7 @@ export const Login: React.FC<LoginProps> = ({
                     type={step === 'email' ? 'email' : 'password'}
                     value={step === 'email' ? email : password}
                     onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
-                    placeholder={step === 'email' ? "Seu melhor e-mail" : "Sua senha segura"}
+                    placeholder={step === 'email' ? "Seu melhor e-mail" : (isNewUser ? "Crie uma senha (mín. 6 dígitos)" : "Sua senha segura")}
                     className="w-full max-w-[320px] bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700 mx-auto block"
                   />
                   {step === 'email' && <Mail className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
