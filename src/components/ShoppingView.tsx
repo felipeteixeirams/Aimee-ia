@@ -281,7 +281,7 @@ export const ShoppingView = ({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {shoppingFilter === 'list' && (
+          {shoppingFilter === 'list' && shoppingList.filter(i => !i.isStock).length > 0 && (
             <button 
               onClick={toggleShoppingMode}
               className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center transition-all hover:bg-brand/20 active:scale-95"
