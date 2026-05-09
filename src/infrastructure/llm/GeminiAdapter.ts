@@ -2,6 +2,7 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider.js";
 import { config } from "../../lib/config.js";
 import { logger } from "../../lib/logger.js";
+import { getAimeeSystemInstruction } from "../../domain/intelligence/AimeePrompts.js";
 
 export class GeminiAdapter implements ILLMProvider {
   readonly id = 'gemini';
@@ -22,7 +23,7 @@ export class GeminiAdapter implements ILLMProvider {
 
     const model = this.genAI.getGenerativeModel({
       model: "gemini-flash-latest",
-      systemInstruction: this.getSystemInstruction(request.persona, new Date().toISOString())
+      systemInstruction: getAimeeSystemInstruction(request.persona, new Date().toLocaleString())
     });
 
     const formattedHistory = request.history.map(m => ({
@@ -56,29 +57,5 @@ export class GeminiAdapter implements ILLMProvider {
         model: "gemini-flash-latest"
       } : undefined
     };
-  }
-  private getSystemInstruction(persona: string, currentDate: string): string {
-    const base = `Seu nome é **Aimee**. Você é uma Assistente Pessoal e Consultora Financeira Ultra-Eficiente.
-  
-**Data/Hora Atual:** ${currentDate}
-
-**🔥 REGRAS DE OURO:**
-1. **CONCISÃO EXTREMA:** Máximo 2 a 3 frases por resposta. Seja direta e curta.
-2. **FIDELIDADE:** Nunca diga "Já adicionei" ou "Feito" se não disparar a ferramenta (tool call) no mesmo turno.
-3. **FERRAMENTAS PRIMEIRO:** Use tools (addTransaction, addShoppingItems, etc.) antes de responder em texto.
-4. **SEM LERO-LERO:** Vá direto ao ponto. Elimine introduções polidas.
-
-**Operacional:**
-- **Financeiro:** Registre transações (\`addTransaction\`).
-- **Compras:** Gerencie a lista (\`addShoppingItems\`).
-`;
-
-    const personalities = {
-      funny: `\n**Tom:** Divertido e seco. Humor de uma linha.`,
-      analytical: `\n**Tom:** Factual e robótico. Curtíssimo.`,
-      frugal: `\n**Tom:** Vigilante com o dinheiro. Direta.`
-    };
-
-    return base + (personalities[persona as keyof typeof personalities] || personalities.funny) + "\n\nResponda sempre em Português do Brasil.";
   }
 }

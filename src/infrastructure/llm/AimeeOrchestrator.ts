@@ -5,6 +5,7 @@ import { allAimeeTools } from "../tools/AimeeTools.js";
 import { config } from "../../lib/config.js";
 import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider.js";
 import { GeminiAdapter } from "./GeminiAdapter.js";
+import { DeepSeekAdapter } from "./DeepSeekAdapter.js";
 import { OpenAICompatibleAdapter } from "./OpenAICompatibleAdapter.js";
 import { usageRepository } from "../repositories/UsageRepository.js";
 
@@ -20,16 +21,9 @@ export class AimeeOrchestrator {
     const gemini = new GeminiAdapter();
     if (gemini.isAvailable()) this.providers.set('gemini', gemini);
 
-    // DeepSeek Adapter
-    const deepseek = new OpenAICompatibleAdapter(
-      'deepseek',
-      config.deepseekApiKey,
-      "https://api.deepseek.com",
-      "deepseek-chat"
-    );
+    const deepseek = new DeepSeekAdapter();
     if (deepseek.isAvailable()) this.providers.set('deepseek', deepseek);
 
-    // OpenAI Adapter
     const openai = new OpenAICompatibleAdapter(
       'openai',
       config.openaiApiKey,

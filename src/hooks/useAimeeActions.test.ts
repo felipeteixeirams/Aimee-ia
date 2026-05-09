@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useAimeeActions } from './useAimeeActions.js';
 import { chatRepository } from '../infrastructure/repositories/index.js';
-import { orchestrator } from '../services/aiService.js';
+import { aimeeClientOrchestrator } from '../services/aiService.js';
 
 // Mock dependencies
 vi.mock('../lib/firebase.js', () => ({
@@ -23,7 +23,7 @@ vi.mock('../infrastructure/repositories/index.js', () => ({
 }));
 
 vi.mock('../services/aiService.js', () => ({
-  orchestrator: vi.fn().mockResolvedValue('Olá!')
+  aimeeClientOrchestrator: vi.fn().mockResolvedValue('Olá!')
 }));
 
 vi.mock('../components/ToastProvider.js', () => ({
@@ -74,14 +74,14 @@ describe('useAimeeActions', () => {
     );
 
     expect(chatRepository.create).toHaveBeenCalled();
-    expect(orchestrator).toHaveBeenCalled();
+    expect(aimeeClientOrchestrator).toHaveBeenCalled();
     expect(setTyping).toHaveBeenCalledWith(true);
     expect(typeText).toHaveBeenCalledWith('Olá!');
     expect(setTyping).toHaveBeenCalledWith(false);
   });
 
   it.skip('should handle actions in AI response', async () => {
-    vi.mocked(orchestrator).mockResolvedValue('Resposta com ação [ACTIONS: [{"id": "1", "label": "Ok", "value": "check", "type": "button"}]]');
+    vi.mocked(aimeeClientOrchestrator).mockResolvedValue('Resposta com ação [ACTIONS: [{"id": "1", "label": "Ok", "value": "check", "type": "button"}]]');
     
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
     

@@ -84,10 +84,34 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - [x] **Tarefa J.3 (2h)**: Fluxo de Descoberta Progressiva: Input único de e-mail que alterna dinamicamente entre login e registro baseado na existência do usuário.
 - [x] **Tarefa J.4 (2h)**: Sistema de Memória Local: Implementar "Lembrar de mim" e exibição do último perfil acessado.
 
+### 🧠 Entregável K: Arquitetura Aimee 2.0 (Inteligência Determinística)
+*Objetivo: Migrar de um modelo de "Prompt Livre" para um fluxo de "Pipeline de Inteligência" modular e confiável.*
+- [x] **Tarefa K.1 (4h)**: Implementar **Intent Router** (Classificador de Intenção).
+  - *Status: Criado `src/ai/IntentRouter.ts` com heurísticas iniciais e suporte para roteamento modular.*
+- [ ] **Tarefa K.2 (6h)**: Refatorar **Skills Especializadas** para lógica determinística.
+  - *Status: Em andamento. `aiService.ts` atualizado para priorizar ferramentas e concisão extrema.*
+- [x] **Tarefa K.3 (6h)**: Desenvolver o **Insight Engine** e **Confidence Layer**.
+  - *Status: Criado `src/ai/InsightEngine.ts` com suporte a níveis de confiança (confirmed, inferred) baseados em dados reais.*
+- [x] **Tarefa K.4 (4h)**: Otimização de Tokens e Concisão.
+  - *Status: Regras de Ouro implementadas no `aiService.ts` (máximo 2 frases, proibição de estimativas fictícias).*
+
+### 🧹 Entregável L: Harmonização Arquitetural e Limpeza
+*Objetivo: Uniformizar o código, eliminar redundâncias e garantir que todos os adaptadores sigam os mesmos padrões.*
+- [x] **Tarefa L.1 (4h)**: Padronização de Adapters LLM.
+  - *Status: Unificado `getAimeeSystemInstruction` em `AimeePrompts.ts`. Gemini, OpenAI e DeepSeek agora usam o mesmo "DNA" de prompt.*
+- [x] **Tarefa L.2 (4h)**: Consolidação de Orquestradores.
+  - *Status: Renomeado `orchestrator` para `aimeeClientOrchestrator` (frontend). Backend segue usando `AimeeOrchestrator` (singleton).*
+- [x] **Tarefa L.3 (2h)**: Reorganização de Pastas.
+  - *Status: Criado `src/domain/intelligence`. Movidos `IntentRouter` e `InsightEngine` para lá.*
+- [x] **Tarefa L.4 (2h)**: Auditoria de Adapters.
+  - *Status: Criado `DeepSeekAdapter.ts` explícito. Removidos prompts legados do adapter OpenAI.*
+
 ---
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-09**: Implementadas as fundações da **Arquitetura Aimee 2.0**: `IntentRouter`, `InsightEngine` e refatoração do `aiService` para concisão extrema (máximo 2 frases) e fidelidade aos dados (fim das alucinações de custos/estoque).
+- **2026-05-09**: Início da definição da **Arquitetura Aimee 2.0**. Objetivo: Reduzir alucinações, custos de tokens e aumentar a previsibilidade através de lógica determinística fora do prompt.
 - **2026-05-04**: Início da Etapa 10. Design de transição para interface "Elite" inspirada em ChatGPT/Copilot, com foco em animações hapticas e layout mobile-first.
 - **2026-05-03**: Finalização da Etapa 9. Implementação de Autenticação Híbrida (E-mail/Senha + Google), fluxo de registro em 2 etapas, recuperação de senha e restrições de domínio para Google Calendar.
 - **2026-05-02**: Finalização da Etapa 8 (Premium UI/UX). Aimee agora possui uma estética moderna inspirada nos principais players de IA, com navegação flutuante, fontes premium (Outfit) e micro-interações fluidas.
@@ -114,5 +138,5 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 ---
 
 ## 🎯 Atividade Iniciada agora
-**Etapa 10**: Modernização da Experiência de Login (Inspirada em ChatGPT/Copilot).
+**Arquitetura Aimee 2.0**: Refatoração do `aiService.ts` e `AimeeOrchestrator` para o modelo de Inteligência Determinística e Modular.
 

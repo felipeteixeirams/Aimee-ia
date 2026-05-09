@@ -10,47 +10,24 @@ import { withRetry } from "../lib/retryUtils.js";
 import { config } from "../lib/config.js";
 import { usageRepository } from "../infrastructure/repositories/UsageRepository.js";
 import { logger } from "../lib/logger.js";
+import { getAimeeSystemInstruction } from "../domain/intelligence/AimeePrompts.js";
 
 // Initialize AI on frontend
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-// Only use direct Frontend AI if specifically configured and not in production environment ideally
-// or if we have a valid-looking key.
+// Only use direct Frontend AI if specifically configured
 const isValidKey = (key?: string) => key && key.length > 20 && !key.includes('your-');
 const genAI = isValidKey(geminiApiKey) ? new GoogleGenAI({ apiKey: geminiApiKey! }) : null;
 
 if (!genAI) {
-  console.log('[Aimee] API Key de Frontend ausente ou inválida. Operando via Backend somente.');
+  console.log('[AimeeClient] API Key de Frontend ausente ou inválida. Operando via Backend somente.');
 }
 
-const getSystemInstruction = (persona: string = 'funny', currentDate: string): string => {
-  const base = `Seu nome é **Aimee**. Você é uma Assistente Pessoal e Consultora Financeira Ultra-Eficiente.
-  
-**Data/Hora Atual:** ${currentDate}
-
-**🔥 REGRAS DE OURO (MUITO IMPORTANTE):**
-1. **CONCISÃO EXTREMA:** Suas respostas devem ser curtas (máximo 2 a 3 frases). Nunca mande blocos grandes de texto.
-2. **FIDELIDADE TOTAL:** Nunca afirme que "Adicionou" ou "Fez" se não tiver disparado a ferramenta (tool call) correspondente no mesmo turno.
-3. **FERRAMENTAS PRIMEIRO:** Se o usuário pediu para anotar, comprar ou registrar, você DEVE usar a ferramenta antes de qualquer texto.
-4. **DIRETO AO PONTO:** Elimine saudações excessivas e conclusões longas.
-
-**Diretrizes:**
-- **Financeiro:** Registre transações (\`addTransaction\`).
-- **Compras:** Gerencie a lista (\`addShoppingItems\`).
-- **Sugestões:** Use \`[SUGGESTION: ...]\` para dicas rápidas na interface.
-- **Aviso:** "*Valide dados antes de decisões críticas.*" apenas para projeções fiscais complexas.`;
-
-  const personalities = {
-    funny: `\n**Tom:** Divertido e seco. Humor de uma linha.`,
-    analytical: `\n**Tom:** Factual e robótico. Curtíssimo.`,
-    frugal: `\n**Tom:** Protetora do dinheiro. Direta e vigilante.`
-  };
-
-  return base + (personalities[persona as keyof typeof personalities] || personalities.funny) + "\n\nResponda sempre em Português do Brasil.";
-};
-
-export const orchestrator = async (
+/**
+ * Aimee Client Orchestrator
+ * Coordena a inteligência local (Gemini) e remota (Backend/DeepSeek)
+ */
+export const aimeeClientOrchestrator = async (
   prompt: string, 
   history: ChatMessage[], 
   userId: string, 
@@ -68,9 +45,9 @@ export const orchestrator = async (
   const activeUserId = targetUserId || userId;
   
   const callAI = async () => {
-    // Se o provedor não for Gemini, usamos a API do backend
-    if (provider !== 'gemini') {
-      console.log(`[Aimee] Roteando para o backend (Provedor: ${provider})`);
+    // 1. Roteamento para o Backend (Provedores Externos ou Fallback)
+    if (provider !== 'gemini' || !genAI) {
+      console.log(`[AimeeClient] Roteando para o backend (Provedor: ${provider})`);
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,101 +82,65 @@ export const orchestrator = async (
       };
     }
 
-    // Fluxo direto do Gemini no Frontend (Recomendado pela Skill)
-    if (genAI) {
-      console.log(`[Aimee] Tentando Gemini no Frontend...`);
-      try {
-        const contextString = `
+    // 2. Execução Local (Gemini Frontend)
+    console.log(`[AimeeClient] Executando Gemini localmente...`);
+    try {
+      const contextString = `
 [CONTEXTO ATUAL]
-Tarefas: ${JSON.stringify(tasks.slice(0, 10))}
-Finanças: ${JSON.stringify(transactions.slice(0, 10))}
-Compras: ${JSON.stringify(shoppingList.slice(0, 10))}
+Tarefas: ${JSON.stringify(tasks.slice(0, 5))}
+Finanças: ${JSON.stringify(transactions.slice(0, 5))}
+Compras: ${JSON.stringify(shoppingList.slice(0, 5))}
 `;
-        
-        const fullPrompt = `${prompt}\n\n${contextString}`;
-        const formattedHistory = history.map(msg => ({
-          role: msg.role === 'user' ? ('user' as const) : ('model' as const),
-          parts: [{ text: msg.content }]
-        })).slice(-10);
+      
+      const fullPrompt = `${prompt}\n\n${contextString}`;
+      const formattedHistory = history.map(msg => ({
+        role: msg.role === 'user' ? ('user' as const) : ('model' as const),
+        parts: [{ text: msg.content }]
+      })).slice(-10);
 
-        const parts: any[] = [{ text: fullPrompt }];
-        if (audio) {
-          parts.push({
-            inlineData: {
-              data: audio.data,
-              mimeType: audio.mimeType
-            }
-          });
-        }
-
-        const response: GenerateContentResponse = await genAI.models.generateContent({
-          model: "gemini-flash-latest",
-          contents: [
-            ...formattedHistory,
-            { role: "user", parts }
-          ],
-          config: {
-            systemInstruction: getSystemInstruction(persona, new Date().toLocaleString()),
-            tools: [{ functionDeclarations: allAimeeTools } as any]
+      const parts: any[] = [{ text: fullPrompt }];
+      if (audio) {
+        parts.push({
+          inlineData: {
+            data: audio.data,
+            mimeType: audio.mimeType
           }
         });
-
-        // Audit usage if direct frontend
-        if (response.usageMetadata) {
-          usageRepository.logUsage({
-            userId: activeUserId,
-            model: "gemini-flash-latest",
-            promptTokens: response.usageMetadata.promptTokenCount || 0,
-            completionTokens: response.usageMetadata.candidatesTokenCount || 0,
-            totalTokens: response.usageMetadata.totalTokenCount || 0,
-            context: contextType
-          }).catch(err => logger.error('Falha ao registrar auditoria de tokens (local)', { err }));
-        }
-
-        return {
-          content: response.text || "",
-          functionCalls: response.functionCalls
-        };
-      } catch (err: any) {
-        console.warn(`[Aimee] Falha no Gemini Frontend, tentando fallback para backend...`, err);
-        // Fallback para o backend se o Gemini local falhar
       }
+
+      const response: GenerateContentResponse = await genAI.models.generateContent({
+        model: "gemini-flash-latest",
+        contents: [
+          ...formattedHistory,
+          { role: "user", parts }
+        ],
+        config: {
+          systemInstruction: getAimeeSystemInstruction(persona, new Date().toLocaleString()),
+          tools: [{ functionDeclarations: allAimeeTools } as any]
+        }
+      });
+
+      if (response.usageMetadata) {
+        usageRepository.logUsage({
+          userId: activeUserId,
+          model: "gemini-flash-latest",
+          promptTokens: response.usageMetadata.promptTokenCount || 0,
+          completionTokens: response.usageMetadata.candidatesTokenCount || 0,
+          totalTokens: response.usageMetadata.totalTokenCount || 0,
+          context: contextType
+        }).catch(err => logger.error('Falha ao registrar auditoria de tokens', { err }));
+      }
+
+      return {
+        content: response.text || "",
+        functionCalls: response.functionCalls
+      };
+    } catch (err: any) {
+      console.warn(`[AimeeClient] Falha local, tentando backend como fallback...`, err);
+      // Fallback automático para o backend
+      provider = 'deepseek' as any; 
+      return callAI(); 
     }
-
-    // Se o Gemini não estiver configurado ou falhar, roteamos para o backend
-    console.log(`[Aimee] Roteando para o backend (Motivo: Gemini indisponível ou erro)`);
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt,
-        history: history.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }]
-        })).slice(-10),
-        persona,
-        provider: provider === 'gemini' ? undefined : provider, // Se era gemini e falhou, deixa o orchestrator escolher o melhor reserva
-        userId: activeUserId,
-        contextType,
-        context: {
-          tasks: tasks.slice(0, 10),
-          finance: transactions.slice(0, 10),
-          shopping: shoppingList.slice(0, 10)
-        },
-        audio
-      })
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "Erro na comunicação com o servidor de IA");
-    }
-
-    const data = await response.json();
-    return {
-      content: data.content || "",
-      functionCalls: data.functionCalls
-    };
   };
 
   try {

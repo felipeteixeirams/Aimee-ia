@@ -33,7 +33,7 @@ import {
   getDocFromServer,
   getDocs
 } from 'firebase/firestore';
-import { orchestrator } from './services/aiService.js';
+import { aimeeClientOrchestrator } from './services/aiService.js';
 import { fetchGoogleCalendarEvents } from './services/calendarService.js';
 import { 
   ChatMessage, Transaction, ShoppingItem, UserProfile, Share, FinancialGoal, 

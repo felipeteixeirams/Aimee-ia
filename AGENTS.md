@@ -5,7 +5,7 @@ Toda interação com LLM deve ser auditada para controle de custos e monitoramen
 - **Repositório**: `UsageRepository` salva em `llm_usage` (coleção global).
 - **Dados Capturados**: `userId`, `model`, `promptTokens`, `completionTokens`, `totalTokens`, `context` (ex: chat, insight).
 - **Boas Práticas**:
-  - O orquestrador (`AimeeOrchestrator` no backend e `orchestrator` no frontend) cuida do log automaticamente.
+  - O orquestrador (`AimeeOrchestrator` no backend e `aimeeClientOrchestrator` no frontend) cuida do log automaticamente.
   - Ao adicionar novos provedores ou fluxos de IA, garanta que os metadados de `usage` sejam extraídos e passados para o repositório.
 
 ## PWA & Performance

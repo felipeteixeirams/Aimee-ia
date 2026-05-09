@@ -14,7 +14,7 @@ import {
   configRepository 
 } from '../infrastructure/repositories/index.js';
 import { User } from 'firebase/auth';
-import { orchestrator } from '../services/aiService.js';
+import { aimeeClientOrchestrator } from '../services/aiService.js';
 import { fetchGoogleCalendarEvents } from '../services/calendarService.js';
 import { generateRecurrenceInstances } from '../lib/recurrenceUtils.js';
 import { logger } from '../lib/logger.js';
@@ -83,7 +83,7 @@ export function useAimeeActions(
 
     while (retryCount <= maxRetries) {
       try {
-        response = await orchestrator(
+        response = await aimeeClientOrchestrator(
           text, 
           aimeeData.messages, 
           user.uid, 
@@ -483,7 +483,7 @@ export function useAimeeActions(
     if (!prompt) return;
 
     try {
-      let insight = await orchestrator(
+      let insight = await aimeeClientOrchestrator(
         `[SISTEMA: GERE UM INSIGHT PREMIUM ESTRATÉGICO] ${prompt}`,
         [], 
         targetId,
