@@ -106,6 +106,13 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - [x] **Tarefa L.4 (2h)**: Auditoria de Adapters.
   - *Status: Criado `DeepSeekAdapter.ts` explícito. Removidos prompts legados do adapter OpenAI.*
 
+### 📍 Entregável M: Serviços de Localização e Robustez
+*Objetivo: Garantir que funcionalidades baseadas em localização funcionem corretamente e com feedback claro.*
+- [x] **Tarefa M.1 (2h)**: Correção do erro 500 no Proxy de Localização.
+  - *Status: Melhorado o tratamento de erros em `routes.ts` e `locationService.ts`. Agora retorna 403/400 com mensagens claras em vez de 500 genérico.*
+- [ ] **Tarefa M.2 (2h)**: Implementação de Fallback de Busca.
+  - *Critério: Se a API falhar, permitir que o usuário digite o local ou use busca por texto simples.*
+
 ---
 
 ## 🚀 Log de Progresso Detalhado

@@ -150,26 +150,47 @@ Compras: ${JSON.stringify(context.shopping || [])}
     }
   });
 
-  // Google Places Proxy Route
   fastify.get("/location/nearby-markets", async (req: FastifyRequest<{ Querystring: { lat: string, lng: string } }>, reply: FastifyReply) => {
     const { lat, lng } = req.query;
     const apiKey = config.google.mapsApiKey;
 
+    if (!lat || !lng) {
+      reply.status(400).send({ error: "Latitude e longitude são obrigatórias." });
+      return;
+    }
+
     if (!apiKey) {
-      reply.status(500).send({ error: "Chave da API do Google Maps não configurada." });
+      logger.warn("Google Maps API Key missing in request to /location/nearby-markets");
+      reply.status(403).send({ error: "Serviço de localização não configurado (chave ausente)." });
       return;
     }
 
     try {
-      const radius = 2000;
+      const radius = 5000; // Aumentado para 5km para melhor chance de resultados
       const type = "supermarket";
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}`;
 
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
 
+      if (data.status === "ZERO_RESULTS") {
+        return { results: [] };
+      }
+
       if (data.status !== "OK") {
-        throw new Error(`Google Maps API Error: ${data.status} ${data.error_message || ""}`);
+        const errorMsg = data.error_message || data.status;
+        logger.error("Google Maps API Error", { status: data.status, message: errorMsg });
+        
+        if (data.status === "REQUEST_DENIED") {
+          reply.status(403).send({ error: "Acesso negado à API do Google Maps. Verifique se a chave é válida e se a Places API está ativada." });
+          return;
+        }
+        
+        throw new Error(`Google Maps API Error: ${data.status}`);
       }
 
       const results = data.results.map((place: any) => ({
@@ -177,13 +198,14 @@ Compras: ${JSON.stringify(context.shopping || [])}
         address: place.vicinity,
         rating: place.rating,
         placeId: place.place_id,
-        distance: "Calcular"
+        location: place.geometry?.location,
+        distance: "Próximo"
       }));
 
       return { results };
     } catch (error: any) {
-      logger.error("Nearby Markets Error", { error: error.message });
-      reply.status(500).send({ error: "Erro ao buscar mercados próximos." });
+      logger.error("Nearby Markets Exception", { error: error.message, stack: error.stack });
+      reply.status(500).send({ error: "Erro interno ao buscar mercados próximos." });
     }
   });
 

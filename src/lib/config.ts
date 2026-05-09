@@ -185,7 +185,11 @@ export function validateConfig(): boolean {
       console.warn(JSON.stringify(errorDetail, null, 2));
       console.warn('!'.repeat(50) + '\n\n');
     }
-    return true; // Retornamos true para não travar o processo da Vercel
+    return false; // Retornamos false indicando erro
+  }
+  
+  if (!config.google.mapsApiKey) {
+    logger.warn('Google Maps API Key missing. Nearby markets feature will be disabled.');
   }
   
   if (missingRecommended.length > 0) {

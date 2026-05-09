@@ -23,7 +23,12 @@ export const locationService = {
   async findNearbyMarkets(lat: number, lng: number): Promise<MarketLocation[]> {
     try {
       const response = await fetch(`/api/location/nearby-markets?lat=${lat}&lng=${lng}`);
-      if (!response.ok) throw new Error('Falha ao buscar mercados próximos.');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Falha ao buscar mercados próximos.');
+      }
+      
       const data = await response.json();
       return data.results || [];
     } catch (error: any) {
