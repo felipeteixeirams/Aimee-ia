@@ -12,6 +12,7 @@ import { usageRepository } from "../infrastructure/repositories/UsageRepository.
 import { logger } from "../lib/logger.js";
 import { IntentRouter } from "../domain/intelligence/IntentRouter.js";
 import { InsightEngine, AimeeInsight } from "../domain/intelligence/InsightEngine.js";
+import { getAimeeSystemInstruction } from "../domain/intelligence/AimeePrompts.js";
 
 // Initialize AI on frontend
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();

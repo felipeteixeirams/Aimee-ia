@@ -72,7 +72,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from './lib/utils.js';
+import { cn, safeFormatDate } from './lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from './hooks/useAuth.js';
@@ -198,8 +198,8 @@ export default function App() {
     startOfWeek.setHours(0, 0, 0, 0);
 
     const weeklySpending = transactions
-      .filter(t => t.type === 'expense' && new Date(t.date) >= startOfWeek)
-      .reduce((acc, t) => acc + t.amount, 0);
+      .filter(t => t.type === 'expense' && t.date && new Date(t.date) >= startOfWeek)
+      .reduce((acc, t) => acc + (t.amount || 0), 0);
 
     // Update profile if spending changed or points need updating
     if (weeklySpending !== (profile.gamification?.currentWeeklySpending ?? 0)) {
@@ -414,7 +414,10 @@ export default function App() {
   };
 
   const formatDateSeparator = (dateStr: string) => {
+    if (!dateStr) return 'Data indefinida';
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Data inválida';
+
     const now = new Date();
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
@@ -518,11 +521,11 @@ export default function App() {
     }).reverse();
 
     last7Days.forEach(date => {
-      const dayTransactions = transactions.filter(t => t.date.startsWith(date));
-      const income = dayTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-      const expense = dayTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+      const dayTransactions = transactions.filter(t => t.date?.startsWith(date));
+      const income = dayTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + (t.amount || 0), 0);
+      const expense = dayTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + (t.amount || 0), 0);
       data.push({
-        name: format(new Date(date), 'dd/MM', { locale: ptBR }),
+        name: safeFormatDate(date, 'dd/MM'),
         income,
         expense
       });
@@ -533,10 +536,10 @@ export default function App() {
   const categoryData = useMemo(() => {
     const data: { name: string; value: number }[] = [];
     const expenses = transactionsByPeriod.filter(t => t.type === 'expense');
-    const cats = Array.from(new Set(expenses.map(t => t.category))) as string[];
+    const cats = Array.from(new Set(expenses.map(t => t.category).filter(Boolean))) as string[];
     
     cats.forEach(cat => {
-      const total = expenses.filter(t => t.category === cat).reduce((acc, t) => acc + t.amount, 0);
+      const total = expenses.filter(t => t.category === cat).reduce((acc, t) => acc + (t.amount || 0), 0);
       data.push({ name: cat, value: total });
     });
     return data.sort((a, b) => b.value - a.value);
@@ -549,10 +552,13 @@ export default function App() {
     const data = days.map(day => ({ name: day, value: 0 }));
     
     transactionsByPeriod
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === 'expense' && t.date)
       .forEach(t => {
-        const dayIndex = new Date(t.date).getDay();
-        data[dayIndex].value += t.amount;
+        const d = new Date(t.date);
+        if (!isNaN(d.getTime())) {
+          const dayIndex = d.getDay();
+          data[dayIndex].value += (t.amount || 0);
+        }
       });
     return data;
   }, [transactionsByPeriod]);

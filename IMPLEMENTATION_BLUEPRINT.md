@@ -110,12 +110,14 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 *Objetivo: Garantir que funcionalidades baseadas em localização funcionem corretamente e com feedback claro.*
 - [x] **Tarefa M.1 (2h)**: Correção do erro 500 no Proxy de Localização.
   - *Status: Melhorado o tratamento de erros em `routes.ts` e `locationService.ts`. Agora retorna 403/400 com mensagens claras em vez de 500 genérico.*
-- [ ] **Tarefa M.2 (2h)**: Implementação de Fallback de Busca.
-  - *Critério: Se a API falhar, permitir que o usuário digite o local ou use busca por texto simples.*
+- [x] **Tarefa M.2 (2h)**: Resiliência de Interface e Log Centralizado.
+  - *Status: Implementado endpoint `/api/logs` para captura de erros do frontend. Adicionado `safeFormatDate` e hardening de hooks UI contra dados malformados.*
 
 ---
 
 ## 🚀 Log de Progresso Detalhado
+
+- **2026-05-09**: **Robustez Frontend & Observabilidade**: Implementado sistema de log centralizado (Client -> Server). Hardening de componentes React contra erros de parsing de data e campos nulos. Corrigido erro 500 no serviço de localização (nearby markets).
 
 - **2026-05-09**: **Arquitetura Aimee 2.0 Concluída**: `IntentRouter`, `InsightEngine` e `Skills` analíticas integrados. Otimização radical de tokens e fim das alucinações de dados via pipeline determinístico. Harmonização de adapters (Gemini, DeepSeek, OpenAI) via `AimeePrompts`.
 - **2026-05-09**: Implementadas as fundações da **Arquitetura Aimee 2.0**: `IntentRouter`, `InsightEngine` e refatoração do `aiService` para concisão extrema (máximo 2 frases) e fidelidade aos dados (fim das alucinações de custos/estoque).

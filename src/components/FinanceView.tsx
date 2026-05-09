@@ -4,7 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Transaction, FinancialGoal, UserProfile, Period, Tab } from '../types/index.js';
-import { cn } from '../lib/utils.js';
+import { cn, safeFormatDate } from '../lib/utils.js';
 import React, { useMemo } from 'react';
 
 interface FinanceViewProps {
@@ -601,7 +601,7 @@ export const FinanceView = ({
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase truncate max-w-[80px]">{t.category}</span>
                     <span className="w-1 h-1 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />
-                    <span className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase shrink-0">{format(new Date(t.date), 'dd MMM', { locale: ptBR })}</span>
+                    <span className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase shrink-0">{safeFormatDate(t.date, 'dd MMM')}</span>
                   </div>
                 </div>
               </div>

@@ -10,21 +10,44 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: string | null;
+  errorId: string | null;
 }
 
 export class GlobalErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
-    errorInfo: null
+    errorInfo: null,
+    errorId: null
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: error.message };
+    const errorId = Math.random().toString(36).substring(2, 9).toUpperCase();
+    return { 
+      hasError: true, 
+      error, 
+      errorInfo: error.message,
+      errorId
+    };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Log to server
+    fetch('/api/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        level: 'error',
+        message: error.message,
+        errorId: this.state.errorId,
+        details: {
+          componentStack: errorInfo.componentStack,
+          stack: error.stack
+        }
+      })
+    }).catch(err => console.error('Failed to log error to server:', err));
   }
 
   private handleReset = () => {
@@ -99,7 +122,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             </div>
 
             <p className="mt-8 text-[10px] text-neutral-400 font-medium italic">
-              ID do Erro: {Math.random().toString(36).substring(2, 9).toUpperCase()}
+              ID do Erro: {this.state.errorId}
             </p>
           </motion.div>
         </div>

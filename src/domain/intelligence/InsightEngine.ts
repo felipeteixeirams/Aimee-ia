@@ -56,12 +56,12 @@ export class InsightEngine {
 
     // 3. Previsão de Consumo (Estatística Determinística)
     const milkPurchases = shoppingList
-      .filter(i => i.name.toLowerCase().includes('leite') && i.purchasedAt)
-      .sort((a, b) => new Date(b.purchasedAt!).getTime() - new Date(a.purchasedAt!).getTime());
+      .filter(i => i.name.toLowerCase().includes('leite') && i.lastPurchasedAt)
+      .sort((a, b) => new Date(b.lastPurchasedAt!).getTime() - new Date(a.lastPurchasedAt!).getTime());
 
     if (milkPurchases.length >= 2) {
-      const latest = new Date(milkPurchases[0].purchasedAt!);
-      const previous = new Date(milkPurchases[1].purchasedAt!);
+      const latest = new Date(milkPurchases[0].lastPurchasedAt!);
+      const previous = new Date(milkPurchases[1].lastPurchasedAt!);
       const diffDays = Math.ceil((latest.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24));
       
       const today = new Date();

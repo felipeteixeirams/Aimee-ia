@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info, Users, RotateCcw } from 'lucide-react';
 import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage, RecurrenceType, Share } from '../types/index.js';
-import { cn } from '../lib/utils.js';
+import { cn, safeFormatDate } from '../lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useState, useMemo } from 'react';
@@ -221,8 +221,8 @@ export const RoutinesView = ({
           {events.length > 0 ? events.map((event) => (
             <div key={event.id} className="flex items-center gap-3 md:gap-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-neutral-900 rounded-xl flex flex-col items-center justify-center border border-neutral-100 dark:border-neutral-800 shrink-0">
-                <span className="text-[8px] md:text-[10px] font-bold text-brand uppercase leading-none mb-0.5">{format(new Date(event.date), 'MMM', { locale: ptBR })}</span>
-                <span className="text-sm md:text-lg font-black text-neutral-800 dark:text-white leading-none">{format(new Date(event.date), 'dd')}</span>
+                <span className="text-[8px] md:text-[10px] font-bold text-brand uppercase leading-none mb-0.5">{safeFormatDate(event.date, 'MMM')}</span>
+                <span className="text-sm md:text-lg font-black text-neutral-800 dark:text-white leading-none">{safeFormatDate(event.date, 'dd')}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs md:text-sm font-bold text-neutral-800 dark:text-white truncate">{event.title}</p>
@@ -323,7 +323,7 @@ export const RoutinesView = ({
                       isOverdue(task) ? "text-rose-500" : "text-neutral-400"
                     )}>
                       <Clock className="w-2 md:w-2.5 h-2 md:h-2.5" />
-                      {format(new Date(task.dueDate), 'dd/MM')}
+                      {safeFormatDate(task.dueDate, 'dd/MM')}
                       {task.time && <span className="ml-1 text-brand"> às {task.time}</span>}
                     </span>
                   )}

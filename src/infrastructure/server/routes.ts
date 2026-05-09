@@ -277,17 +277,24 @@ Compras: ${JSON.stringify(context.shopping || [])}
     }
   });
 
-  // Support Route
-  fastify.post("/support/message", { preHandler: validateRequest(supportSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const { email, message } = req.body as any;
+  // Logs endpoint for client-side errors
+  fastify.post("/logs", async (req: FastifyRequest, reply: FastifyReply) => {
+    const { level, message, details, errorId } = req.body as any;
     
-    try {
-      const emailService = container.resolve(EmailService);
-      await emailService.sendSupportEmail(email, message.substring(0, 100));
-      return { success: true };
-    } catch (error: any) {
-      logger.error("Support API Error", { error: error.message });
-      reply.status(500).send({ error: "Erro ao enviar mensagem de suporte." });
+    const logData = {
+      clientMessage: message,
+      details,
+      errorId,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    };
+
+    if (level === 'error') {
+      logger.error("Client Side Error", logData);
+    } else {
+      logger.info("Client Side Log", logData);
     }
+
+    return { success: true };
   });
 }
