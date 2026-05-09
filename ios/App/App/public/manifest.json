@@ -3,13 +3,13 @@
   "name": "Aimee - Inteligência Pessoal",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=192",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon.png",
+      "src": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=512",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"

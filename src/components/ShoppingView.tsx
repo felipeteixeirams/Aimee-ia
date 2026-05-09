@@ -101,18 +101,35 @@ export const ShoppingView = ({
   }, 0);
 
   const toggleShoppingMode = () => {
-    setIsShoppingMode(!isShoppingMode);
-    if (!isShoppingMode) {
+    const nextMode = !isShoppingMode;
+    setIsShoppingMode(nextMode);
+    
+    if (nextMode) {
+      // STARTING SHOPPING
       setRecordedPrices({});
-      setRecordedQuantities({});
-      
-      // Initialize quantities for all unpurchased items
       const initialQtys: Record<string, number> = {};
       shoppingList.filter(i => !i.isStock && !i.purchased).forEach(item => {
         if (item.id) initialQtys[item.id] = item.quantity || 1;
       });
       setRecordedQuantities(initialQtys);
+    } else {
+      // CANCELING SHOPPING
+      setRecordedPrices({});
+      setRecordedQuantities({});
+      localStorage.removeItem('aimee_recorded_prices');
+      localStorage.removeItem('aimee_recorded_quantities');
+      localStorage.removeItem('aimee_shopping_mode');
     }
+  };
+
+  const onFinish = () => {
+    handleFinishShopping(cartTotal, recordedPrices, recordedQuantities);
+    setIsShoppingMode(false);
+    setRecordedPrices({});
+    setRecordedQuantities({});
+    localStorage.removeItem('aimee_recorded_prices');
+    localStorage.removeItem('aimee_recorded_quantities');
+    localStorage.removeItem('aimee_shopping_mode');
   };
 
   const handlePriceChange = (itemId: string, price: string) => {
@@ -251,10 +268,7 @@ export const ShoppingView = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/40 active:scale-95 transition-all text-sm mx-auto block"
-            onClick={() => {
-              handleFinishShopping(cartTotal, recordedPrices, recordedQuantities);
-              toggleShoppingMode();
-            }}
+            onClick={onFinish}
           >
             Finalizar e Atualizar Estoque
           </motion.button>
