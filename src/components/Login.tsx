@@ -408,17 +408,17 @@ export const Login: React.FC<LoginProps> = ({
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="relative group">
+                <div className="relative group w-full max-w-[320px] mx-auto">
                   <input
                     autoFocus
                     type={step === 'email' ? 'email' : 'password'}
                     value={step === 'email' ? email : password}
                     onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
                     placeholder={step === 'email' ? "Seu melhor e-mail" : (isNewUser ? "Crie uma senha (mín. 6 dígitos)" : "Sua senha segura")}
-                    className="w-full max-w-[320px] bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700 mx-auto block"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-6 pr-14 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700 block"
                   />
-                  {step === 'email' && <Mail className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
-                  {step === 'password' && <Lock className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
+                  {step === 'email' && <Mail className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
+                  {step === 'password' && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
                 </div>
 
                 {step === 'password' && (
