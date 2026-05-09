@@ -49,7 +49,12 @@ describe('GeminiAdapter', () => {
   });
 
   it('should format history correctly for Gemini', async () => {
-    const history = [{ role: 'user', content: 'Olá' }];
+    const history = [{ 
+      role: 'user' as const, 
+      content: 'Olá',
+      userId: 'test-user',
+      timestamp: new Date().toISOString()
+    }];
     const response = await adapter.generateResponse({
       prompt: 'Tudo bem?',
       history,
