@@ -45,6 +45,25 @@ export class FinanceSkill {
       transactionCount: transactions.length
     };
   }
+
+  async getCategoryBreakdown(userId: string) {
+    const transactions = await transactionRepository.list([], userId);
+    const expenses = transactions.filter(t => t.type === 'expense');
+    
+    const breakdown: Record<string, number> = {};
+    expenses.forEach(t => {
+      const cat = t.category || 'others';
+      breakdown[cat] = (breakdown[cat] || 0) + (t.amount || 0);
+    });
+
+    return breakdown;
+  }
+
+  async getSavingsRate(userId: string) {
+    const summary = await this.getSummary(userId);
+    if (summary.totalIncome === 0) return 0;
+    return (summary.balance / summary.totalIncome) * 100;
+  }
 }
 
 export const financeSkill = new FinanceSkill();

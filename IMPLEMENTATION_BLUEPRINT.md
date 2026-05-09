@@ -88,8 +88,8 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 *Objetivo: Migrar de um modelo de "Prompt Livre" para um fluxo de "Pipeline de Inteligência" modular e confiável.*
 - [x] **Tarefa K.1 (4h)**: Implementar **Intent Router** (Classificador de Intenção).
   - *Status: Criado `src/ai/IntentRouter.ts` com heurísticas iniciais e suporte para roteamento modular.*
-- [ ] **Tarefa K.2 (6h)**: Refatorar **Skills Especializadas** para lógica determinística.
-  - *Status: Em andamento. `aiService.ts` atualizado para priorizar ferramentas e concisão extrema.*
+- [x] **Tarefa K.2 (6h)**: Refatorar **Skills Especializadas** para lógica determinística.
+  - *Status: Finalizado. Adicionados métodos analíticos (Savings Rate, Stock Report, Routine Health) permitindo que o `InsightEngine` forneça fatos brutos.*
 - [x] **Tarefa K.3 (6h)**: Desenvolver o **Insight Engine** e **Confidence Layer**.
   - *Status: Criado `src/ai/InsightEngine.ts` com suporte a níveis de confiança (confirmed, inferred) baseados em dados reais.*
 - [x] **Tarefa K.4 (4h)**: Otimização de Tokens e Concisão.
@@ -110,6 +110,7 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-09**: **Arquitetura Aimee 2.0 Concluída**: `IntentRouter`, `InsightEngine` e `Skills` analíticas integrados. Otimização radical de tokens e fim das alucinações de dados via pipeline determinístico. Harmonização de adapters (Gemini, DeepSeek, OpenAI) via `AimeePrompts`.
 - **2026-05-09**: Implementadas as fundações da **Arquitetura Aimee 2.0**: `IntentRouter`, `InsightEngine` e refatoração do `aiService` para concisão extrema (máximo 2 frases) e fidelidade aos dados (fim das alucinações de custos/estoque).
 - **2026-05-09**: Início da definição da **Arquitetura Aimee 2.0**. Objetivo: Reduzir alucinações, custos de tokens e aumentar a previsibilidade através de lógica determinística fora do prompt.
 - **2026-05-04**: Início da Etapa 10. Design de transição para interface "Elite" inspirada em ChatGPT/Copilot, com foco em animações hapticas e layout mobile-first.

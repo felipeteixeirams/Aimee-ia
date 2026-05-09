@@ -10,7 +10,8 @@ import { withRetry } from "../lib/retryUtils.js";
 import { config } from "../lib/config.js";
 import { usageRepository } from "../infrastructure/repositories/UsageRepository.js";
 import { logger } from "../lib/logger.js";
-import { getAimeeSystemInstruction } from "../domain/intelligence/AimeePrompts.js";
+import { IntentRouter } from "../domain/intelligence/IntentRouter.js";
+import { InsightEngine, AimeeInsight } from "../domain/intelligence/InsightEngine.js";
 
 // Initialize AI on frontend
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
@@ -45,14 +46,37 @@ export const aimeeClientOrchestrator = async (
   const activeUserId = targetUserId || userId;
   
   const callAI = async () => {
-    // 1. Roteamento para o Backend (Provedores Externos ou Fallback)
+    // 1. Identificar Intenção (Intent Router)
+    const intent = await IntentRouter.route(prompt, history, provider);
+    
+    // 2. Gerar Insights Baseados em Dados Reais (Insight Engine)
+    const insights = InsightEngine.generateInsights(transactions, shoppingList, tasks);
+    
+    // 3. Filtrar Insights Relevantes para a Intenção
+    const relevantInsights = insights.filter(ins => 
+      intent === 'chat_general' || ins.category === intent
+    ).slice(0, 3);
+
+    // 4. Montar Contexto Estruturado (Previsível)
+    const contextString = `
+[DADOS REAIS E VERIFICADOS]
+Intenção Identificada: ${intent}
+Insights Atuais: ${JSON.stringify(relevantInsights)}
+Dados Brutos (Amostra): ${JSON.stringify({
+      transactions: intent === 'finance' ? transactions.slice(0, 5) : [],
+      shopping: intent === 'shopping' ? shoppingList.slice(0, 5) : [],
+      tasks: intent === 'routine' ? tasks.slice(0, 5) : []
+    })}
+`;
+
+    // 5. Roteamento para o Backend (Provedores Externos ou Fallback)
     if (provider !== 'gemini' || !genAI) {
-      console.log(`[AimeeClient] Roteando para o backend (Provedor: ${provider})`);
+      console.log(`[AimeeClient] Roteando para o backend (Intenção: ${intent})`);
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt,
+          prompt: `${prompt}\n\n${contextString}`,
           history: history.map(msg => ({
             role: msg.role === 'user' ? 'user' : 'model',
             parts: [{ text: msg.content }]
@@ -62,9 +86,8 @@ export const aimeeClientOrchestrator = async (
           userId: activeUserId,
           contextType,
           context: {
-            tasks: tasks.slice(0, 10),
-            finance: transactions.slice(0, 10),
-            shopping: shoppingList.slice(0, 10)
+            intent,
+            insights: relevantInsights
           },
           audio
         })
@@ -82,16 +105,9 @@ export const aimeeClientOrchestrator = async (
       };
     }
 
-    // 2. Execução Local (Gemini Frontend)
-    console.log(`[AimeeClient] Executando Gemini localmente...`);
+    // 6. Execução Local (Gemini Frontend)
+    console.log(`[AimeeClient] Executando Gemini localmente (Intenção: ${intent})...`);
     try {
-      const contextString = `
-[CONTEXTO ATUAL]
-Tarefas: ${JSON.stringify(tasks.slice(0, 5))}
-Finanças: ${JSON.stringify(transactions.slice(0, 5))}
-Compras: ${JSON.stringify(shoppingList.slice(0, 5))}
-`;
-      
       const fullPrompt = `${prompt}\n\n${contextString}`;
       const formattedHistory = history.map(msg => ({
         role: msg.role === 'user' ? ('user' as const) : ('model' as const),

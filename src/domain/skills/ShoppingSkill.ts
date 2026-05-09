@@ -51,6 +51,18 @@ export class ShoppingSkill {
       lastPurchasedAt: new Date().toISOString()
     }, userId)));
   }
+
+  async getStockReport(userId: string) {
+    const items = await shoppingRepository.list([], userId);
+    const inStock = items.filter(i => i.isStock);
+    const missing = items.filter(i => !i.isStock && !i.purchased);
+
+    return {
+      stockCount: inStock.length,
+      missingCount: missing.length,
+      criticalItems: inStock.filter(i => (i.quantity || 0) <= 1)
+    };
+  }
 }
 
 export const shoppingSkill = new ShoppingSkill();

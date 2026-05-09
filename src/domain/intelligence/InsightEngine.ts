@@ -54,6 +54,46 @@ export class InsightEngine {
       });
     }
 
+    // 3. Previsão de Consumo (Estatística Determinística)
+    const milkPurchases = shoppingList
+      .filter(i => i.name.toLowerCase().includes('leite') && i.purchasedAt)
+      .sort((a, b) => new Date(b.purchasedAt!).getTime() - new Date(a.purchasedAt!).getTime());
+
+    if (milkPurchases.length >= 2) {
+      const latest = new Date(milkPurchases[0].purchasedAt!);
+      const previous = new Date(milkPurchases[1].purchasedAt!);
+      const diffDays = Math.ceil((latest.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24));
+      
+      const today = new Date();
+      const daysSinceLast = Math.ceil((today.getTime() - latest.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysSinceLast >= (diffDays - 1)) {
+        insights.push({
+          id: `predict-milk-${Date.now()}`,
+          category: 'shopping',
+          title: 'Previsão de Estoque',
+          message: `O leite costuma acabar a cada ${diffDays} dias. O último foi há ${daysSinceLast} dias. Adicionar à lista?`,
+          confidence: 'inferred',
+          sources: ['shoppingHistory'],
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    // 4. Rotinas e Atrasos
+    const overdueTasks = tasks.filter(t => t.status === 'todo' && t.dueDate && new Date(t.dueDate) < new Date());
+    if (overdueTasks.length > 0) {
+      insights.push({
+        id: `task-late-${Date.now()}`,
+        category: 'routine',
+        title: 'Tarefas Atrasadas',
+        message: `Você tem ${overdueTasks.length} tarefas pendentes que já passaram do prazo.`,
+        confidence: 'confirmed',
+        sources: ['tasks'],
+        createdAt: new Date().toISOString()
+      });
+    }
+
     return insights;
   }
 }

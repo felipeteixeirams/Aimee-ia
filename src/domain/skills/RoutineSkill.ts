@@ -78,6 +78,18 @@ export class RoutineSkill {
       await Promise.all(toDelete.map(t => t.id && taskRepository.delete(t.id, userId)));
     }
   }
+
+  async getRoutineHealth(userId: string) {
+    const tasks = await taskRepository.list([], userId);
+    const completed = tasks.filter(t => t.status === 'done');
+    const overdue = tasks.filter(t => t.status === 'todo' && t.dueDate && new Date(t.dueDate) < new Date());
+
+    return {
+      completionRate: tasks.length > 0 ? (completed.length / tasks.length) * 100 : 0,
+      overdueCount: overdue.length,
+      totalPending: tasks.filter(t => t.status === 'todo').length
+    };
+  }
 }
 
 export const routineSkill = new RoutineSkill();
