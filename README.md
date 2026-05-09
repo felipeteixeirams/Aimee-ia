@@ -22,19 +22,22 @@ Aimee é uma **Agente Orquestradora de Inteligência Pessoal** projetada para si
 - **Família e Compartilhamento**: Convide membros da família e gerencie o espaço doméstico de forma colaborativa com permissões de SuperAdmin.
 - **Agenda Multimodal**: Registro de eventos sociais sincronizados com as tarefas da casa.
 
-### 🤖 Inteligência Artificial (Aimee Orchestrator)
-- **Orquestração de Intenção**: Um núcleo inteligente que detecta intenção e seleciona automaticamente a "Skill" necessária.
-- **Comandos Naturais e Tool Calling**: Aimee decide quando invocar ferramentas como `addTransaction` ou `manageRoutines` de forma autônoma.
-- **Context Awareness**: A IA possui visibilidade do estado atual da casa (tarefas pendentes, gastos recentes) para oferecer respostas personalizadas.
-- **Personas Customizáveis**: Perfis que alteram o tom de voz e a prioridade de insights.
+### 🤖 Inteligência Artificial (Arquitetura Aimee 2.0)
+Aimee utiliza uma arquitetura híbrida determinística para garantir precisão e reduzir drasticamente alucinações.
+- **Intent Router**: Classifica a intenção do usuário antes do processamento, roteando para a Skill correta.
+- **Insight Engine & Confidence Layer**: Gera insights estruturados com níveis de confiança (*confirmed, inferred, weak*) baseados em evidências reais dos dados.
+- **Skills Analíticas**: Lógica determinística (cálculo de taxa de poupança, previsão de estoque, saúde da rotina) executada fora da LLM.
+- **Multi-Provedor**: Suporte nativo para **Google Gemini** e **DeepSeek** (via adapter compatível).
+- **Concisão Extrema**: Respostas otimizadas para serem curtas, diretas e factuais (máximo 2 frases).
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite
 - **Backend/API**: Express (Full-stack mode com `tsx`)
 - **Estilização**: Tailwind CSS 4
-- **Animações**: Motion (formely Framer Motion)
-- **IA/Orchestration**: Google GenAI SDK (`gemini-3-flash-preview`)
+- **Animações**: Motion (formely motion/react)
+- **IA/Orchestration**: Arquitetura Aimee 2.0 (Intent Router + Insight Engine)
+- **Modelos**: Gemini 1.5 Flash (Nativo/Local) e DeepSeek Chat (Backend)
 - **Persistência**: Firebase Firestore & Auth
 - **Utilidade**: `date-fns` para lógica de recorrência complexa
 
@@ -107,12 +110,12 @@ A aplicação estará disponível em `http://localhost:3000`. O volume está con
 
 ## 🏗️ Estrutura do Projeto (Clean Architecture)
 
-- `src/domain/`: Entidades básicas e regras de negócio puras (`BaseEntity`, etc.).
-- `src/infrastructure/`: Implementações técnicas e integrações:
-  - `llm/`: Orquestrador Aimee e lógica de seleção de modelos.
-  - `tools/`: Definições de ferramentas disponíveis para a IA (Function Calling).
-- `src/services/`: Serviços de aplicação que coordenam Firebase e UI.
-- `src/components/`: Interface do usuário modularizada e gamificada.
+- `src/domain/intelligence/`: Núcleo da Arquitetura 2.0 (`IntentRouter`, `InsightEngine`, `AimeePrompts`).
+- `src/domain/skills/`: Lógica analítica e operacional (Finance, Shopping, Routine).
+- `src/infrastructure/llm/`: Adapters especializados para diferentes provedores (Gemini, DeepSeek, OpenAI).
+- `src/infrastructure/tools/`: Definições de ferramentas disponíveis para a IA (Function Calling).
+- `src/services/`: Orquestradores de aplicação (Client e Server).
+- `src/components/`: Interface do usuário modularizada e PWA.
 - `src/lib/`: Utilitários e configurações (recurrence, logger, shadcn).
 
 ## 📜 Versão e Histórico
