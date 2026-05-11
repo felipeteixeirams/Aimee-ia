@@ -145,6 +145,29 @@
     @apply absolute inset-0 bg-linear-to-r from-brand/5 via-transparent to-brand/5 pointer-events-none;
   }
 
+  .skeleton {
+    background-color: rgb(229 231 235 / 0.6);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    border-radius: 0.5rem;
+  }
+
+  .dark .skeleton {
+    background-color: rgb(38 38 38 / 0.6);
+  }
+
+  .skeleton-text {
+    height: 0.75rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+    background-color: rgb(229 231 235 / 0.6);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    border-radius: 0.5rem;
+  }
+
+  .dark .skeleton-text {
+    background-color: rgb(38 38 38 / 0.6);
+  }
+
   .markdown-body {
     @apply text-[14px] leading-relaxed;
   }

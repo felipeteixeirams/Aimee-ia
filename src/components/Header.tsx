@@ -70,6 +70,7 @@ export function Header({
           <div className="relative" ref={menuRef}>
             <button 
               onClick={() => setShowNavMenu(!showNavMenu)}
+              aria-label="Menu de Navegação"
               className="w-10 h-10 flex items-center justify-center text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all active:scale-95"
             >
               <Menu className="w-6 h-6" />

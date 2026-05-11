@@ -144,8 +144,21 @@ export default function App() {
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [editValue, setEditValue] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [showInsightsModal, setShowInsightsModal] = useState(false);
+  useEffect(() => {
+    if (user && isApproved) {
+      const seen = localStorage.getItem('aimee_onboarding_seen');
+      if (!seen) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [user, isApproved]);
+  
+  const handleDismissOnboarding = () => {
+    localStorage.setItem('aimee_onboarding_seen', 'true');
+    setShowOnboarding(false);
+  };
   const [showAIDropdown, setShowAIDropdown] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [shoppingFilter, setShoppingFilter] = useState<'list' | 'stock'>('list');
   const [availableAIProviders, setAvailableAIProviders] = useState<string[]>([]);
 
@@ -706,6 +719,55 @@ export default function App() {
           onAction={handleAdminAction} 
           onClose={() => setShowAdminPanel(false)} 
         />
+      )}
+
+      {showOnboarding && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-brand via-rose-500 to-amber-500" />
+            <div className="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-brand" />
+            </div>
+            <h2 className="text-2xl font-display font-black text-center mb-2">Bem-vindo à Aimee</h2>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center mb-8 leading-relaxed">
+              Sua inteligência pessoal para finanças, rotinas e compras. Fale comigo como se fosse uma pessoa.
+            </p>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-neutral-50 dark:bg-neutral-800 rounded-xl flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5 text-neutral-400" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-0.5">Finanças</h3>
+                  <p className="text-[10px] text-neutral-400">Classificação automática e insights preditivos.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-neutral-50 dark:bg-neutral-800 rounded-xl flex items-center justify-center shrink-0">
+                  <ShoppingCart className="w-5 h-5 text-neutral-400" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-widest mb-0.5">Compras</h3>
+                  <p className="text-[10px] text-neutral-400">Lista inteligente que entende seu estoque.</p>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={handleDismissOnboarding}
+              className="w-full mt-8 py-4 bg-brand text-brand-foreground rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand/20 active:scale-95 transition-all"
+            >
+              Começar agora
+            </button>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Main Content */}

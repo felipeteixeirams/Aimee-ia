@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import middie from "@fastify/middie";
 import fastifyStatic from "@fastify/static";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import { logger } from "./src/lib/logger.js";
 import { validateConfig } from "./src/lib/config.js";
 import { requestLogger, globalErrorHandler } from "./src/infrastructure/server/middlewares.js";
@@ -27,6 +28,14 @@ async function startServer() {
 
   // 1. Plugins & Core Middlewares
   await fastify.register(cors);
+  await fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+    errorResponseBuilder: (req, context) => ({
+      error: "Muitas requisições",
+      message: `Limite de requisições excedido. Tente novamente em ${context.after}.`
+    })
+  });
   await fastify.register(middie);
   
   fastify.addHook('preHandler', requestLogger);

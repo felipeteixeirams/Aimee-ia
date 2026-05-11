@@ -8,10 +8,15 @@ import { GeminiAdapter } from "./GeminiAdapter.js";
 import { DeepSeekAdapter } from "./DeepSeekAdapter.js";
 import { OpenAICompatibleAdapter } from "./OpenAICompatibleAdapter.js";
 import { usageRepository } from "../repositories/UsageRepository.js";
+import { LRUCache } from "lru-cache";
 
 @singleton()
 export class AimeeOrchestrator {
   private providers: Map<string, ILLMProvider> = new Map();
+  private cache = new LRUCache<string, { content: string; usage: any }>({
+    max: 100, // Armazena até 100 respostas
+    ttl: 1000 * 60 * 5, // 5 minutos de cache
+  });
 
   constructor() {
     this.initializeProviders();
@@ -54,6 +59,17 @@ export class AimeeOrchestrator {
     contextType: string = 'chat'
   ): Promise<{ content: string; functionCalls?: any[]; usage?: any }> {
     
+    // Check Cache first (only for simple text requests without tools/audio)
+    const cacheKey = JSON.stringify({ prompt, history, persona, preferredProvider });
+    if (!audio && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey)!;
+      logger.info('Orchestrator: Cache hit!', { prompt: prompt.substring(0, 30) });
+      return { 
+        content: cached.content, 
+        usage: { ...cached.usage, cached: true } 
+      };
+    }
+
     const providersToTry = this.getOrderedProviders(preferredProvider);
 
     if (providersToTry.length === 0) {
@@ -78,6 +94,15 @@ export class AimeeOrchestrator {
 
         const response: LLMResponse = await provider.generateResponse(request);
         
+        // Cache successful text-only responses
+        if (!response.functionCalls || response.functionCalls.length === 0) {
+          const cacheKey = JSON.stringify({ prompt, history, persona, preferredProvider });
+          this.cache.set(cacheKey, { 
+            content: response.content, 
+            usage: response.usage 
+          });
+        }
+
         // Audit usage
         if (response.usage) {
           usageRepository.logUsage({

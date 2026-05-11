@@ -232,6 +232,33 @@ interface ChatViewProps {
   availableAIProviders: string[];
 }
 
+const ChatSkeleton = memo(({ GLOBAL_AIMEE_AVATAR }: { GLOBAL_AIMEE_AVATAR: string }) => (
+  <motion.div 
+    layout
+    initial={{ opacity: 0, y: 5 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="flex group gap-2.5 max-w-2xl mx-auto w-full flex-row"
+  >
+    <div className="shrink-0 flex flex-col justify-end pb-0.5 items-start">
+      <AimeeAvatar 
+        src={GLOBAL_AIMEE_AVATAR} 
+        size="sm" 
+        className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
+      />
+    </div>
+    <div className="bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 px-5 py-4 rounded-2xl rounded-tl-none shadow-sm min-w-[240px] flex flex-col gap-2">
+      <div className="skeleton-text w-full" />
+      <div className="skeleton-text w-[90%] opacity-70" />
+      <div className="skeleton-text w-[60%] opacity-40" />
+      <div className="flex gap-1 mt-1">
+        <div className="w-1.5 h-1.5 bg-brand/30 dark:bg-brand/50 rounded-full animate-bounce" />
+        <div className="w-1.5 h-1.5 bg-brand/30 dark:bg-brand/50 rounded-full animate-bounce [animation-delay:0.2s]" />
+        <div className="w-1.5 h-1.5 bg-brand/30 dark:bg-brand/50 rounded-full animate-bounce [animation-delay:0.4s]" />
+      </div>
+    </div>
+  </motion.div>
+));
+
 export const ChatView = memo(({
   messages,
   scrollRef,
@@ -405,27 +432,7 @@ export const ChatView = memo(({
           </motion.div>
         )}
         {isTyping && !filteredTypingContent && (
-          <motion.div 
-            layout
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex group gap-2.5 max-w-2xl mx-auto w-full flex-row"
-          >
-            <div className="shrink-0 flex flex-col justify-end pb-0.5 items-start">
-              <AimeeAvatar 
-                src={GLOBAL_AIMEE_AVATAR} 
-                size="sm" 
-                className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
-              />
-            </div>
-            <div className="bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm h-10 flex items-center">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce" />
-                <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:0.4s]" />
-              </div>
-            </div>
-          </motion.div>
+          <ChatSkeleton GLOBAL_AIMEE_AVATAR={GLOBAL_AIMEE_AVATAR} />
         )}
       </div>
 

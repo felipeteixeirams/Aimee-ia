@@ -126,7 +126,15 @@ export default async function (fastify: FastifyInstance) {
   });
 
   // AI Route
-  fastify.post("/ai", { preHandler: validateRequest(aiRequestSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
+  fastify.post("/ai", { 
+    preHandler: validateRequest(aiRequestSchema),
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req: FastifyRequest, reply: FastifyReply) => {
     const { prompt, history, persona, context, audio, provider, userId, contextType } = req.body as any;
 
     try {
