@@ -126,7 +126,30 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [calendarBlocked, setCalendarBlocked] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>('chat');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const saved = localStorage.getItem('aimee_active_tab');
+    return (saved as Tab) || 'chat';
+  });
+
+  const TABS: Tab[] = ['chat', 'finance', 'shopping', 'routines', 'settings'];
+
+  useEffect(() => {
+    localStorage.setItem('aimee_active_tab', activeTab);
+  }, [activeTab]);
+
+  const handleNextTab = () => {
+    const currentIndex = TABS.indexOf(activeTab);
+    if (currentIndex < TABS.length - 1) {
+      setActiveTab(TABS[currentIndex + 1]);
+    }
+  };
+
+  const handlePrevTab = () => {
+    const currentIndex = TABS.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(TABS[currentIndex - 1]);
+    }
+  };
   
   const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -771,145 +794,169 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden relative pb-0">
-        <div className="h-full max-w-5xl mx-auto flex flex-col">
-          <AnimatePresence mode="wait">
-          {activeTab === 'chat' && (
-            <ChatView 
-              messages={messages}
-              scrollRef={scrollRef}
-              handleScroll={handleScroll}
-              showScrollButton={showScrollButton}
-              scrollToBottom={scrollToBottom}
-              inputText={inputText}
-              setInputText={setInputText}
-              unreadInsights={unreadInsights}
-              handleGoToInsight={handleGoToInsight}
-              handleDismissInsight={async (id) => {
-                await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, id), { read: true });
+      <main className="flex-1 overflow-hidden relative pb-0 touch-pan-y">
+        <div className="h-full max-w-5xl mx-auto flex flex-col relative">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="flex-1 flex flex-col h-full"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.05}
+              onDragEnd={(_, info) => {
+                const swipeThreshold = 50;
+                const velocityThreshold = 200;
+                
+                if (Math.abs(info.offset.x) > swipeThreshold || Math.abs(info.velocity.x) > velocityThreshold) {
+                  if (info.offset.x > 0) {
+                    handlePrevTab();
+                  } else {
+                    handleNextTab();
+                  }
+                }
               }}
-              handleSendMessage={async (t, skip) => {
-                const content = typeof t === 'string' ? t : inputText;
-                if (!content?.trim()) return;
-                if (!t) setInputText('');
-                setTimeout(() => scrollToBottom('smooth'), 100);
-                await sendMessage(content, activeSpace, setIsTyping, (txt) => typeText(txt, 8), setTypingContent, skip);
-              }}
-              availableAIProviders={availableAIProviders}
-              handleSendVoiceMessage={async () => {
-                // Not used anymore as we transcribe in real-time
-              }}
-              isTyping={isTyping}
-              typingContent={typingContent}
-              formatDateSeparator={formatDateSeparator}
-              editingMessage={editingMessage}
-              setEditingMessage={setEditingMessage}
-              editValue={editValue}
-              setEditValue={setEditValue}
-              handleEditMessage={async (msg) => {
-                const val = editValue.trim();
-                if (!val || val === msg.content) return setEditingMessage(null);
-                await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, msg.id!), { content: val, timestamp: new Date().toISOString() });
-                setEditingMessage(null);
-              }}
-              copyToClipboard={copyToClipboard}
-              copiedId={copiedId}
-              profile={profile}
-              user={user}
-              GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
-            />
-          )}
+            >
+              {activeTab === 'chat' && (
+                <ChatView 
+                  messages={messages}
+                  scrollRef={scrollRef}
+                  handleScroll={handleScroll}
+                  showScrollButton={showScrollButton}
+                  scrollToBottom={scrollToBottom}
+                  inputText={inputText}
+                  setInputText={setInputText}
+                  unreadInsights={unreadInsights}
+                  handleGoToInsight={handleGoToInsight}
+                  handleDismissInsight={async (id) => {
+                    await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, id), { read: true });
+                  }}
+                  handleSendMessage={async (t, skip) => {
+                    const content = typeof t === 'string' ? t : inputText;
+                    if (!content?.trim()) return;
+                    if (!t) setInputText('');
+                    setTimeout(() => scrollToBottom('smooth'), 100);
+                    await sendMessage(content, activeSpace, setIsTyping, (txt) => typeText(txt, 8), setTypingContent, skip);
+                  }}
+                  availableAIProviders={availableAIProviders}
+                  handleSendVoiceMessage={async () => {
+                    // Not used anymore as we transcribe in real-time
+                  }}
+                  isTyping={isTyping}
+                  typingContent={typingContent}
+                  formatDateSeparator={formatDateSeparator}
+                  editingMessage={editingMessage}
+                  setEditingMessage={setEditingMessage}
+                  editValue={editValue}
+                  setEditValue={setEditValue}
+                  handleEditMessage={async (msg) => {
+                    const val = editValue.trim();
+                    if (!val || val === msg.content) return setEditingMessage(null);
+                    await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, msg.id!), { content: val, timestamp: new Date().toISOString() });
+                    setEditingMessage(null);
+                  }}
+                  copyToClipboard={copyToClipboard}
+                  copiedId={copiedId}
+                  profile={profile}
+                  user={user}
+                  GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
+                />
+              )}
 
-          <Suspense fallback={<ViewLoader />}>
-            {activeTab === 'finance' && (
-              <FinanceView 
-                profile={profile}
-                transactions={transactions}
-                transactionsByPeriod={transactionsByPeriod}
-                financePeriod={financePeriod}
-                setFinancePeriod={setFinancePeriod}
-                financeStartDate={financeStartDate}
-                setFinanceStartDate={setFinanceStartDate}
-                financeEndDate={financeEndDate}
-                setFinanceEndDate={setFinanceEndDate}
-                financeCategory={financeCategory}
-                setFinanceCategory={setFinanceCategory}
-                totalIncome={totalIncome}
-                totalExpense={totalExpense}
-                chartData={chartData}
-                categoryData={categoryData}
-                behaviorData={behaviorData}
-                goals={goals}
-                categories={categories}
-                isDarkMode={isDarkMode}
-                filteredTransactions={filteredTransactions}
-                handleAddTransaction={(data) => manageFinance.addTransaction(data, activeSpace || user!.uid)}
-              />
-            )}
+              <Suspense fallback={<ViewLoader />}>
+                {activeTab === 'finance' && (
+                  <FinanceView 
+                    profile={profile}
+                    transactions={transactions}
+                    transactionsByPeriod={transactionsByPeriod}
+                    financePeriod={financePeriod}
+                    setPeriod={setFinancePeriod}
+                    financeStartDate={financeStartDate}
+                    setFinanceStartDate={setFinanceStartDate}
+                    financeEndDate={financeEndDate}
+                    setFinanceEndDate={setFinanceEndDate}
+                    financeCategory={financeCategory}
+                    setFinanceCategory={setFinanceCategory}
+                    totalIncome={totalIncome}
+                    totalExpense={totalExpense}
+                    chartData={chartData}
+                    categoryData={categoryData}
+                    behaviorData={behaviorData}
+                    goals={goals}
+                    categories={categories}
+                    isDarkMode={isDarkMode}
+                    filteredTransactions={filteredTransactions}
+                    handleAddTransaction={(data) => manageFinance.addTransaction(data, activeSpace || user!.uid)}
+                  />
+                )}
 
-            {activeTab === 'shopping' && (
-              <ShoppingView 
-                shoppingFilter={shoppingFilter}
-                setShoppingFilter={setShoppingFilter}
-                shoppingList={shoppingList}
-                handleToggleShoppingItem={(item, extra) => manageShopping.toggle(item, activeSpace || user!.uid, extra)}
-                handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
-                handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
-                handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
-                handleFinishShopping={(cartTotal, recordedPrices, recordedQuantities) => manageShopping.finish(cartTotal, recordedPrices, recordedQuantities, activeSpace || user!.uid)}
-                handleAddItem={(item) => manageShopping.addItem(item, activeSpace || user!.uid)}
-                profile={profile}
-              />
-            )}
+                {activeTab === 'shopping' && (
+                  <ShoppingView 
+                    shoppingFilter={shoppingFilter}
+                    setShoppingFilter={setShoppingFilter}
+                    shoppingList={shoppingList}
+                    handleToggleShoppingItem={(item, extra) => manageShopping.toggle(item, activeSpace || user!.uid, extra)}
+                    handleMoveToStock={(item) => manageShopping.moveToStock(item, activeSpace || user!.uid)}
+                    handleMoveToList={(item) => manageShopping.moveToList(item, activeSpace || user!.uid)}
+                    handleDeleteShoppingItem={(item) => manageShopping.delete(item, activeSpace || user!.uid)}
+                    handleFinishShopping={(cartTotal, recordedPrices, recordedQuantities) => manageShopping.finish(cartTotal, recordedPrices, recordedQuantities, activeSpace || user!.uid)}
+                    handleAddItem={(item) => manageShopping.addItem(item, activeSpace || user!.uid)}
+                    profile={profile}
+                  />
+                )}
 
-            {activeTab === 'routines' && (
-              <RoutinesView 
-                events={events}
-                tasks={tasks}
-                insights={messages.filter(m => m.isInsight)}
-                shares={shares}
-                isSuperAdmin={isSuperAdmin}
-                isSyncing={isSyncing}
-                calendarBlocked={calendarBlocked}
-                syncError={syncError}
-                handleSyncCalendar={handleSyncCalendar}
-                globalConfig={globalConfig}
-                handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
-                handleCreateTask={(task) => manageTasks.create(task, activeSpace || user!.uid)}
-                handleUpdateTask={(id, updates, scope) => manageTasks.update(id, updates, activeSpace || user!.uid, scope)}
-                handleDeleteTask={(id, scope) => manageTasks.delete(id, activeSpace || user!.uid, scope)}
-                handleDeleteEvent={async (id) => {
-                  await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
-                }}
-                isGoogleEmail={isGoogleEmail}
-              />
-            )}
+                {activeTab === 'routines' && (
+                  <RoutinesView 
+                    events={events}
+                    tasks={tasks}
+                    insights={messages.filter(m => m.isInsight)}
+                    shares={shares}
+                    isSuperAdmin={isSuperAdmin}
+                    isSyncing={isSyncing}
+                    calendarBlocked={calendarBlocked}
+                    syncError={syncError}
+                    handleSyncCalendar={handleSyncCalendar}
+                    globalConfig={globalConfig}
+                    handleToggleTask={(id, status) => manageTasks.toggle(id, status, activeSpace || user!.uid)}
+                    handleCreateTask={(task) => manageTasks.create(task, activeSpace || user!.uid)}
+                    handleUpdateTask={(id, updates, scope) => manageTasks.update(id, updates, activeSpace || user!.uid, scope)}
+                    handleDeleteTask={(id, scope) => manageTasks.delete(id, activeSpace || user!.uid, scope)}
+                    handleDeleteEvent={async (id) => {
+                      await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
+                    }}
+                    isGoogleEmail={isGoogleEmail}
+                  />
+                )}
 
-            {activeTab === 'settings' && user && (
-              <SettingsView 
-                profile={profile}
-                isDarkMode={isDarkMode}
-                setIsDarkMode={setIsDarkMode}
-                isSuperAdmin={isSuperAdmin}
-                globalConfig={globalConfig}
-                updateGlobalConfig={updateGlobalConfig}
-                shares={shares}
-                activeSpace={activeSpace}
-                setActiveSpace={setActiveSpace}
-                inviteEmail={inviteEmail}
-                setInviteEmail={setInviteEmail}
-                invitePerms={invitePerms}
-                setInvitePerms={setInvitePerms}
-                handleInvite={handleInvite}
-                handleAcceptInvite={handleAcceptInvite}
-                handleDeclineInvite={handleDeclineInvite}
-                handleRequestUpgrade={handleRequestUpgrade}
-                user={user}
-                updateProfile={updateProfile}
-              />
-            )}
-          </Suspense>
-        </AnimatePresence>
+                {activeTab === 'settings' && user && (
+                  <SettingsView 
+                    profile={profile}
+                    isDarkMode={isDarkMode}
+                    setIsDarkMode={setIsDarkMode}
+                    isSuperAdmin={isSuperAdmin}
+                    globalConfig={globalConfig}
+                    updateGlobalConfig={updateGlobalConfig}
+                    shares={shares}
+                    activeSpace={activeSpace}
+                    setActiveSpace={setActiveSpace}
+                    inviteEmail={inviteEmail}
+                    setInviteEmail={setInviteEmail}
+                    invitePerms={invitePerms}
+                    setInvitePerms={setInvitePerms}
+                    handleInvite={handleInvite}
+                    handleAcceptInvite={handleAcceptInvite}
+                    handleDeclineInvite={handleDeclineInvite}
+                    handleRequestUpgrade={handleRequestUpgrade}
+                    user={user}
+                    updateProfile={updateProfile}
+                  />
+                )}
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 
