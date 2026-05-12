@@ -1,5 +1,9 @@
 {
-  "name": "Agente Pessoal IA",
-  "description": "Um assistente pessoal inteligente para gestão financeira, listas de compras e automação de tarefas cotidianas.",
-  "requestFramePermissions": ["geolocation", "microphone", "camera"]
+  "name": "Aimee - Inteligência Pessoal",
+  "description": "Seu orquestrador inteligente para finanças, rotinas e compras. Aimee aprende com seu comportamento para simplificar sua vida.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone",
+    "camera"
+  ]
 }

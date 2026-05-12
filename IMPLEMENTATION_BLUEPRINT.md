@@ -117,6 +117,8 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-12**: **Refatoração Arquitetural Concluída**: Removidas chamadas diretas ao Firestore em `App.tsx`, movendo toda a persistência para a camada de Repositórios e Skills através do hook `useAimeeActions`. Expansão do `InsightEngine` com insights determinísticos de produtividade e categorização financeira. Build verificado e estável.
+
 - **2026-05-09**: **Robustez Frontend & Observabilidade**: Implementado sistema de log centralizado (Client -> Server). Hardening de componentes React contra erros de parsing de data e campos nulos. Corrigido erro 500 no serviço de localização (nearby markets).
 
 - **2026-05-09**: **Arquitetura Aimee 2.0 Concluída**: `IntentRouter`, `InsightEngine` e `Skills` analíticas integrados. Otimização radical de tokens e fim das alucinações de dados via pipeline determinístico. Harmonização de adapters (Gemini, DeepSeek, OpenAI) via `AimeePrompts`.

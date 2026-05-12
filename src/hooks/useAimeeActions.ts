@@ -684,6 +684,47 @@ export function useAimeeActions(
     handleAdminAction,
     manageShopping,
     manageFinance,
-    manageTasks
+    manageTasks,
+    manageChat: {
+      markAsRead: async (msgId: string) => {
+        if (!user) return;
+        try {
+          await chatRepository.update(msgId, { read: true }, user.uid);
+        } catch (error) {
+          logger.error('Error marking message as read', { error });
+        }
+      },
+      updateMessage: async (msgId: string, content: string) => {
+        if (!user) return;
+        try {
+          await chatRepository.update(msgId, { content, timestamp: new Date().toISOString() }, user.uid);
+        } catch (error) {
+          logger.error('Error updating message', { error });
+        }
+      }
+    },
+    manageEvents: {
+      delete: async (eventId: string, targetId: string) => {
+        try {
+          await eventRepository.delete(eventId, targetId);
+          showToast('Evento removido', 'success', 2000);
+        } catch (error) {
+          logger.error('Error deleting event', { error });
+          showToast('Erro ao remover evento', 'error');
+        }
+      }
+    },
+    updateGamification: async (weeklySpending: number, points: number, level: number) => {
+      if (!user) return;
+      try {
+        await profileRepository.updateProfile(user.uid, {
+          'gamification.currentWeeklySpending': weeklySpending,
+          'gamification.points': points,
+          'gamification.level': level
+        } as any);
+      } catch (error) {
+        logger.error('Error updating gamification', { error });
+      }
+    }
   };
 }

@@ -69,7 +69,10 @@ import {
   Plane,
   GraduationCap,
   Home,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Wallet,
+  ShoppingCart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, safeFormatDate } from './lib/utils.js';
@@ -118,7 +121,10 @@ export default function App() {
     handleAdminAction,
     manageShopping,
     manageFinance,
-    manageTasks
+    manageTasks,
+    manageChat,
+    manageEvents,
+    updateGamification
   } = useAimeeActions(user, profile, aimeeData);
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -130,8 +136,27 @@ export default function App() {
     const saved = localStorage.getItem('aimee_active_tab');
     return (saved as Tab) || 'chat';
   });
+  const [direction, setDirection] = useState(0);
 
-  const TABS: Tab[] = ['chat', 'finance', 'shopping', 'routines', 'settings'];
+  const slideVariants = {
+    enter: (dir: number) => ({
+      opacity: 0,
+      x: dir > 0 ? 300 : -300
+    }),
+    center: {
+      opacity: 1,
+      x: 0
+    },
+    exit: (dir: number) => ({
+      opacity: 0,
+      x: dir > 0 ? -300 : 300
+    })
+  };
+
+  const TABS: Tab[] = ['chat', 'finance', 'shopping', 'routines', 'settings'].filter(t => {
+    if (t === 'shopping') return shoppingList.filter(i => !i.isStock).length > 0;
+    return true;
+  }) as Tab[];
 
   useEffect(() => {
     localStorage.setItem('aimee_active_tab', activeTab);
@@ -140,6 +165,7 @@ export default function App() {
   const handleNextTab = () => {
     const currentIndex = TABS.indexOf(activeTab);
     if (currentIndex < TABS.length - 1) {
+      setDirection(1);
       setActiveTab(TABS[currentIndex + 1]);
     }
   };
@@ -147,12 +173,14 @@ export default function App() {
   const handlePrevTab = () => {
     const currentIndex = TABS.indexOf(activeTab);
     if (currentIndex > 0) {
+      setDirection(-1);
       setActiveTab(TABS[currentIndex - 1]);
     }
   };
   
   const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
   
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePerms, setInvitePerms] = useState<{ finance: PermissionLevel; shopping: PermissionLevel; routines: PermissionLevel }>({ finance: PermissionLevel.READ, shopping: PermissionLevel.READ, routines: PermissionLevel.NONE });
@@ -242,11 +270,7 @@ export default function App() {
       const pointsToAdd = transactions.length * 5; // Simple point logic
       const level = Math.floor(pointsToAdd / 100) + 1;
 
-      updateDoc(doc(db, 'users', user.uid), {
-        'gamification.currentWeeklySpending': weeklySpending,
-        'gamification.points': pointsToAdd,
-        'gamification.level': level
-      }).catch(err => console.error("Error updating gamification:", err));
+      updateGamification(weeklySpending, pointsToAdd, level);
     }
   }, [transactions, user, profile?.uid]);
 
@@ -477,11 +501,7 @@ export default function App() {
     if (!msg.id) return;
     
     // Mark as read
-    try {
-      await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, msg.id), { read: true });
-    } catch (error) {
-      console.error("Error marking insight as read:", error);
-    }
+    manageChat.markAsRead(msg.id);
 
     // Switch to chat tab if not already there
     if (activeTab !== 'chat') {
@@ -734,6 +754,7 @@ export default function App() {
         availableAIProviders={availableAIProviders}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        shoppingItemsCount={shoppingList.filter(i => !i.isStock).length}
       />
 
       {showAdminPanel && isSuperAdmin && (
@@ -796,20 +817,27 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-hidden relative pb-0 touch-pan-y">
         <div className="h-full max-w-5xl mx-auto flex flex-col relative">
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ 
+                type: "spring", 
+                stiffness: 300, 
+                damping: 30,
+                opacity: { duration: 0.2 }
+              }}
               className="flex-1 flex flex-col h-full"
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.05}
+              dragElastic={0.4}
               onDragEnd={(_, info) => {
                 const swipeThreshold = 50;
-                const velocityThreshold = 200;
+                const velocityThreshold = 500;
                 
                 if (Math.abs(info.offset.x) > swipeThreshold || Math.abs(info.velocity.x) > velocityThreshold) {
                   if (info.offset.x > 0) {
@@ -832,7 +860,7 @@ export default function App() {
                   unreadInsights={unreadInsights}
                   handleGoToInsight={handleGoToInsight}
                   handleDismissInsight={async (id) => {
-                    await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, id), { read: true });
+                    manageChat.markAsRead(id);
                   }}
                   handleSendMessage={async (t, skip) => {
                     const content = typeof t === 'string' ? t : inputText;
@@ -855,7 +883,7 @@ export default function App() {
                   handleEditMessage={async (msg) => {
                     const val = editValue.trim();
                     if (!val || val === msg.content) return setEditingMessage(null);
-                    await updateDoc(doc(db, `users/${user!.uid}/chatHistory`, msg.id!), { content: val, timestamp: new Date().toISOString() });
+                    manageChat.updateMessage(msg.id!, val);
                     setEditingMessage(null);
                   }}
                   copyToClipboard={copyToClipboard}
@@ -873,7 +901,7 @@ export default function App() {
                     transactions={transactions}
                     transactionsByPeriod={transactionsByPeriod}
                     financePeriod={financePeriod}
-                    setPeriod={setFinancePeriod}
+                    setFinancePeriod={setFinancePeriod}
                     financeStartDate={financeStartDate}
                     setFinanceStartDate={setFinanceStartDate}
                     financeEndDate={financeEndDate}
@@ -925,7 +953,7 @@ export default function App() {
                     handleUpdateTask={(id, updates, scope) => manageTasks.update(id, updates, activeSpace || user!.uid, scope)}
                     handleDeleteTask={(id, scope) => manageTasks.delete(id, activeSpace || user!.uid, scope)}
                     handleDeleteEvent={async (id) => {
-                      await deleteDoc(doc(db, `users/${activeSpace || user!.uid}/events/${id}`));
+                      manageEvents.delete(id, activeSpace || user!.uid);
                     }}
                     isGoogleEmail={isGoogleEmail}
                   />

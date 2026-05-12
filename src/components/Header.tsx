@@ -21,6 +21,7 @@ interface HeaderProps {
   availableAIProviders?: string[];
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  shoppingItemsCount: number;
 }
 
 export function Header({
@@ -38,7 +39,8 @@ export function Header({
   health,
   availableAIProviders = [],
   activeTab,
-  setActiveTab
+  setActiveTab,
+  shoppingItemsCount
 }: HeaderProps) {
   const isOnline = health.firebase && health.ai;
   const [showNavMenu, setShowNavMenu] = useState(false);
@@ -57,10 +59,10 @@ export function Header({
   const navItems = [
     { id: 'chat' as Tab, label: 'Conversa', icon: MessageSquare },
     { id: 'finance' as Tab, label: 'Finanças', icon: Wallet },
-    { id: 'shopping' as Tab, label: 'Compras', icon: ShoppingCart },
+    { id: 'shopping' as Tab, label: 'Compras', icon: ShoppingCart, hideIfEmpty: true },
     { id: 'routines' as Tab, label: 'Rotinas', icon: Calendar },
     { id: 'settings' as Tab, label: 'Ajustes', icon: Settings },
-  ];
+  ].filter(item => !item.hideIfEmpty || shoppingItemsCount > 0);
   
   return (
     <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-2 sm:pb-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 shrink-0 z-50 sticky top-0">

@@ -94,6 +94,49 @@ export class InsightEngine {
       });
     }
 
+    // 5. Progresso de Metas Financeiras
+    // (Poderia ser expandido se tivéssemos goals aqui, mas vamos usar os dados que temos)
+    
+    // 6. Ritmo de Tarefas Completo
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === 'done').length;
+    if (totalTasks > 3) {
+      const completionRate = (completedTasks / totalTasks) * 100;
+      if (completionRate < 30) {
+        insights.push({
+          id: `task-slow-${Date.now()}`,
+          category: 'routine',
+          title: 'Ritmo de Produtividade',
+          message: `Você concluiu apenas ${completionRate.toFixed(0)}% das suas tarefas. Quer que eu ajude a repriorizar?`,
+          confidence: 'confirmed',
+          sources: ['tasks'],
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    // 7. Balanço de Categoria Dominante
+    if (transactions.length > 5) {
+      const expenses = transactions.filter(t => t.type === 'expense');
+      const categories: Record<string, number> = {};
+      expenses.forEach(t => {
+        if (t.category) categories[t.category] = (categories[t.category] || 0) + (t.amount || 0);
+      });
+      
+      const topCategory = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
+      if (topCategory && topCategory[1] > totalExpense * 0.4) {
+        insights.push({
+          id: `fin-top-cat-${Date.now()}`,
+          category: 'finance',
+          title: 'Alerta de Categoria',
+          message: `Sua maior categoria de gastos é "${topCategory[0]}", representando ${((topCategory[1]/totalExpense)*100).toFixed(0)}% do total.`,
+          confidence: 'confirmed',
+          sources: ['transactions'],
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
     return insights;
   }
 }
