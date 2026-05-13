@@ -180,7 +180,7 @@ export const ShoppingView = ({
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className="space-y-6 pb-32"
+        className="space-y-6 pb-[180px]"
       >
         <div className="flex items-center justify-between bg-brand p-6 -mx-4 -mt-4 rounded-b-[3rem] shadow-xl shadow-brand/20 mb-8">
           <div className="flex items-center gap-4">
@@ -283,7 +283,7 @@ export const ShoppingView = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-32"
+      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[180px]"
     >
       <div className="flex items-center justify-between">
         <div>

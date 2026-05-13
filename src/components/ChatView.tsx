@@ -393,7 +393,7 @@ export const ChatView = memo(({
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden pt-4 px-4 pb-28 space-y-3"
+        className="flex-1 overflow-y-auto overflow-x-hidden pt-4 px-4 pb-[160px] md:pb-[180px] space-y-3"
       >
         {messages.length === 0 && (
           <div className="text-center py-20">
@@ -443,14 +443,14 @@ export const ChatView = memo(({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom('smooth')}
-            className="absolute bottom-36 right-6 p-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
+            className="absolute bottom-44 right-6 p-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
           >
             <ChevronDown className="w-5 h-5" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-8 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none z-20">
+      <div className="absolute bottom-[80px] md:bottom-[90px] left-0 right-0 p-3 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-12 pb-4 pointer-events-none z-20">
         <div className="max-w-xl mx-auto flex flex-col gap-2 pointer-events-auto">
           {isRecording && (
             <motion.div 

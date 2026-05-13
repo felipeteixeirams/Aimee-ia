@@ -1,17 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  ShieldCheck, 
-  Sparkles, 
-  Globe, 
-  ArrowRight, 
-  Mail, 
-  Lock, 
-  X,
-  History,
-  Check,
-  Loader2
-} from 'lucide-react';
+import { Globe, History, Check, Loader2, X, ShieldCheck, Mail, Lock, ArrowRight } from 'lucide-react';
 import { cn } from '../lib/utils.js';
 import { SystemHealth } from '../hooks/useAuth.js';
 import { fetchSignInMethodsForEmail } from 'firebase/auth';
@@ -31,21 +20,23 @@ interface LoginProps {
 }
 
 const PHRASES = [
+  "Sua assistente inteligente.",
   "Vamos imaginar...",
-  "Vamos explorar...",
   "Vamos criar...",
-  "AIMEE",
-  "Sua assistente inteligente."
+  "Aimee"
 ];
+
 
 const Spark = ({ delay }: { delay: number }) => {
   const [randoms] = useState(() => ({
-    size: Math.random() * 2 + 1,
+    size: Math.random() * 8 + 4,
     left: Math.random() * 100,
-    duration: Math.random() * 3 + 2,
+    duration: Math.random() * 10 + 10,
     xOffset: Math.random() * 30 - 15,
-    glow: Math.random() * 15 + 10,
-    delay: delay + Math.random() * 2
+    glow: Math.random() * 20 + 10,
+    delay: delay + Math.random() * 5,
+    hue: Math.random() > 0.5 ? '#ffaa00' : '#ff5500',
+    opacityMax: Math.random() * 0.5 + 0.3
   }));
   
   return (
@@ -53,44 +44,47 @@ const Spark = ({ delay }: { delay: number }) => {
       initial={{ y: '110vh', x: `${randoms.left}vw`, opacity: 0, scale: 0 }}
       animate={{ 
         y: '-20vh', 
-        opacity: [0, 1, 1, 0.4, 0],
-        scale: [0.5, 1.2, 1, 0.5, 0],
+        opacity: [0, randoms.opacityMax, randoms.opacityMax, 0.1, 0],
+        scale: [0.5, 1.2, 1, 0.8, 0],
         x: [`${randoms.left}vw`, `${randoms.left + randoms.xOffset}vw`]
       }}
       transition={{ 
         duration: randoms.duration, 
         repeat: Infinity, 
         delay: randoms.delay,
-        ease: "easeOut"
+        ease: "linear"
       }}
       className="absolute rounded-full"
       style={{ 
         width: randoms.size, 
         height: randoms.size,
-        background: 'linear-gradient(to bottom, #ff9d00, #ff4c00)',
-        boxShadow: `0 0 ${randoms.glow}px #ff4c00, 0 0 ${randoms.glow/2}px #fff`
+        background: randoms.hue,
+        boxShadow: `0 0 ${randoms.glow}px ${randoms.hue}`,
+        filter: 'blur(1px)'
       }}
     />
   );
 };
 
 const FireBackground = () => {
-  const [sparks] = useState(() => Array.from({ length: 60 }));
-  
+  const [sparks] = useState(() => Array.from({ length: 45 }));
+
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden pointer-events-none z-0">
-      {/* Base glow */}
-      <div className="absolute bottom-0 left-0 right-0 h-[80vh] bg-[radial-gradient(ellipse_at_50%_100%,rgba(120,40,0,0.25),transparent_70%)]" />
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#050a14]">
+      {/* Base deep glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(75,142,255,0.1)_0%,transparent_60%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(233,179,255,0.05)_0%,transparent_50%)]"></div>
       
-      {/* Fire core glow */}
-      <div className="absolute bottom-[-10vh] left-[20%] right-[20%] h-[40vh] bg-orange-900/20 blur-[100px] rounded-full" />
-      
+      {/* Embers animated */}
       {sparks.map((_, i) => (
-        <Spark key={i} delay={i * 0.1} />
+        <Spark key={i} delay={i * 0.15} />
       ))}
-      
-      {/* Smoke effect (subtle) */}
-      <div className="absolute inset-0 bg-neutral-950/20 backdrop-blur-[1px]" />
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-[150vw] h-[150vw] md:w-[80vw] md:h-[80vw] rounded-full" style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(233, 179, 255, 0.08), transparent 70%)'
+        }}></div>
+      </div>
     </div>
   );
 };
@@ -136,14 +130,27 @@ const TypingHero = () => {
   }, [displayText, isDeleting, phraseIndex, typingSpeed]);
 
   return (
-    <div className="relative flex items-center justify-center h-[50vh] px-8 z-10">
-      <div className="text-center">
-        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter flex items-center justify-center gap-3 drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] font-sans">
-          {displayText}
+    <div className="relative flex flex-col items-center justify-center px-8 z-10 w-full">
+      <div className="w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center mb-6 relative shadow-[0_0_40px_rgba(233,179,255,0.2)]" style={{
+        background: 'rgba(27, 27, 27, 0.7)',
+        backdropFilter: 'blur(30px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+      }}>
+        <div className="absolute inset-4 rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-secondary/40 to-transparent"></div>
+        <svg className="w-16 h-16 text-secondary font-light z-10 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+           <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+
+      <div className="min-h-[120px] md:min-h-[160px] flex items-center justify-center w-full">
+        <h1 className="text-3xl md:text-5xl font-['Inter'] font-bold text-white tracking-tighter flex items-center justify-center drop-shadow-md text-center leading-tight">
+          <span className="opacity-90">{displayText}</span>
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
             transition={{ duration: 0.8, repeat: Infinity }}
-            className="w-1.5 h-8 md:w-2 md:h-12 bg-white inline-block rounded-full shadow-[0_0_15px_white]"
+            className="w-1 md:w-1.5 h-8 md:h-12 bg-secondary inline-block rounded-full ml-2"
           />
         </h1>
       </div>
@@ -259,21 +266,19 @@ export const Login: React.FC<LoginProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black font-sans overflow-hidden select-none">
+    <div className="fixed inset-0 bg-background text-on-surface font-sans overflow-hidden select-none flex flex-col justify-between items-center">
       <FireBackground />
-      
-      {/* Subtle Grain Overlay for cinematic feel */}
-      {/* Grainy Noise Overlay */}
+
       <div 
         className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-10" 
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
       />
 
-      {/* Hero Section */}
-      <TypingHero />
+      <main className="relative z-10 flex flex-col items-center justify-center w-full h-full max-w-[1200px] px-5 pt-12 pb-[350px] md:pb-[400px] flex-grow">
+        <TypingHero />
+      </main>
 
-      {/* Bottom Interface */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 z-50">
+      <div className="absolute inset-x-0 bottom-0 p-6 z-50 flex justify-center w-full">
         <AnimatePresence mode="wait">
           {isMaintenance ? (
             <motion.div
@@ -283,7 +288,7 @@ export const Login: React.FC<LoginProps> = ({
               animate="animate"
               exit="exit"
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="bg-neutral-900/60 backdrop-blur-3xl border border-rose-500/20 p-8 rounded-[3rem] text-center space-y-6 shadow-2xl relative overflow-hidden"
+              className="bg-neutral-900/60 backdrop-blur-3xl border border-rose-500/20 p-8 rounded-[1.5rem] w-full max-w-sm text-center space-y-6 shadow-2xl relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500/0 via-rose-500/40 to-rose-500/0" />
               
@@ -292,20 +297,19 @@ export const Login: React.FC<LoginProps> = ({
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Sistema Indisponível</h2>
-                <p className="text-xs text-neutral-400 font-medium leading-relaxed px-4">
-                  Desculpe, o sistema está temporariamente offline para manutenção ou devido a instabilidades de conexão.
+                <h2 className="text-2xl font-bold text-white tracking-tight">Sistema Indisponível</h2>
+                <p className="text-sm text-neutral-400 font-medium leading-relaxed px-4">
+                  Desculpe, o sistema está temporariamente offline.
                 </p>
               </div>
 
               <div className="pt-4 space-y-3 flex flex-col items-center">
                 <button
                   onClick={() => setShowSupport(true)}
-                  className="w-full max-w-[280px] bg-white text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-white/5 active:scale-95 transition-all mx-auto"
+                  className="w-full bg-white text-black py-4 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all mx-auto"
                 >
                   Contatar Administrador
                 </button>
-                <p className="text-[10px] text-neutral-600 font-black uppercase tracking-widest text-center">Aimee Core v3.0</p>
               </div>
             </motion.div>
           ) : step === 'options' && (
@@ -316,61 +320,43 @@ export const Login: React.FC<LoginProps> = ({
               animate="animate"
               exit="exit"
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="space-y-3 pb-12 flex flex-col items-center"
+              className="w-full max-w-sm flex flex-col items-center rounded-xl p-4 backdrop-blur-3xl relative overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.2)]"
+              style={{
+                background: 'rgba(27, 27, 27, 0.7)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
             >
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+
               {lastUser && (
                 <button
                   onClick={handleContinueAsLastUser}
-                  className="w-full max-w-[320px] bg-white text-black py-5 rounded-2xl font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all shadow-xl mx-auto"
+                  className="w-full bg-white/5 border border-white/5 text-white py-4 rounded-lg font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all hover:bg-white/10 mb-3"
                 >
-                  <div className="text-left">
-                    <p className="text-[10px] uppercase tracking-widest opacity-60 font-black">Continuar como</p>
-                    <p className="text-sm truncate max-w-[200px] font-black">{lastUser}</p>
+                  <div className="text-left font-['Inter']">
+                    <p className="text-[11px] text-neutral-400 font-medium">Continuar como</p>
+                    <p className="text-sm truncate max-w-[200px] font-semibold">{lastUser}</p>
                   </div>
-                  <div className="w-10 h-10 bg-black/5 rounded-full flex items-center justify-center">
-                    <History className="w-5 h-5 opacity-40" />
-                  </div>
+                  <History className="w-5 h-5 text-neutral-400" />
                 </button>
               )}
 
               <button
                 onClick={onLogin}
-                className="w-full max-w-[320px] bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all mx-auto"
+                className="w-full bg-primary-container text-on-primary-container font-semibold py-4 rounded-lg flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_14px_rgba(75,142,255,0.3)] mb-3"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                <span className="tracking-tight font-black">Continuar com Google</span>
+                <span>Continuar com Google</span>
+                <ArrowRight className="w-5 h-5" />
               </button>
 
               <button
                 onClick={() => setStep('email')}
-                className="w-full max-w-[320px] bg-neutral-900/60 backdrop-blur-3xl border border-white/10 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-all mx-auto"
+                className="w-full bg-transparent text-on-surface-variant font-medium py-3 rounded-lg flex items-center justify-center hover:text-on-surface transition-colors active:scale-95"
               >
-                <Mail className="w-5 h-5 opacity-60" />
-                <span className="tracking-tight font-black">Continuar com E-mail</span>
+                Opções com Email
               </button>
 
-              <div className="flex items-center justify-center gap-2 pt-6">
-                <button 
-                  onClick={() => setRememberMe(!rememberMe)}
-                  className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] font-black group"
-                >
-                  <div className={cn(
-                    "w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
-                    rememberMe ? "bg-white border-white scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]" : "border-white/40 group-hover:border-white/70"
-                  )}>
-                    {rememberMe && <Check className="w-3.5 h-3.5 text-black stroke-[3]" />}
-                  </div>
-                  <span className={cn(
-                    "transition-colors duration-300 drop-shadow-sm",
-                    rememberMe ? "text-white" : "text-neutral-400 group-hover:text-white"
-                  )}>Lembrar de mim</span>
-                </button>
-              </div>
             </motion.div>
           )}
 
@@ -382,58 +368,63 @@ export const Login: React.FC<LoginProps> = ({
               animate="animate"
               exit="exit"
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="bg-neutral-900 rounded-[3rem] p-8 border border-white/5 relative shadow-2xl"
+              className="rounded-[1.5rem] p-8 w-full max-w-sm relative shadow-2xl backdrop-blur-3xl"
+              style={{
+                background: 'rgba(27, 27, 27, 0.8)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
             >
               <button 
                 onClick={() => setStep('options')}
-                className="absolute top-8 right-8 p-3 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
+                className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="mb-10">
-                <h2 className="text-3xl font-black text-white tracking-tighter">
-                  {step === 'email' ? 'E-mail' : (isNewUser ? 'Criar Senha' : 'Senha')}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  {step === 'email' ? 'Conta' : (isNewUser ? 'Criar Senha' : 'Entrar')}
                 </h2>
-                {step === 'password' && <p className="text-neutral-500 text-xs mt-2 font-medium truncate opacity-60">{email}</p>}
+                {step === 'password' && <p className="text-neutral-400 text-sm mt-1">{email}</p>}
                 {error && (
                   <motion.p 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-rose-500 text-[10px] font-black uppercase tracking-widest mt-3 bg-rose-500/10 py-2 px-4 rounded-xl border border-rose-500/20"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-error text-xs font-medium mt-3 bg-error-container/30 py-2 px-3 rounded-lg border border-error/20"
                   >
                     {error}
                   </motion.p>
                 )}
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="relative group w-full max-w-[320px] mx-auto">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative group w-full">
                   <input
                     autoFocus
                     type={step === 'email' ? 'email' : 'password'}
                     value={step === 'email' ? email : password}
                     onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
-                    placeholder={step === 'email' ? "Seu melhor e-mail" : (isNewUser ? "Crie uma senha (mín. 6 dígitos)" : "Sua senha segura")}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-6 pr-14 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-bold placeholder:text-neutral-700 block"
+                    placeholder={step === 'email' ? "Seu email" : (isNewUser ? "Mínimo 6 caracteres" : "Senha")}
+                    className="w-full bg-[rgba(14,14,14,0.6)] border border-outline-variant/30 rounded-xl py-4 pl-4 pr-12 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-medium placeholder:text-neutral-500 shadow-inner"
                   />
-                  {step === 'email' && <Mail className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
-                  {step === 'password' && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-700 group-focus-within:text-brand transition-colors" />}
+                  {step === 'email' && <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
+                  {step === 'password' && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
                 </div>
 
                 {step === 'password' && (
-                  <div className="flex justify-between items-center px-2">
+                  <div className="flex justify-between items-center px-1">
                     <button
                       type="button"
                       onClick={() => setShowReset(true)}
-                      className="text-[10px] uppercase tracking-widest font-black text-neutral-600 hover:text-white transition-colors"
+                      className="text-xs font-medium text-neutral-400 hover:text-white transition-colors"
                     >
-                      Esqueci a senha
+                      Recuperar senha
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsNewUser(!isNewUser)}
-                      className="text-[10px] uppercase tracking-widest font-black text-brand hover:brightness-125 transition-all"
+                      className="text-xs font-bold text-primary hover:text-primary-fixed transition-colors"
                     >
                       {isNewUser ? 'Já tenho conta' : 'Criar conta'}
                     </button>
@@ -443,19 +434,12 @@ export const Login: React.FC<LoginProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || isMaintenance || isCheckingEmail}
-                  className="w-full max-w-[280px] bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.1em] text-xs flex items-center justify-center gap-3 shadow-2xl active:scale-[0.97] transition-all hover:bg-neutral-100 disabled:opacity-50 mx-auto"
+                  className="w-full bg-primary-container text-on-primary-container py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all hover:bg-primary-container/90 disabled:opacity-50 mx-auto mt-2"
                 >
                   {(isLoading || isCheckingEmail) ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
-                    />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <>
-                      <span>{step === 'email' ? 'Continuar' : (isNewUser ? 'Registrar' : 'Acessar')}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
+                    <span>{step === 'email' ? 'Avançar' : (isNewUser ? 'Registrar' : 'Acessar')}</span>
                   )}
                 </button>
               </form>

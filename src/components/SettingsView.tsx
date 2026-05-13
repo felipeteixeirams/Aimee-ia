@@ -267,7 +267,7 @@ export const SettingsView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-32"
+      className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-[180px]"
     >
       {/* Profile Card Refined */}
       <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden group">

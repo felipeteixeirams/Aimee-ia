@@ -994,6 +994,10 @@ export default function App() {
         unreadInsights={unreadInsights}
         handleGoToInsight={handleGoToInsight}
       />
+
+      {user && profile?.status === 'approved' && (
+        <NavigationBar activeTab={activeTab} setActiveTab={setActiveTab} />
+      )}
     </div>
   );
 }

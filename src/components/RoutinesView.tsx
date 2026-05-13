@@ -145,7 +145,7 @@ export const RoutinesView = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-32 no-scrollbar"
+        className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[180px] no-scrollbar"
       >
         <div className="flex items-center justify-between mb-2">
           <div>

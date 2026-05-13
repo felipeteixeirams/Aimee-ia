@@ -68,53 +68,6 @@ export function Header({
     <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-2 sm:pb-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 shrink-0 z-50 sticky top-0">
       <div className="max-w-5xl mx-auto flex items-center justify-between py-1 sm:py-2">
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Navigation Menu Burger */}
-          <div className="relative" ref={menuRef}>
-            <button 
-              onClick={() => setShowNavMenu(!showNavMenu)}
-              aria-label="Menu de Navegação"
-              className="w-10 h-10 flex items-center justify-center text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all active:scale-95"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-
-            <AnimatePresence>
-              {showNavMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-3xl shadow-2xl z-50 overflow-hidden p-2"
-                >
-                  <p className="px-4 py-3 text-[10px] font-black text-neutral-400 uppercase tracking-widest border-b border-neutral-50 dark:border-neutral-800 mb-2">Navegação</p>
-                  <div className="space-y-1">
-                    {navItems.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id);
-                          setShowNavMenu(false);
-                        }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all",
-                          activeTab === item.id 
-                            ? "bg-brand text-brand-foreground shadow-lg shadow-brand/20" 
-                            : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                        )}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm font-bold">{item.label}</span>
-                        {activeTab === item.id && (
-                          <motion.div layoutId="active-nav-dot" className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
           <div className="relative group">
             <button 
               onClick={() => unreadInsightsCount > 0 && setShowInsightsModal(true)}
