@@ -177,37 +177,43 @@ export const ShoppingView = ({
   if (isShoppingMode) {
     return (
       <motion.div 
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="space-y-6 pb-[180px]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[60] bg-white dark:bg-neutral-950 overflow-hidden flex flex-col"
       >
-        <div className="flex items-center justify-between bg-brand p-6 -mx-4 -mt-4 rounded-b-[3rem] shadow-xl shadow-brand/20 mb-8">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={toggleShoppingMode}
-              className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-95 transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div>
-              <h2 className="text-lg font-black text-white uppercase tracking-tighter">Modo Compra</h2>
-              <p className="text-[10px] text-white/70 font-medium tracking-widest uppercase">Carrinho Ativo</p>
+        <div className="glass pb-8 pt-[env(safe-area-inset-top)] px-6 border-b-0 rounded-b-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] shrink-0 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand/10 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="flex items-center justify-between relative z-10 pt-4">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={toggleShoppingMode}
+                className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-500 active:scale-90 transition-all border border-neutral-200/50 dark:border-neutral-700/50"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <div>
+                <h2 className="text-xl font-black text-neutral-800 dark:text-white uppercase tracking-tighter">Modo Compra</h2>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <p className="text-[10px] text-neutral-400 font-bold tracking-widest uppercase">Carrinho Ativo</p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest">Total</p>
-            <p className="text-2xl font-black text-white">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <div className="text-right">
+              <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-1">Total Estimado</p>
+              <p className="text-2xl font-black text-brand leading-none">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="flex-1 overflow-y-auto px-6 py-8 space-y-4 no-scrollbar">
           {shoppingList.filter(item => !item.isStock).map((item) => (
             <motion.div 
               key={item.id}
               layout
               className={cn(
-                "p-4 rounded-[2rem] border transition-all flex items-center gap-4 group",
+                "p-5 rounded-[2.5rem] border transition-all flex items-center gap-4 relative overflow-hidden",
                 item.purchased 
                   ? "bg-neutral-50 dark:bg-neutral-900/40 border-neutral-100 dark:border-neutral-800 opacity-60" 
                   : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 shadow-sm"
@@ -215,39 +221,44 @@ export const ShoppingView = ({
             >
               <button 
                 onClick={() => onToggleWithLocation(item)}
-                className="shrink-0"
+                className="shrink-0 relative z-10"
               >
-                {item.purchased ? (
-                  <CheckCircle2 className="w-6 h-6 text-brand" />
-                ) : (
-                  <Circle className="w-6 h-6 text-neutral-300" />
-                )}
+                <div className={cn(
+                  "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
+                  item.purchased 
+                    ? "bg-brand border-brand text-brand-foreground" 
+                    : "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
+                )}>
+                  {item.purchased && <CheckCircle2 className="w-5 h-5" />}
+                </div>
               </button>
               
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 relative z-10">
                 <span className={cn(
-                  "text-sm font-black dark:text-white block truncate mb-1",
+                  "text-base font-black dark:text-white block truncate mb-1.5 tracking-tight",
                   item.purchased && "line-through text-neutral-400"
                 )}>
                   {item.name}
                 </span>
                 {!item.purchased && item.id ? (
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => updateQuantity(item.id!, -1)} className="w-5 h-5 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-500 font-bold">-</button>
-                    <span className="text-[10px] text-neutral-700 dark:text-neutral-300 font-bold w-4 text-center">{recordedQuantities[item.id] || item.quantity || 1}</span>
-                    <button onClick={() => updateQuantity(item.id!, 1)} className="w-5 h-5 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded text-neutral-500 font-bold">+</button>
-                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{item.unit}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
+                      <button onClick={() => updateQuantity(item.id!, -1)} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 rounded-lg text-neutral-500 font-black transition-colors">-</button>
+                      <span className="text-xs text-neutral-800 dark:text-neutral-200 font-black w-6 text-center">{recordedQuantities[item.id] || item.quantity || 1}</span>
+                      <button onClick={() => updateQuantity(item.id!, 1)} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 rounded-lg text-neutral-500 font-black transition-colors">+</button>
+                    </div>
+                    <span className="text-[10px] text-neutral-400 font-black uppercase tracking-widest px-2">{item.unit}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{item.quantity} {item.unit}</span>
+                    <span className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">{item.quantity} {item.unit}</span>
                   </div>
                 )}
               </div>
 
               {!item.purchased && (
-                <div className="relative w-24 shrink-0">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-400">R$</span>
+                <div className="relative w-28 shrink-0 z-10">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-neutral-400">R$</span>
                   <input 
                     type="number"
                     min="0"
@@ -255,7 +266,7 @@ export const ShoppingView = ({
                     placeholder="0.00"
                     value={item.id && recordedPrices[item.id] ? recordedPrices[item.id] : ''}
                     onChange={(e) => item.id && handlePriceChange(item.id, e.target.value)}
-                    className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl pl-8 pr-3 py-2 text-xs font-black text-neutral-800 dark:text-white focus:ring-2 focus:ring-brand/30 outline-none"
+                    className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl pl-10 pr-4 py-4 text-sm font-black text-neutral-800 dark:text-white focus:ring-2 focus:ring-brand/30 outline-none"
                   />
                 </div>
               )}
@@ -263,16 +274,24 @@ export const ShoppingView = ({
           ))}
         </div>
 
-        {shoppingList.filter(item => !item.isStock).length > 0 && shoppingList.filter(item => !item.isStock).every(item => item.purchased) && (
-          <motion.button
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/40 active:scale-95 transition-all text-sm mx-auto block"
-            onClick={onFinish}
-          >
-            Finalizar e Atualizar Estoque
-          </motion.button>
-        )}
+        <div className="p-6 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-900 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          {shoppingList.filter(item => !item.isStock).length > 0 && shoppingList.filter(item => !item.isStock).every(item => item.purchased) ? (
+            <motion.button
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full py-5 bg-brand text-brand-foreground rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/30 transition-all text-sm flex items-center justify-center gap-3"
+              onClick={onFinish}
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              Finalizar Atuação
+            </motion.button>
+          ) : (
+            <div className="text-center">
+              <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Marque todos os itens para finalizar</p>
+            </div>
+          )}
+        </div>
       </motion.div>
     );
   }

@@ -98,73 +98,78 @@ export const FinanceView = ({
     >
       {/* Gamification & Goals Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-brand to-indigo-600 p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+        <div className="glass p-5 md:p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-brand/10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:scale-125 transition-transform duration-1000" />
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
-                  <Shield className="w-4 h-4 md:w-5 md:h-5" />
+                <div className="w-12 h-12 bg-brand/10 text-brand rounded-[1.25rem] flex items-center justify-center backdrop-blur-xl border border-brand/20">
+                  <Shield className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-80">Nível {profile?.gamification?.level || 1}</p>
-                  <p className="text-base md:text-lg font-black tracking-tight leading-none md:leading-normal">Mestre das Finanças</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-neutral-400">Nível {profile?.gamification?.level || 1}</p>
+                  <p className="text-xl font-black tracking-tight text-neutral-800 dark:text-white">Mestre das Finanças</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-80">Pontos</p>
-                <p className="text-lg md:text-xl font-black">{profile?.gamification?.points || 0}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-neutral-400">Pontos</p>
+                <p className="text-2xl font-black text-brand">{profile?.gamification?.points || 0}</p>
               </div>
             </div>
-            <div className="space-y-1.5 md:space-y-2">
-              <div className="flex justify-between text-[9px] md:text-[10px] font-bold uppercase tracking-wider">
+            <div className="space-y-2.5">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-neutral-400">
                 <span>Progresso do Nível</span>
-                <span>{(profile?.gamification?.points || 0) % 100}%</span>
+                <span className="text-brand">{(profile?.gamification?.points || 0) % 100}%</span>
               </div>
-              <div className="h-1.5 md:h-2 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden p-0.5 border border-neutral-200/50 dark:border-neutral-700/50">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${(profile?.gamification?.points || 0) % 100}%` }}
-                  className="h-full bg-white rounded-full"
+                  className="h-full bg-linear-to-r from-brand to-brand-muted rounded-full shadow-[0_0_10px_rgba(var(--brand-rgb),0.5)]"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
+        <div className="glass p-5 md:p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 md:w-10 md:h-10 bg-brand/10 rounded-xl flex items-center justify-center">
-                <TrendingDown className="w-4 h-4 md:w-5 md:h-5 text-brand" />
+              <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-[1.25rem] flex items-center justify-center backdrop-blur-xl border border-emerald-500/20">
+                <TrendingDown className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Meta Semanal</p>
-                <p className="text-base md:text-lg font-black text-neutral-800 dark:text-white tracking-tight">R$ {profile?.gamification?.weeklyGoal || 500}</p>
+                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">Meta Semanal</p>
+                <p className="text-xl font-black text-neutral-800 dark:text-white tracking-tight leading-none">R$ {profile?.gamification?.weeklyGoal || 500}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[9px] md:text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Gasto Atual</p>
+              <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">Gasto Atual</p>
               <p className={cn(
-                "text-lg md:text-xl font-black",
+                "text-2xl font-black",
                 (profile?.gamification?.currentWeeklySpending || 0) > (profile?.gamification?.weeklyGoal || 500) ? "text-rose-500" : "text-emerald-500"
               )}>
                 R$ {profile?.gamification?.currentWeeklySpending || 0}
               </p>
             </div>
           </div>
-          <div className="space-y-1.5 md:space-y-2">
-            <div className="flex justify-between text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+          <div className="space-y-2.5">
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-neutral-400">
               <span>Uso do Orçamento</span>
-              <span>{Math.min(100, Math.round(((profile?.gamification?.currentWeeklySpending || 0) / (profile?.gamification?.weeklyGoal || 500)) * 100))}%</span>
+              <span className={cn(
+                (profile?.gamification?.currentWeeklySpending || 0) > (profile?.gamification?.weeklyGoal || 500) ? "text-rose-500" : "text-emerald-500"
+              )}>
+                {Math.min(100, Math.round(((profile?.gamification?.currentWeeklySpending || 0) / (profile?.gamification?.weeklyGoal || 500)) * 100))}%
+              </span>
             </div>
-            <div className="h-1.5 md:h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden p-0.5 border border-neutral-200/50 dark:border-neutral-700/50">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, ((profile?.gamification?.currentWeeklySpending || 0) / (profile?.gamification?.weeklyGoal || 500)) * 100)}%` }}
                 className={cn(
-                  "h-full rounded-full",
-                  (profile?.gamification?.currentWeeklySpending || 0) > (profile?.gamification?.weeklyGoal || 500) ? "bg-rose-500" : "bg-brand"
+                  "h-full rounded-full transition-colors",
+                  (profile?.gamification?.currentWeeklySpending || 0) > (profile?.gamification?.weeklyGoal || 500) ? "bg-rose-500" : "bg-emerald-500"
                 )}
               />
             </div>
@@ -326,18 +331,25 @@ export const FinanceView = ({
       </div>
 
       {/* Benchmarking Alert */}
-      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 p-4 rounded-3xl flex items-start gap-4">
-        <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-2xl flex items-center justify-center shrink-0">
-          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+      <motion.div 
+        whileHover={{ scale: 1.02 }}
+        className="glass border border-amber-200/50 dark:border-amber-900/30 p-6 rounded-[2.5rem] flex items-start gap-4 shadow-xl shadow-amber-500/5 relative overflow-hidden group"
+      >
+        <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-12 -mt-12" />
+        <div className="w-12 h-12 bg-amber-500/10 dark:bg-amber-500/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-xl border border-amber-500/20">
+          <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
-          <h5 className="text-sm font-black text-amber-900 dark:text-amber-100 mb-1">Benchmarking Familiar</h5>
-          <p className="text-xs text-amber-800/70 dark:text-amber-200/60 leading-relaxed">
-            Notei que seus gastos com **Delivery** estão 15% acima da média regional para famílias do seu perfil em {profile?.location?.city || 'sua cidade'}. 
-            Que tal um desafio de cozinhar em casa este final de semana?
+          <div className="flex items-center gap-2 mb-1">
+            <h5 className="text-sm font-black text-amber-900 dark:text-amber-100 uppercase tracking-tight">Insight da Aimee</h5>
+            <span className="text-[8px] bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Benchmarking</span>
+          </div>
+          <p className="text-sm text-amber-800/80 dark:text-amber-200/60 leading-relaxed font-medium">
+            Seus gastos com <span className="font-black text-amber-900 dark:text-white">Delivery</span> estão 15% acima da média regional para famílias em {profile?.location?.city || 'sua cidade'}. 
+            Que tal um desafio de cozinhar em casa este final de semana? Isso pode te poupar <span className="font-black text-emerald-500">R$ 120,00</span>.
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Bento Grid: Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

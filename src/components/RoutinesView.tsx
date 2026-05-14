@@ -217,36 +217,59 @@ export const RoutinesView = ({
           </div>
         )}
 
-        <div className="space-y-4">
-          {events.length > 0 ? events.map((event) => (
-            <div key={event.id} className="flex items-center gap-3 md:gap-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-neutral-900 rounded-xl flex flex-col items-center justify-center border border-neutral-100 dark:border-neutral-800 shrink-0">
-                <span className="text-[8px] md:text-[10px] font-bold text-brand uppercase leading-none mb-0.5">{safeFormatDate(event.date, 'MMM')}</span>
-                <span className="text-sm md:text-lg font-black text-neutral-800 dark:text-white leading-none">{safeFormatDate(event.date, 'dd')}</span>
+        <div className="space-y-3">
+          {events.length > 0 ? events.map((event, idx) => (
+            <motion.div 
+              key={event.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="group relative flex gap-4 p-4 glass rounded-[2rem] border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all overflow-hidden"
+            >
+              <div className={cn(
+                "absolute left-0 top-0 bottom-0 w-1.5",
+                event.type === 'holiday' ? "bg-rose-500" :
+                event.type === 'social' ? "bg-purple-500" :
+                "bg-blue-500"
+              )} />
+              
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-neutral-50 dark:bg-neutral-800 rounded-2xl flex flex-col items-center justify-center shrink-0 border border-neutral-100 dark:border-neutral-700">
+                <span className="text-[10px] font-black text-brand uppercase tracking-tighter leading-none mb-0.5">{safeFormatDate(event.date, 'MMM')}</span>
+                <span className="text-xl font-black text-neutral-800 dark:text-white leading-none tracking-tighter">{safeFormatDate(event.date, 'dd')}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm font-bold text-neutral-800 dark:text-white truncate">{event.title}</p>
-                <p className="text-[9px] md:text-[10px] text-neutral-500 truncate leading-none mt-0.5">{event.description || 'Sem descrição'}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1.5">
-                <div className={cn(
-                  "px-2 py-0.5 rounded-full text-[7px] md:text-[8px] font-black uppercase tracking-wider",
-                  event.type === 'social' ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" :
-                  event.type === 'holiday' ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                )}>
-                  {event.type}
+
+              <div className="flex-1 min-w-0 py-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm md:text-base font-black text-neutral-800 dark:text-white truncate tracking-tight">{event.title}</p>
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-[0.1em] shrink-0",
+                    event.type === 'holiday' ? "bg-rose-50 text-rose-500 dark:bg-rose-900/30" :
+                    event.type === 'social' ? "bg-purple-50 text-purple-500 dark:bg-purple-900/30" :
+                    "bg-blue-50 text-blue-500 dark:bg-blue-900/30"
+                  )}>
+                    {event.type}
+                  </span>
                 </div>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate font-medium">
+                  {event.description || 'Nenhum detalhe adicional'}
+                </p>
+              </div>
+
+              <div className="flex flex-col items-end justify-center gap-2">
                 <button 
                   onClick={() => event.id && handleDeleteEvent(event.id)}
-                  className="p-1.5 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all"
+                  className="p-2 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl"
                   title="Remover evento"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </motion.div>
           )) : (
-            <p className="text-center py-8 text-sm text-neutral-400 italic">Nenhum evento agendado.</p>
+            <div className="py-12 bg-neutral-50 dark:bg-neutral-900/50 rounded-[2.5rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800 text-center">
+              <Calendar className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
+              <p className="text-neutral-400 text-sm font-black uppercase tracking-[0.2em]">Nenhum evento agendado</p>
+            </div>
           )}
         </div>
       </div>
@@ -266,81 +289,74 @@ export const RoutinesView = ({
         </div>
 
         <div className="space-y-3">
-          {tasks.length > 0 ? tasks.map((task) => (
-            <div key={task.id} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800 group transition-all hover:border-brand/20">
+          {tasks.length > 0 ? tasks.map((task, idx) => (
+            <motion.div 
+              key={task.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="flex items-center gap-4 p-4 md:p-5 glass rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 group transition-all hover:shadow-lg hover:shadow-brand/5 relative overflow-hidden"
+            >
               <button 
                 onClick={() => task.id && handleToggleTask(task.id, task.status)}
                 className={cn(
-                  "w-5 h-5 md:w-6 md:h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0",
-                  task.status === 'done' ? "bg-emerald-500 border-emerald-500 text-white" : "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                  "w-10 h-10 rounded-[1.25rem] border-2 flex items-center justify-center transition-all shrink-0 active:scale-90",
+                  task.status === 'done' 
+                    ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
+                    : "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
                 )}
               >
-                {task.status === 'done' && <Check className="w-3 md:w-4 h-3 md:h-4" />}
+                {task.status === 'done' && <Check className="w-5 h-5" />}
               </button>
+              
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <p className={cn(
-                    "text-xs md:text-sm font-bold transition-all truncate",
+                    "text-sm md:text-base font-black transition-all truncate tracking-tight",
                     task.status === 'done' ? "text-neutral-400 line-through font-medium" : "text-neutral-800 dark:text-white"
                   )}>{task.title}</p>
                   {isOverdue(task) && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
-                    >
-                      <AlertCircle className="w-3.5 h-3.5 text-rose-500 fill-rose-500/10" />
-                    </motion.div>
+                    <span className="shrink-0 text-[8px] font-black uppercase bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full tracking-widest border border-rose-200">Em Atraso</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-[8px] md:text-[9px] font-black uppercase text-neutral-400 tracking-wider shrink-0">{task.category}</span>
+                
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-neutral-50 dark:bg-neutral-800/80 rounded-full border border-neutral-100 dark:border-neutral-800 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+                    <span className="text-[9px] font-black uppercase text-neutral-500 tracking-widest">{task.category}</span>
+                  </div>
                   
                   {task.assignedTo && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-brand/10 text-brand rounded-full truncate max-w-[120px] shrink-0">
-                      <User className="w-2 md:w-2.5 h-2 md:h-2.5" />
-                      <span className="text-[8px] md:text-[9px] font-black uppercase truncate">{task.assignedTo.split('@')[0]}</span>
-                    </div>
-                  )}
-
-                  {task.participants && task.participants.length > 0 && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 rounded-full shrink-0">
-                      <Users className="w-2 md:w-2.5 h-2 md:h-2.5" />
-                      <span className="text-[8px] md:text-[9px] font-black uppercase">{task.participants.length}</span>
-                    </div>
-                  )}
-
-                  {task.recurrence && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full shrink-0" title="Tarefa Recorrente">
-                      <RotateCcw className="w-2 md:w-2.5 h-2 md:h-2.5" />
-                      <span className="text-[8px] md:text-[9px] font-black uppercase">{task.recurrence.type}</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-brand/10 text-brand rounded-full border border-brand/10 shrink-0">
+                      <User className="w-3 h-3" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">{task.assignedTo.split('@')[0]}</span>
                     </div>
                   )}
 
                   {task.dueDate && (
-                    <span className={cn(
-                      "text-[8px] md:text-[9px] font-black flex items-center gap-1 opacity-70 shrink-0",
-                      isOverdue(task) ? "text-rose-500" : "text-neutral-400"
+                    <div className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full border shrink-0",
+                      isOverdue(task) 
+                        ? "bg-rose-50 border-rose-100 text-rose-500" 
+                        : "bg-neutral-50 dark:bg-neutral-800 border-neutral-100 dark:border-neutral-800 text-neutral-400"
                     )}>
-                      <Clock className="w-2 md:w-2.5 h-2 md:h-2.5" />
-                      {safeFormatDate(task.dueDate, 'dd/MM')}
-                      {task.time && <span className="ml-1 text-brand"> às {task.time}</span>}
-                    </span>
-                  )}
-                  {task.note && (
-                    <span className="text-[7px] md:text-[8px] text-amber-500 font-bold italic shrink-0">
-                      * {task.note}
-                    </span>
+                      <Clock className="w-3 h-3" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">
+                        {safeFormatDate(task.dueDate, 'dd MMM')}
+                        {task.time && <span className="ml-1 opacity-60"> às {task.time}</span>}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1 md:gap-2">
+
+              <div className="flex items-center gap-1">
                 {task.description && (
                   <button 
                     onClick={() => setSelectedTaskDescription(task.description!)}
-                    className="p-1.5 md:p-2 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-xl transition-colors text-brand"
+                    className="w-10 h-10 flex items-center justify-center bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl transition-all text-brand hover:scale-105 active:scale-95"
                   >
-                    <Info className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                    <Info className="w-5 h-5" />
                   </button>
                 )}
                 <button 
@@ -351,14 +367,17 @@ export const RoutinesView = ({
                       handleDeleteTask(task.id!, 'single');
                     }
                   }}
-                  className="p-1.5 md:p-2 text-neutral-300 hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-all font-bold"
+                  className="w-10 h-10 flex items-center justify-center text-neutral-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-2xl transition-all active:scale-95 sm:opacity-0 group-hover:opacity-100"
                 >
-                  <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
-            </div>
+            </motion.div>
           )) : (
-            <p className="text-center py-8 text-sm text-neutral-400 italic">Tudo limpo por aqui!</p>
+            <div className="py-12 bg-neutral-50 dark:bg-neutral-900/50 rounded-[2.5rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800 text-center">
+              <CheckSquare className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
+              <p className="text-neutral-400 text-sm font-black uppercase tracking-[0.2em]">Tudo limpo por aqui!</p>
+            </div>
           )}
         </div>
       </div>
