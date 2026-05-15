@@ -19,7 +19,7 @@ import { fetchGoogleCalendarEvents } from '../services/calendarService.js';
 import { generateRecurrenceInstances } from '../lib/recurrenceUtils.js';
 import { logger } from '../lib/logger.js';
 import { useToast } from '../components/ToastProvider.js';
-import { notificationSchema } from '../types/schemas.js';
+import { notificationSchema } from '../models/index.js';
 import { notificationService } from '../services/notificationService.js';
 
 interface AimeeData {

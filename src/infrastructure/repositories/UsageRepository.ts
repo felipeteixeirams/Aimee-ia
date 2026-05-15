@@ -1,6 +1,6 @@
 import { BaseRepository } from './BaseRepository.js';
-import { LLMUsage } from '../../types/index.js';
-import { LLMUsageSchema } from '../../domain/validation/schemas.js';
+import { LLMUsage } from '../../models/index.js';
+import { LLMUsageSchema } from '../../models/index.js';
 
 export class UsageRepository extends BaseRepository<LLMUsage> {
   constructor() {

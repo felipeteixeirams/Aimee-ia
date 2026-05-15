@@ -6,7 +6,7 @@ import { SystemHealth } from '../hooks/useAuth.js';
 import { fetchSignInMethodsForEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase.js';
 
-import { supportSchema } from '../types/schemas.js';
+import { supportSchema } from '../models/index.js';
 
 interface LoginProps {
   onLogin: () => void;

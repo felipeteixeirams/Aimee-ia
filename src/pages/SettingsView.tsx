@@ -2,7 +2,7 @@ import { User as UserIcon, Send, Link as LinkIcon, Lock, Check, Copy, Wallet, Sh
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Share, GlobalConfig, AIProvider, PermissionLevel, AIRecommendedPersona } from '../types/index.js';
 import { cn } from '../lib/utils.js';
-import { AimeeAvatar } from './AimeeAvatar.js';
+import { AimeeAvatar } from '../components/AimeeAvatar.js';
 import React, { useState, useRef, useEffect } from 'react';
 import { calendarService } from '../services/calendarService.js';
 import { notificationService } from '../services/notificationService.js';

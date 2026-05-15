@@ -2,7 +2,7 @@ import { BaseRepository } from './BaseRepository.js';
 import { UserProfile } from '../../types/index.js';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase.js';
-import { UserProfileSchema } from '../../domain/validation/schemas.js';
+import { UserProfileSchema } from '../../models/index.js';
 
 export class ProfileRepository extends BaseRepository<UserProfile & { id?: string }> {
   constructor() {

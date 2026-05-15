@@ -1,5 +1,5 @@
 import { Transaction, HouseholdTask, ShoppingItem } from '../../types/index.js';
-import { TransactionSchema, HouseholdTaskSchema, ShoppingItemSchema } from '../validation/schemas.js';
+import { TransactionSchema, HouseholdTaskSchema, ShoppingItemSchema } from '../../models/index.js';
 import { z } from 'zod';
 
 export class ValidationService {

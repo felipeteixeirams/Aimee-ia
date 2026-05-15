@@ -104,7 +104,23 @@ export class AimeeOrchestrator {
         }
 
         // Audit usage
-        if (response.usage) {
+        if (response.usage && typeof window === 'undefined') {
+          import('../server/firebaseAdmin.js').then(({ getAdminFirestore }) => {
+            const db = getAdminFirestore();
+            if (db) {
+              db.collection('llm_usage').add({
+                userId,
+                model: response.usage!.model,
+                promptTokens: response.usage!.promptTokens,
+                completionTokens: response.usage!.completionTokens,
+                totalTokens: response.usage!.totalTokens,
+                context: contextType,
+                timestamp: new Date().toISOString()
+              }).catch(err => logger.error('Falha ao registrar auditoria de tokens via Admin SDk', { err }));
+            }
+          }).catch(err => logger.error('Falha ao carregar Admin SDK', { err }));
+        } else if (response.usage && typeof window !== 'undefined') {
+          // Fallback para cliente no caso do uso ser client-side
           usageRepository.logUsage({
             userId,
             model: response.usage.model,

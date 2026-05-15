@@ -46,11 +46,11 @@ import { Login } from './components/Login.js';
 import { Register } from './components/Register.js';
 import { StatusScreen } from './components/StatusScreen.js';
 import { AdminPanel } from './components/AdminPanel.js';
-import { ChatView } from './components/ChatView.js';
-const FinanceView = lazy(() => import('./components/FinanceView.js').then(m => ({ default: m.FinanceView })));
-const ShoppingView = lazy(() => import('./components/ShoppingView.js').then(m => ({ default: m.ShoppingView })));
-const RoutinesView = lazy(() => import('./components/RoutinesView.js').then(m => ({ default: m.RoutinesView })));
-const SettingsView = lazy(() => import('./components/SettingsView.js').then(m => ({ default: m.SettingsView })));
+import { ChatView } from './pages/ChatView.js';
+const FinanceView = lazy(() => import('./pages/FinanceView.js').then(m => ({ default: m.FinanceView })));
+const ShoppingView = lazy(() => import('./pages/ShoppingView.js').then(m => ({ default: m.ShoppingView })));
+const RoutinesView = lazy(() => import('./pages/RoutinesView.js').then(m => ({ default: m.RoutinesView })));
+const SettingsView = lazy(() => import('./pages/SettingsView.js').then(m => ({ default: m.SettingsView })));
 
 // Loading component for Suspense
 const ViewLoader = () => (
