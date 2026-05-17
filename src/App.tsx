@@ -61,7 +61,6 @@ const ViewLoader = () => (
 import { AimeeAvatar } from './components/AimeeAvatar.js';
 import { NetworkStatus } from './components/NetworkStatus.js';
 import { Header } from './components/Header.js';
-import { NavigationBar } from './components/NavigationBar.js';
 import { InsightsModal } from './components/InsightsModal.js';
 import { 
   Users,
@@ -994,10 +993,6 @@ export default function App() {
         unreadInsights={unreadInsights}
         handleGoToInsight={handleGoToInsight}
       />
-
-      {user && profile?.status === 'approved' && (
-        <NavigationBar activeTab={activeTab} setActiveTab={setActiveTab} />
-      )}
     </div>
   );
 }

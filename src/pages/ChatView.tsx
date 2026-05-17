@@ -53,49 +53,38 @@ const ChatMessageItem = memo(({
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={cn(
-        "flex group gap-2.5 max-w-2xl mx-auto w-full", 
+        "flex group gap-4 max-w-3xl mx-auto w-full", 
         msg.role === 'user' ? "flex-row-reverse" : "flex-row"
       )}
     >
       <div className={cn(
-        "shrink-0 flex flex-col justify-end pb-0.5",
-        msg.role === 'user' ? "items-end" : "items-start"
+        "shrink-0 flex flex-col justify-start pt-1",
+        msg.role === 'user' ? "items-end hidden" : "items-start"
       )}>
-        {msg.role === 'assistant' ? (
-          <AimeeAvatar 
-            src={GLOBAL_AIMEE_AVATAR} 
-            size="sm" 
-            className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-xl overflow-hidden bg-brand/10 dark:bg-brand/20 flex items-center justify-center border border-brand/20">
-            {(profile?.avatarUrl || profile?.photoUrl || user?.photoURL) ? (
-              <img 
-                src={profile?.avatarUrl || profile?.photoUrl || user?.photoURL || ''} 
-                className="w-full h-full object-cover" 
-                alt="User" 
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <span className="text-[10px] font-bold text-brand uppercase">{profile?.displayName?.charAt(0) || user?.displayName?.charAt(0) || 'U'}</span>
-            )}
+        {msg.role === 'assistant' && (
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-neutral-200 dark:border-neutral-800 shrink-0">
+             <AimeeAvatar 
+               src={GLOBAL_AIMEE_AVATAR} 
+               size="sm" 
+               className="w-full h-full" 
+             />
           </div>
         )}
       </div>
 
       <div className={cn(
-        "relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%]",
+        "relative flex flex-col gap-1 w-full max-w-[85%] md:max-w-[80%]",
         msg.role === 'user' ? "items-end" : "items-start"
       )}>
         <div className={cn(
-          "relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words whitespace-pre-wrap",
+          "relative text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap",
           msg.role === 'user' 
-            ? "bg-brand text-brand-foreground rounded-tr-none font-medium" 
+            ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-[1.5rem] px-5 py-3 font-medium" 
             : msg.status === 'error'
-              ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100 rounded-tl-none shadow-sm"
+              ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100 rounded-[1.5rem] px-5 py-3 shadow-sm"
               : msg.isInsight
-                ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-tl-none shadow-sm ring-1 ring-amber-500/10 ai-bubble"
-                : "bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble"
+                ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-[1.5rem] px-5 py-3 shadow-sm ring-1 ring-amber-500/10 ai-bubble"
+                : "bg-transparent text-neutral-800 dark:text-neutral-200 py-2 px-1"
         )}>
           {msg.isInsight && msg.status !== 'error' && (
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
@@ -110,19 +99,19 @@ const ChatMessageItem = memo(({
             </div>
           )}
           {editingMessage?.id === msg.id ? (
-            <div className="flex flex-col gap-3 min-w-[200px]">
+            <div className="flex flex-col gap-3 min-w-[300px]">
               <textarea
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="w-full bg-transparent border-none focus:ring-0 resize-none text-[15px] p-0 text-white placeholder:text-white/50"
+                className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand resize-none text-[15px] p-3 text-neutral-900 dark:text-white"
                 autoFocus
                 rows={3}
               />
-              <div className="flex justify-end gap-2 border-t border-white/20 pt-2">
-                <button onClick={() => setEditingMessage(null)} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-xs font-bold">
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setEditingMessage(null)} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-xl transition-colors text-sm font-medium">
                   Cancelar
                 </button>
-                <button onClick={() => handleEditMessage(msg)} className="px-3 py-1 bg-white text-brand rounded-lg transition-colors text-xs font-bold">
+                <button onClick={() => handleEditMessage(msg)} className="px-4 py-2 bg-brand text-brand-foreground rounded-xl transition-colors text-sm font-medium">
                   Salvar
                 </button>
               </div>
@@ -142,12 +131,12 @@ const ChatMessageItem = memo(({
                 </button>
               )}
               <div className={cn(
-                "absolute top-4 opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-1",
-                msg.role === 'user' ? "right-full mr-3" : "left-full ml-3"
+                "mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1",
+                msg.role === 'user' ? "justify-end" : "justify-start"
               )}>
                 <button 
                   onClick={() => copyToClipboard(msg.content, msg.id || index.toString())}
-                  className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors relative"
+                  className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
                   title="Copiar"
                 >
                   {copiedId === (msg.id || index.toString()) ? (
@@ -162,7 +151,7 @@ const ChatMessageItem = memo(({
                       setEditingMessage(msg);
                       setEditValue(msg.content);
                     }}
-                    className="p-2 glass rounded-xl text-neutral-400 hover:text-brand transition-colors"
+                    className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
                     title="Editar"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -172,16 +161,16 @@ const ChatMessageItem = memo(({
             </>
           )}
           {msg.actions && msg.actions.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-brand/5 dark:border-white/5">
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
               {msg.actions.map((action) => (
                 <button
                   key={action.id}
                   onClick={() => handleSendMessage(action.value, true)}
                   className={cn(
-                    "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] transition-all active:scale-95 border",
+                    "px-4 py-2 rounded-xl text-[13px] font-medium transition-all active:scale-95 border",
                     msg.role === 'user' 
-                      ? "bg-white/10 text-white border-white/20 hover:bg-white/20" 
-                      : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10 dark:bg-brand/20 dark:text-brand-foreground"
+                      ? "bg-white/50 dark:bg-neutral-700 text-neutral-900 dark:text-white border-neutral-200 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-600" 
+                      : "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   )}
                 >
                   {action.label}
@@ -190,12 +179,6 @@ const ChatMessageItem = memo(({
             </div>
           )}
         </div>
-        <span className={cn(
-          "text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2",
-          msg.role === 'user' ? "text-right" : "text-left"
-        )}>
-          {format(new Date(msg.timestamp), 'HH:mm')}
-        </span>
       </div>
     </motion.div>
   );
@@ -393,7 +376,7 @@ export const ChatView = memo(({
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden pt-4 px-4 pb-[160px] md:pb-[180px] space-y-3"
+        className="flex-1 overflow-y-auto overflow-x-hidden pt-4 px-4 pb-[140px] md:pb-[160px] space-y-4"
       >
         {messages.length === 0 && (
           <div className="text-center py-20">
@@ -450,62 +433,76 @@ export const ChatView = memo(({
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-[80px] md:bottom-[90px] left-0 right-0 p-3 bg-gradient-to-t from-neutral-50/90 via-neutral-50/50 to-transparent dark:from-neutral-950/90 dark:via-neutral-950/50 dark:to-transparent pt-12 pb-4 pointer-events-none z-20">
-        <div className="max-w-xl mx-auto flex flex-col gap-2 pointer-events-auto">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-800 z-20">
+        <div className="max-w-3xl mx-auto flex flex-col gap-2">
           {isRecording && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center justify-between px-4 py-2 bg-brand/10 dark:bg-brand/20 backdrop-blur-xl border border-brand/20 rounded-2xl mb-1"
+              className="flex items-center justify-between px-4 py-2 bg-brand/10 dark:bg-brand/20 border border-brand/20 rounded-2xl mb-1"
             >
               <div className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-brand">Gravando...</span>
+                <span className="text-[10px] font-medium text-brand">Gravando...</span>
               </div>
               <AudioVisualizer isRecording={isRecording} getFrequencyData={getFrequencyData} />
             </motion.div>
           )}
           
-          <div className="relative group">
-            <input 
-              type="text" 
+          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-800 rounded-2xl border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-1 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 transition-all">
+            <textarea
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder={isRecording ? "Solte para enviar..." : isTranscribing ? "Aimee está ouvindo..." : "Fale com sua Aimee..."}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                e.target.style.height = '56px';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                  e.currentTarget.style.height = '56px';
+                }
+              }}
+              placeholder={isRecording ? "Solte para enviar..." : isTranscribing ? "Aimee está ouvindo..." : "Mensagem para Aimee"}
               disabled={isRecording || isTranscribing}
-              className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-[2rem] pl-6 pr-24 py-4 text-sm focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all outline-none dark:text-white shadow-xl shadow-black/5 disabled:opacity-50"
+              rows={1}
+              className="w-full bg-transparent border-none rounded-2xl pl-5 pr-20 py-4 text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none"
+              style={{ minHeight: '56px', maxHeight: '200px' }}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <div className="absolute right-2 bottom-2 flex items-center gap-1.5">
               <button
                 onClick={isRecording ? onStopRecording : startRecording}
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
-                title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada neste navegador" : "Clique para falar"}
+                title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada" : "Falar"}
                 className={cn(
-                  "w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90",
+                  "w-10 h-10 flex items-center justify-center rounded-xl transition-all",
                   isRecording 
-                    ? "bg-red-500 text-white shadow-lg shadow-red-500/40" 
-                    : "text-neutral-400 hover:text-brand bg-neutral-50 dark:bg-neutral-800",
+                    ? "bg-red-500 text-white" 
+                    : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-700",
                   (isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))) && "opacity-50 cursor-not-allowed"
                 )}
               >
                 {isTranscribing ? (
-                  <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" />
                 ) : isRecording ? (
-                  <Square className="w-4 h-4" />
+                  <Square className="w-5 h-5 fill-current" />
                 ) : (
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-5 h-5" />
                 )}
               </button>
               
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
-                className="w-10 h-10 bg-brand text-brand-foreground rounded-full flex items-center justify-center shadow-lg shadow-brand/20 active:scale-90 transition-all disabled:opacity-30 disabled:scale-100 group shrink-0"
+                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500"
               >
                 <Send className="w-4 h-4" />
               </button>
             </div>
+          </div>
+          <div className="text-center mt-1">
+            <span className="text-[11px] text-neutral-400">Aimee pode cometer erros. Considere verificar informações importantes.</span>
           </div>
         </div>
       </div>
