@@ -449,7 +449,7 @@ export const ChatView = memo(({
             </motion.div>
           )}
           
-          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-800 rounded-2xl border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-1 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 transition-all">
+          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-800 rounded-[1.5rem] border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-1 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 transition-all">
             <textarea
               value={inputText}
               onChange={(e) => {
@@ -467,7 +467,7 @@ export const ChatView = memo(({
               placeholder={isRecording ? "Solte para enviar..." : isTranscribing ? "Aimee está ouvindo..." : "Mensagem para Aimee"}
               disabled={isRecording || isTranscribing}
               rows={1}
-              className="w-full bg-transparent border-none rounded-2xl pl-5 pr-20 py-4 text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none"
+              className="w-full bg-transparent border-none rounded-[1.5rem] pl-5 pr-20 py-4 text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none"
               style={{ minHeight: '56px', maxHeight: '200px' }}
             />
             <div className="absolute right-2 bottom-2 flex items-center gap-1.5">
@@ -476,7 +476,7 @@ export const ChatView = memo(({
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
                 title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada" : "Falar"}
                 className={cn(
-                  "w-10 h-10 flex items-center justify-center rounded-xl transition-all",
+                  "w-10 h-10 flex items-center justify-center rounded-full transition-all",
                   isRecording 
                     ? "bg-red-500 text-white" 
                     : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-700",
@@ -495,7 +495,7 @@ export const ChatView = memo(({
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
-                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500"
+                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500"
               >
                 <Send className="w-4 h-4" />
               </button>
