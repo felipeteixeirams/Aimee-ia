@@ -1,5 +1,5 @@
 import { transactionRepository } from '../../infrastructure/repositories/index.js';
-import { Transaction } from '../../types/index.js';
+import { Transaction } from '../../models/index.js';
 import { logger } from '../../lib/logger.js';
 import { ValidationService } from '../services/ValidationService.js';
 

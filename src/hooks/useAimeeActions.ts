@@ -4,19 +4,17 @@ import {
   GlobalConfig, ChatRole, UserStatus,
   Transaction, FinancialGoal, HouseholdTask, FamilyEvent
 } from '../types/index.js';
-import { 
-  taskRepository, 
-  transactionRepository, 
-  shoppingRepository, 
-  chatRepository, 
-  profileRepository, 
-  eventRepository,
-  configRepository 
-} from '../infrastructure/repositories/index.js';
 import { User } from 'firebase/auth';
 import { aimeeClientOrchestrator } from '../services/aiService.js';
-import { fetchGoogleCalendarEvents } from '../services/calendarService.js';
 import { generateRecurrenceInstances } from '../lib/recurrenceUtils.js';
+import { container } from "../infrastructure/container.js";
+import type { TaskRepository } from "../infrastructure/repositories/TaskRepository.js";
+import type { TransactionRepository } from "../infrastructure/repositories/TransactionRepository.js";
+import type { ShoppingRepository } from "../infrastructure/repositories/ShoppingRepository.js";
+import type { ChatRepository } from "../infrastructure/repositories/ChatRepository.js";
+import type { ProfileRepository } from "../infrastructure/repositories/ProfileRepository.js";
+import type { EventRepository } from "../infrastructure/repositories/EventRepository.js";
+import type { ConfigRepository } from "../infrastructure/repositories/ConfigRepository.js";
 import { logger } from '../lib/logger.js';
 import { useToast } from '../components/ToastProvider.js';
 import { notificationSchema } from '../models/index.js';
@@ -40,6 +38,14 @@ export function useAimeeActions(
 ) {
   const { showToast } = useToast();
   
+  const chatRepository = container.resolve<ChatRepository>("ChatRepository");
+  const taskRepository = container.resolve<TaskRepository>("TaskRepository");
+  const transactionRepository = container.resolve<TransactionRepository>("TransactionRepository");
+  const shoppingRepository = container.resolve<ShoppingRepository>("ShoppingRepository");
+  const profileRepository = container.resolve<ProfileRepository>("ProfileRepository");
+  const eventRepository = container.resolve<EventRepository>("EventRepository");
+  const configRepository = container.resolve<ConfigRepository>("ConfigRepository");
+
   const sendMessage = async (
     text: string, 
     activeSpace: string | null,
@@ -236,7 +242,7 @@ export function useAimeeActions(
   const syncGoogleCalendar = async (token: string, targetUserId: string) => {
     logger.info('Starting Google Calendar bidirectional sync', { targetUserId });
     try {
-      const { calendarService } = await import('../services/calendarService');
+      const calendarService = container.resolve<any>("CalendarService");
       const googleEvents = await calendarService.fetchGoogleCalendarEvents(token);
       const localEvents = await eventRepository.list([], targetUserId);
       

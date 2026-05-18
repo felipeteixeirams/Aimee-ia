@@ -1,18 +1,17 @@
 import { ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent, ShoppingItem, Transaction } from "../types/index.js";
-import { 
-  financeSkill,
-  routineSkill,
-  shoppingSkill
-} from "../domain/skills/index.js";
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import { allAimeeTools } from "../infrastructure/tools/AimeeTools.js";
 import { withRetry } from "../lib/retryUtils.js";
 import { config } from "../lib/config.js";
-import { usageRepository } from "../infrastructure/repositories/UsageRepository.js";
 import { logger } from "../lib/logger.js";
 import { IntentRouter } from "../domain/intelligence/IntentRouter.js";
-import { InsightEngine, AimeeInsight } from "../domain/intelligence/InsightEngine.js";
+import { InsightEngine } from "../domain/intelligence/InsightEngine.js";
 import { getAimeeSystemInstruction } from "../domain/intelligence/AimeePrompts.js";
+import { container } from "../infrastructure/container.js";
+import type { FinanceSkill } from "../domain/skills/FinanceSkill.js";
+import type { ShoppingSkill } from "../domain/skills/ShoppingSkill.js";
+import type { RoutineSkill } from "../domain/skills/RoutineSkill.js";
+import type { UsageRepository } from "../infrastructure/repositories/UsageRepository.js";
 
 // Initialize AI on frontend
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
@@ -138,6 +137,7 @@ Dados Brutos (Amostra): ${JSON.stringify({
       });
 
       if (response.usageMetadata) {
+        const usageRepository = container.resolve<UsageRepository>("UsageRepository");
         usageRepository.logUsage({
           userId: activeUserId,
           model: "gemini-flash-latest",
@@ -165,6 +165,10 @@ Dados Brutos (Amostra): ${JSON.stringify({
 
     let feedback = "";
     if (functionCalls && functionCalls.length > 0) {
+      const financeSkill = container.resolve<FinanceSkill>("FinanceSkill");
+      const shoppingSkill = container.resolve<ShoppingSkill>("ShoppingSkill");
+      const routineSkill = container.resolve<RoutineSkill>("RoutineSkill");
+
       for (const call of functionCalls) {
         const name = call.name;
         const args = (call.args || {}) as any;

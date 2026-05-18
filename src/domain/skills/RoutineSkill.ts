@@ -1,5 +1,5 @@
 import { taskRepository, eventRepository } from '../../infrastructure/repositories/index.js';
-import { HouseholdTask, TaskRecurrence } from '../../types/index.js';
+import { HouseholdTask, TaskRecurrence } from '../../models/index.js';
 import { generateRecurrenceInstances } from '../../lib/recurrenceUtils.js';
 import { logger } from '../../lib/logger.js';
 import { ValidationService } from '../services/ValidationService.js';
