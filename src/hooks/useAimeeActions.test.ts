@@ -14,12 +14,13 @@ vi.mock('../lib/firebase.js', () => ({
 
 vi.mock('../infrastructure/repositories/index.js', () => ({
   chatRepository: { create: vi.fn().mockResolvedValue('msg-id') },
-  taskRepository: {},
-  transactionRepository: {},
-  shoppingRepository: {},
-  profileRepository: {},
-  eventRepository: {},
-  configRepository: {}
+  taskRepository: { update: vi.fn(), create: vi.fn(), getById: vi.fn(), delete: vi.fn(), list: vi.fn() },
+  transactionRepository: { create: vi.fn() },
+  shoppingRepository: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), list: vi.fn() },
+  profileRepository: { updateProfile: vi.fn(), getProfile: vi.fn(), getGoogleCredentials: vi.fn() },
+  eventRepository: { delete: vi.fn(), create: vi.fn(), list: vi.fn(), update: vi.fn() },
+  configRepository: { updateGlobal: vi.fn() },
+  usageRepository: { logUsage: vi.fn() }
 }));
 
 vi.mock('../services/aiService.js', () => ({

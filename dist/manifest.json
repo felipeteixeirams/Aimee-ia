@@ -1,0 +1,24 @@
+{
+  "short_name": "Aimee",
+  "name": "Aimee - Inteligência Pessoal",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/sJwbY4cy/IMG-0538.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/sJwbY4cy/IMG-0538.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#171717",
+  "background_color": "#000000",
+  "description": "Agente de Inteligência Pessoal Orquestrada"
+}
