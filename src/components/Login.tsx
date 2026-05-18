@@ -332,7 +332,7 @@ export const Login: React.FC<LoginProps> = ({
               {lastUser && (
                 <button
                   onClick={handleContinueAsLastUser}
-                  className="w-full bg-white/5 border border-white/5 text-white py-4 rounded-lg font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all hover:bg-white/10 mb-3"
+                  className="w-full bg-white/5 border border-white/5 text-white py-3 rounded-full font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all hover:bg-white/10 mb-3"
                 >
                   <div className="text-left font-['Inter']">
                     <p className="text-[11px] text-neutral-400 font-medium">Continuar como</p>
@@ -344,7 +344,7 @@ export const Login: React.FC<LoginProps> = ({
 
               <button
                 onClick={onLogin}
-                className="w-full bg-primary-container text-on-primary-container font-semibold py-4 rounded-lg flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_14px_rgba(75,142,255,0.3)] mb-3"
+                className="w-full bg-primary-container text-on-primary-container font-semibold py-3 rounded-full flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_14px_rgba(75,142,255,0.3)] mb-3"
               >
                 <span>Continuar com Google</span>
                 <ArrowRight className="w-5 h-5" />
@@ -352,7 +352,7 @@ export const Login: React.FC<LoginProps> = ({
 
               <button
                 onClick={() => setStep('email')}
-                className="w-full bg-transparent text-on-surface-variant font-medium py-3 rounded-lg flex items-center justify-center hover:text-on-surface transition-colors active:scale-95"
+                className="w-full bg-transparent text-on-surface-variant font-medium py-3 rounded-full flex items-center justify-center hover:text-on-surface transition-colors active:scale-95"
               >
                 Opções com Email
               </button>
@@ -406,14 +406,14 @@ export const Login: React.FC<LoginProps> = ({
                     value={step === 'email' ? email : password}
                     onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
                     placeholder={step === 'email' ? "Seu email" : (isNewUser ? "Mínimo 6 caracteres" : "Senha")}
-                    className="w-full bg-[rgba(14,14,14,0.6)] border border-outline-variant/30 rounded-xl py-4 pl-4 pr-12 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-medium placeholder:text-neutral-500 shadow-inner"
+                    className="w-full bg-[rgba(14,14,14,0.6)] border border-outline-variant/30 rounded-full py-3 pl-5 pr-12 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-medium placeholder:text-neutral-500 shadow-inner"
                   />
-                  {step === 'email' && <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
-                  {step === 'password' && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
+                  {step === 'email' && <Mail className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
+                  {step === 'password' && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
                 </div>
 
                 {step === 'password' && (
-                  <div className="flex justify-between items-center px-1">
+                  <div className="flex justify-between items-center px-4">
                     <button
                       type="button"
                       onClick={() => setShowReset(true)}
@@ -434,7 +434,7 @@ export const Login: React.FC<LoginProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || isMaintenance || isCheckingEmail}
-                  className="w-full bg-primary-container text-on-primary-container py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all hover:bg-primary-container/90 disabled:opacity-50 mx-auto mt-2"
+                  className="w-full bg-primary-container text-on-primary-container py-3 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all hover:bg-primary-container/90 disabled:opacity-50 mx-auto mt-4"
                 >
                   {(isLoading || isCheckingEmail) ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
