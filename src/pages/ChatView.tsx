@@ -449,28 +449,28 @@ export const ChatView = memo(({
             </motion.div>
           )}
           
-          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-800 rounded-[26px] border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-1 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 transition-all">
+          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-800 rounded-[24px] border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-1 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 transition-all">
             <textarea
               value={inputText}
               onChange={(e) => {
                 setInputText(e.target.value);
-                e.target.style.height = '52px';
+                e.target.style.height = '48px';
                 e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   handleSendMessage();
-                  e.currentTarget.style.height = '52px';
+                  e.currentTarget.style.height = '48px';
                 }
               }}
               placeholder={isRecording ? "Solte para enviar..." : isTranscribing ? "Aimee está ouvindo..." : "Mensagem para Aimee"}
               disabled={isRecording || isTranscribing}
               rows={1}
-              className="w-full bg-transparent border-none rounded-[26px] pl-5 pr-[104px] py-[14px] text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none leading-relaxed"
-              style={{ minHeight: '52px', maxHeight: '200px' }}
+              className="w-full bg-transparent border-none rounded-[24px] pl-5 pr-[100px] py-3 text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none leading-relaxed"
+              style={{ minHeight: '48px', maxHeight: '200px' }}
             />
-            <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1.5">
+            <div className="absolute right-1 bottom-1 flex items-center gap-1">
               <button
                 onClick={isRecording ? onStopRecording : startRecording}
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
@@ -495,7 +495,7 @@ export const ChatView = memo(({
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
-                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500"
+                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 shrink-0"
               >
                 <Send className="w-4 h-4" />
               </button>
