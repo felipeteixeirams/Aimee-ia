@@ -1,27 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
-import { useAimeeActions } from './useAimeeActions.js';
-import { chatRepository } from '../infrastructure/repositories/index.js';
-import { aimeeClientOrchestrator } from '../services/aiService.js';
 
-// Mock dependencies
+// Mock dependencies (Must be before other imports to ensure hoisted correctly and used by container)
 vi.mock('../lib/firebase.js', () => ({
   auth: { currentUser: { uid: 'user-1' } },
   signOut: vi.fn(),
   googleProvider: {},
-  signInWithPopup: vi.fn()
+  signInWithPopup: vi.fn(),
+  db: {}
 }));
 
 vi.mock('../infrastructure/repositories/index.js', () => ({
-  chatRepository: { create: vi.fn().mockResolvedValue('msg-id') },
+  chatRepository: { create: vi.fn().mockResolvedValue('msg-id'), update: vi.fn() },
   taskRepository: { update: vi.fn(), create: vi.fn(), getById: vi.fn(), delete: vi.fn(), list: vi.fn() },
-  transactionRepository: { create: vi.fn() },
+  transactionRepository: { create: vi.fn(), list: vi.fn() },
   shoppingRepository: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), list: vi.fn() },
   profileRepository: { updateProfile: vi.fn(), getProfile: vi.fn(), getGoogleCredentials: vi.fn() },
   eventRepository: { delete: vi.fn(), create: vi.fn(), list: vi.fn(), update: vi.fn() },
   configRepository: { updateGlobal: vi.fn() },
-  usageRepository: { logUsage: vi.fn() }
+  usageRepository: { logUsage: vi.fn() },
+  BaseRepository: class {}
 }));
+
+import { renderHook } from '@testing-library/react';
+import { useAimeeActions } from './useAimeeActions.js';
+import { chatRepository, taskRepository, shoppingRepository } from '../infrastructure/repositories/index.js';
+import { aimeeClientOrchestrator } from '../services/aiService.js';
 
 vi.mock('../services/aiService.js', () => ({
   aimeeClientOrchestrator: vi.fn().mockResolvedValue('Olá!')
@@ -53,13 +56,13 @@ describe('useAimeeActions', () => {
     vi.clearAllMocks();
   });
 
-  it.skip('should return action functions', () => {
+  it('should return action functions', () => {
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
     expect(result.current.sendMessage).toBeDefined();
     expect(result.current.manageTasks).toBeDefined();
   });
 
-  it.skip('should process sendMessage flow', async () => {
+  it('should process sendMessage flow', async () => {
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
     
     const setTyping = vi.fn();
@@ -81,7 +84,7 @@ describe('useAimeeActions', () => {
     expect(setTyping).toHaveBeenCalledWith(false);
   });
 
-  it.skip('should handle actions in AI response', async () => {
+  it('should handle actions in AI response', async () => {
     vi.mocked(aimeeClientOrchestrator).mockResolvedValue('Resposta com ação [ACTIONS: [{"id": "1", "label": "Ok", "value": "check", "type": "button"}]]');
     
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
@@ -99,7 +102,7 @@ describe('useAimeeActions', () => {
     );
   });
 
-  it.skip('should manage tasks toggle', async () => {
+  it('should manage tasks toggle', async () => {
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
     const { taskRepository } = await import('../infrastructure/repositories/index.js');
     (taskRepository.update as any) = vi.fn().mockResolvedValue({});
@@ -109,7 +112,7 @@ describe('useAimeeActions', () => {
     expect(taskRepository.update).toHaveBeenCalledWith('task-1', { status: 'done' }, 'user-1');
   });
 
-  it.skip('should manage shopping addItem', async () => {
+  it('should manage shopping addItem', async () => {
     const { result } = renderHook(() => useAimeeActions(mockUser, mockProfile, mockAimeeData));
     const { shoppingRepository } = await import('../infrastructure/repositories/index.js');
     (shoppingRepository.create as any) = vi.fn().mockResolvedValue({});
