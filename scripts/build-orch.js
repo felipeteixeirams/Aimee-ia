@@ -3,13 +3,18 @@ import { spawn } from 'child_process';
 const skipTests = process.env.SKIP_TESTS === 'true' || process.env.SKIP_BUILD_TESTS === 'true';
 
 console.log('🚀 \x1b[36mIniciando Orquestrador de Build Otimizado (Aimee AI)...\x1b[0m');
-console.log(`- Modo: Execução em Paralelo`);
+console.log(`- Modo: Execução em Paralelo (Paralelismo Máximo Habilitado ⚡)`);
 console.log(`- Pular Testes: ${skipTests ? '✅ Ativado' : '❌ Desativado (Testes rodarão em paralelo)'}`);
 
 function runCommand(command, args, prefix, colorCode = '\x1b[36m') {
   return new Promise((resolve, reject) => {
     const childEnv = { ...process.env, FORCE_COLOR: '1' };
-    const p = spawn(command, args, { env: childEnv, shell: true });
+    
+    // Evita o warning de segurança DEP0190 usando shell: false e adaptando para Windows apenas se necessário
+    const isWin = process.platform === 'win32';
+    const actualCommand = isWin && command === 'npm' ? 'npm.cmd' : command;
+    
+    const p = spawn(actualCommand, args, { env: childEnv, shell: false });
 
     const resetColor = '\x1b[0m';
     
@@ -32,15 +37,27 @@ function runCommand(command, args, prefix, colorCode = '\x1b[36m') {
       stderrBuffer = lines.pop() || '';
       for (const line of lines) {
         if (line.trim()) {
-          console.log(`\x1b[31m${prefix} (Erro)${resetColor} ${line}`);
+          // esbuild e ferramentas similares direcionam estatísticas de sucesso e logs comuns a stderr.
+          // Só rotularemos como de fato erro se houver palavras-chave óbvias de problemas na linha.
+          const isRealError = /error|failed|exception/i.test(line);
+          const label = isRealError ? ' (Erro)' : '';
+          const color = isRealError ? '\x1b[31m' : '\x1b[90m'; // Vermelho se for erro, cinza discreto para logs normais
+          console.log(`${color}${prefix}${label}${resetColor} ${line}`);
         }
       }
     });
 
-    p.on('close', (code) => {
+     p.on('close', (code) => {
       // Flush residual buffers
-      if (stdoutBuffer.trim()) console.log(`${colorCode}${prefix}${resetColor} ${stdoutBuffer}`);
-      if (stderrBuffer.trim()) console.log(`\x1b[31m${prefix} (Erro)${resetColor} ${stderrBuffer}`);
+      if (stdoutBuffer.trim()) {
+        console.log(`${colorCode}${prefix}${resetColor} ${stdoutBuffer}`);
+      }
+      if (stderrBuffer.trim()) {
+        const isRealError = /error|failed|exception/i.test(stderrBuffer);
+        const label = isRealError ? ' (Erro)' : '';
+        const color = isRealError ? '\x1b[31m' : '\x1b[90m';
+        console.log(`${color}${prefix}${label}${resetColor} ${stderrBuffer}`);
+      }
 
       if (code === 0) {
         resolve();
