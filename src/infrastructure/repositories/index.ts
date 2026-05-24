@@ -6,4 +6,3 @@ export * from './ChatRepository.js';
 export * from './ProfileRepository.js';
 export * from './EventRepository.js';
 export * from './ConfigRepository.js';
-export * from './UsageRepository.js';

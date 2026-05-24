@@ -332,10 +332,10 @@ export const Login: React.FC<LoginProps> = ({
               {lastUser && (
                 <button
                   onClick={handleContinueAsLastUser}
-                  className="w-full bg-white/5 border border-white/5 text-white py-3 rounded-full font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all hover:bg-white/10 mb-3"
+                  className="w-full bg-white/5 border border-white/5 text-white py-2.5 rounded-full font-bold flex items-center justify-between px-6 active:scale-[0.98] transition-all hover:bg-white/10 mb-3"
                 >
                   <div className="text-left font-['Inter']">
-                    <p className="text-[11px] text-neutral-400 font-medium">Continuar como</p>
+                    <p className="text-[10px] text-neutral-400 font-medium">Continuar como</p>
                     <p className="text-sm truncate max-w-[200px] font-semibold">{lastUser}</p>
                   </div>
                   <History className="w-5 h-5 text-neutral-400" />
@@ -344,15 +344,15 @@ export const Login: React.FC<LoginProps> = ({
 
               <button
                 onClick={onLogin}
-                className="w-full bg-primary-container text-on-primary-container font-semibold py-3 rounded-full flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_14px_rgba(75,142,255,0.3)] mb-3"
+                className="w-full bg-primary-container text-on-primary-container font-bold py-2.5 rounded-full flex items-center justify-center gap-3 hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_14px_rgba(75,142,255,0.3)] mb-3 text-sm"
               >
                 <span>Continuar com Google</span>
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => setStep('email')}
-                className="w-full bg-transparent text-on-surface-variant font-medium py-3 rounded-full flex items-center justify-center hover:text-on-surface transition-colors active:scale-95"
+                className="w-full bg-transparent text-on-surface-variant font-bold py-2.5 rounded-full flex items-center justify-center hover:text-on-surface transition-colors active:scale-95 text-sm"
               >
                 Opções com Email
               </button>
@@ -434,10 +434,10 @@ export const Login: React.FC<LoginProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading || isMaintenance || isCheckingEmail}
-                  className="w-full bg-primary-container text-on-primary-container py-3 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all hover:bg-primary-container/90 disabled:opacity-50 mx-auto mt-4"
+                  className="w-full bg-primary-container text-on-primary-container py-2.5 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all hover:bg-primary-container/90 disabled:opacity-50 mx-auto mt-4 text-sm"
                 >
                   {(isLoading || isCheckingEmail) ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <span>{step === 'email' ? 'Avançar' : (isNewUser ? 'Registrar' : 'Acessar')}</span>
                   )}

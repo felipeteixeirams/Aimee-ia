@@ -139,15 +139,7 @@ export default async function (fastify: FastifyInstance) {
 
     try {
       const orchestrator = container.resolve(AimeeOrchestrator);
-      const contextString = `
-[CONTEXTO ATUAL]
-Tarefas: ${JSON.stringify(context.tasks || [])}
-Finanças: ${JSON.stringify(context.finance || [])}
-Compras: ${JSON.stringify(context.shopping || [])}
-`;
-      
-      const fullPrompt = `${prompt}\n\n${contextString}`;
-      const result = await orchestrator.processRequest(fullPrompt, history, persona, audio, provider, userId, contextType);
+      const result = await orchestrator.processRequest(prompt, history, persona, audio, provider, userId, contextType, context);
       return result;
     } catch (error: any) {
       logger.error("Server AI Error", { 

@@ -56,11 +56,31 @@ export class AimeeOrchestrator {
     audio?: { data: string; mimeType: string }, 
     preferredProvider?: string,
     userId: string = 'system',
-    contextType: string = 'chat'
+    contextType: string = 'chat',
+    context: any = {}
   ): Promise<{ content: string; functionCalls?: any[]; usage?: any }> {
     
-    // Check Cache first (only for simple text requests without tools/audio)
-    const cacheKey = JSON.stringify({ prompt, history, persona, preferredProvider });
+    // Build contextual prompt enrichment
+    const tasks = context.tasks || [];
+    const finance = context.finance || [];
+    const shopping = context.shopping || [];
+    const goals = context.goals || [];
+
+    const contextString = `
+[DADOS DO USUÁRIO]
+- Tarefas Pendentes: ${tasks.length} ativas.
+- Transações Recentes: ${finance.length} registradas.
+- Itens na Lista de Compras: ${shopping.length} pendentes.
+- Metas Financeiras: ${goals.length || 0} em progresso.
+
+Histórico de Dados (JSON):
+${JSON.stringify({ tasks: tasks.slice(0, 10), finance: finance.slice(0, 10), shopping: shopping.slice(0, 10) })}
+`;
+
+    const finalPrompt = `${prompt}\n\n${contextString}`;
+    
+    // Check Cache first (only for simple requests)
+    const cacheKey = JSON.stringify({ prompt: finalPrompt, history, persona, preferredProvider });
     if (!audio && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)!;
       logger.info('Orchestrator: Cache hit!', { prompt: prompt.substring(0, 30) });
@@ -86,7 +106,7 @@ export class AimeeOrchestrator {
         logger.info(`Orchestrator: Tentando ${providerId}`);
         
         const request: LLMRequest = {
-          prompt,
+          prompt: finalPrompt,
           history: this.normalizeHistory(history),
           persona,
           tools: allAimeeTools
@@ -104,32 +124,14 @@ export class AimeeOrchestrator {
         }
 
         // Audit usage
-        if (response.usage && typeof window === 'undefined') {
-          import('../server/firebaseAdmin.js').then(({ getAdminFirestore }) => {
-            const db = getAdminFirestore();
-            if (db) {
-              db.collection('llm_usage').add({
-                userId,
-                model: response.usage!.model,
-                promptTokens: response.usage!.promptTokens,
-                completionTokens: response.usage!.completionTokens,
-                totalTokens: response.usage!.totalTokens,
-                context: contextType,
-                timestamp: new Date().toISOString()
-              }).catch(err => logger.error('Falha ao registrar auditoria de tokens via Admin SDk', { err }));
-            }
-          }).catch(err => logger.error('Falha ao carregar Admin SDK', { err }));
-        } else if (response.usage && typeof window !== 'undefined') {
-          // Fallback para cliente no caso do uso ser client-side
-          usageRepository.logUsage({
-            userId,
-            model: response.usage.model,
-            promptTokens: response.usage.promptTokens,
-            completionTokens: response.usage.completionTokens,
-            totalTokens: response.usage.totalTokens,
-            context: contextType
-          }).catch(err => logger.error('Falha ao registrar auditoria de tokens', { err }));
-        }
+        usageRepository.logUsage({
+          userId,
+          model: response.usage?.model || providerId,
+          promptTokens: response.usage?.promptTokens || 0,
+          completionTokens: response.usage?.completionTokens || 0,
+          totalTokens: response.usage?.totalTokens || 0,
+          context: contextType
+        }).catch(err => logger.error('Falha ao registrar auditoria de tokens via Repository', { err }));
 
         return {
           content: response.content,
