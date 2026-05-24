@@ -289,7 +289,7 @@ export type LLMUsageInput = z.infer<typeof LLMUsageSchema>;
 
 export const EVENT_TAXONOMY = {
   "Tecnologia": {
-    "Inteligência Artificial": ["LLMs", "RAG", "Agentes", "Multimodal", "Fine-tuning", "Open Source AI", "Prompt Engineering", "MLOps"],
+    "Inteligência Artificial": ["Inteligência Artificial"],
     "Desenvolvimento": ["Node.js", "React", "DevOps", "Cloud", "Kubernetes"]
   },
   "Pessoal": {
