@@ -733,7 +733,7 @@ export function useAimeeActions(
           // podemos triggar a primeira execução em background!
           if (config.active && (!aimeeData.monitorEvents || aimeeData.monitorEvents.length === 0)) {
             logger.info('Primeiro trigger de descoberta de eventos iniciado em background.');
-            fetch('/events/discovery/trigger', { method: 'POST' })
+            fetch('/api/events/discovery/trigger', { method: 'POST' })
               .then(res => res.json())
               .then(data => {
                 logger.info('Job de descoberta inicial concluído', data);
