@@ -730,10 +730,19 @@ export default function App() {
   const isGoogleEmail = user?.email?.endsWith('@gmail.com') || (user?.providerData?.some(p => p.providerId === 'google.com'));
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden">
-      <NetworkStatus />
-      <Header 
-        unreadInsightsCount={unreadInsights.length}
+    <div className="flex flex-col h-[100dvh] bg-neutral-50 dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-50 overflow-hidden relative">
+      
+      {/* Premium Background Mesh */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20 transition-opacity duration-1000">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-brand/10 dark:bg-brand/20 blur-[120px] mix-blend-multiply dark:mix-blend-screen" />
+        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-blue-300/10 dark:bg-blue-500/10 blur-[120px] mix-blend-multiply dark:mix-blend-screen" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-brand-muted/40 dark:bg-brand/10 blur-[120px] mix-blend-multiply dark:mix-blend-screen" />
+      </div>
+
+      <div className="z-10 flex flex-col h-full w-full absolute inset-0">
+        <NetworkStatus />
+        <Header 
+          unreadInsightsCount={unreadInsights.length}
         setShowInsightsModal={setShowInsightsModal}
         profile={profile}
         activeSpace={activeSpace}
@@ -993,6 +1002,7 @@ export default function App() {
         unreadInsights={unreadInsights}
         handleGoToInsight={handleGoToInsight}
       />
+      </div>
     </div>
   );
 }

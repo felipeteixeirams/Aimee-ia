@@ -218,8 +218,8 @@ interface ChatViewProps {
 const ChatSkeleton = memo(({ GLOBAL_AIMEE_AVATAR }: { GLOBAL_AIMEE_AVATAR: string }) => (
   <motion.div 
     layout
-    initial={{ opacity: 0, y: 5 }}
-    animate={{ opacity: 1, y: 0 }}
+    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
     className="flex group gap-2.5 max-w-2xl mx-auto w-full flex-row"
   >
     <div className="shrink-0 flex flex-col justify-end pb-0.5 items-start">
@@ -229,15 +229,10 @@ const ChatSkeleton = memo(({ GLOBAL_AIMEE_AVATAR }: { GLOBAL_AIMEE_AVATAR: strin
         className="w-8 h-8 rounded-xl shadow-lg border border-white dark:border-neutral-800" 
       />
     </div>
-    <div className="bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 px-5 py-4 rounded-2xl rounded-tl-none shadow-sm min-w-[240px] flex flex-col gap-2">
-      <div className="skeleton-text w-full" />
-      <div className="skeleton-text w-[90%] opacity-70" />
-      <div className="skeleton-text w-[60%] opacity-40" />
-      <div className="flex gap-1 mt-1">
-        <div className="w-1.5 h-1.5 bg-brand/30 dark:bg-brand/50 rounded-full animate-bounce" />
-        <div className="w-1.5 h-1.5 bg-brand/30 dark:bg-brand/50 rounded-full animate-bounce [animation-delay:0.2s]" />
-        <div className="w-1.5 h-1.5 bg-brand/30 dark:bg-brand/50 rounded-full animate-bounce [animation-delay:0.4s]" />
-      </div>
+    <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/50 dark:border-neutral-700/50 px-6 py-4 rounded-[1.5rem] rounded-tl-[0.5rem] shadow-sm flex items-center justify-center gap-1.5 h-12 w-16">
+      <div className="w-1.5 h-1.5 bg-brand/40 dark:bg-brand/60 rounded-full animate-[bounce_1.4s_infinite_ease-in-out_both] [animation-delay:-0.32s]" />
+      <div className="w-1.5 h-1.5 bg-brand/40 dark:bg-brand/60 rounded-full animate-[bounce_1.4s_infinite_ease-in-out_both] [animation-delay:-0.16s]" />
+      <div className="w-1.5 h-1.5 bg-brand/40 dark:bg-brand/60 rounded-full animate-[bounce_1.4s_infinite_ease-in-out_both]" />
     </div>
   </motion.div>
 ));
@@ -484,14 +479,14 @@ export const ChatView = memo(({
               />
             </div>
 
-            <div className="relative flex flex-col gap-0.5 max-w-[85%] md:max-w-[75%] items-start">
-              <div className="relative px-4 py-3 rounded-2xl text-[14px] leading-relaxed transition-all break-words bg-neutral-100/50 dark:bg-neutral-800/40 border border-neutral-200/50 dark:border-neutral-700/30 text-neutral-800 dark:text-neutral-200 rounded-tl-none shadow-sm ai-bubble">
+            <div className="relative flex flex-col gap-0.5 max-w-[88%] md:max-w-[82%] items-start">
+              <div className="relative text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap bg-transparent text-neutral-800 dark:text-neutral-200 py-2 pt-1 px-1 ai-bubble">
                 <div className="markdown-body">
                   <Markdown>{filteredTypingContent}</Markdown>
                 </div>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1 px-2 text-left">
-                Digitando...
+              <span className="text-[9px] font-bold uppercase tracking-widest text-brand mt-1 px-2 text-left animate-pulse hidden">
+                Transcrevendo...
               </span>
             </div>
           </motion.div>

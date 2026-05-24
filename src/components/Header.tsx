@@ -182,19 +182,19 @@ export function Header({
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed top-0 left-0 bottom-0 w-[280px] bg-white dark:bg-neutral-900 shadow-2xl z-[110] flex flex-col border-r border-neutral-100 dark:border-neutral-800"
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="fixed top-0 left-0 bottom-0 w-[300px] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-3xl shadow-[40px_0_100px_rgba(0,0,0,0.1)] z-[110] flex flex-col border-r border-neutral-200/50 dark:border-neutral-800/50 text-neutral-900 dark:text-white"
             >
-              <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                <h2 className="text-xl font-display font-black tracking-tight">Menu</h2>
+              <div className="p-8 border-b border-neutral-200/50 dark:border-neutral-800/50 flex items-center justify-between">
+                <h2 className="text-2xl font-display font-black tracking-tighter">Menu</h2>
                 <button 
                   onClick={() => setShowSidebar(false)}
-                  className="p-2 -mr-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                  className="p-2 -mr-2 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-all hover:scale-105 active:scale-95"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+              <nav className="flex-1 overflow-y-auto p-4 space-y-1.5 no-scrollbar">
                 {navItems.map(item => {
                   const Icon = item.icon;
                   return (
@@ -205,28 +205,28 @@ export function Header({
                         setShowSidebar(false);
                       }}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium",
+                        "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all font-semibold outline-none",
                         activeTab === item.id 
-                          ? "bg-brand/10 text-brand" 
-                          : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          ? "bg-brand text-brand-foreground shadow-md shadow-brand/10 dark:shadow-brand/20 scale-[1.02]" 
+                          : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white hover:scale-105 active:scale-95"
                       )}
                     >
                       <Icon className="w-5 h-5" />
-                      {item.label}
+                      <span className="tracking-tight">{item.label}</span>
                     </button>
                   );
                 })}
               </nav>
-              <div className="p-4 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="p-4 border-t border-neutral-200/50 dark:border-neutral-800/50">
                 <button 
                   onClick={() => {
                     setShowSidebar(false);
                     onLogout();
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:scale-105 active:scale-95"
                 >
                   <LogOut className="w-5 h-5" />
-                  Sair
+                  <span className="tracking-tight">Sair da aplicação</span>
                 </button>
               </div>
             </motion.div>
