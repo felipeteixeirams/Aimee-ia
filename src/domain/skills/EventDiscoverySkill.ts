@@ -90,6 +90,20 @@ Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focad
       });
       
       const rawResponse = response.text || '';
+
+      try {
+        const { UsageRepository } = await import('../../infrastructure/repositories/UsageRepository.js');
+        const usageRepo = new UsageRepository();
+        await usageRepo.saveUsage('system-event-discovery', {
+          model: 'gemini-2.5-flash',
+          promptTokens: response.usageMetadata?.promptTokenCount || 0,
+          completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
+          totalTokens: response.usageMetadata?.totalTokenCount || 0,
+          context: 'event_discovery'
+        });
+      } catch (usageError) {
+        logger.error('Failed to log usage for EventDiscoverySkill', { error: usageError });
+      }
       
       let parsedResponse: any;
       try {

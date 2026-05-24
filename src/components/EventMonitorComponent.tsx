@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Compass, MapPin, Globe, CreditCard, ChevronDown, ChevronUp, BellRing, Settings2, Filter, Info, InfoIcon } from 'lucide-react';
+import { Search, Compass, MapPin, Globe, CreditCard, ChevronDown, ChevronUp, BellRing, Settings2, Filter, Info, InfoIcon, Calendar } from 'lucide-react';
 import { MonitorEvent, EventMonitorConfig, EVENT_TAXONOMY } from '../types/index.js';
 import { cn, safeFormatDate } from '../lib/utils.js';
 

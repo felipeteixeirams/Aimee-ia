@@ -1,6 +1,7 @@
 import { MonitorEvent, MonitorEventSchema } from '../../models/index.js';
 import { BaseRepository } from './BaseRepository.js';
 import { db } from '../../lib/firebase.js';
+import { collection, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
 
 export class MonitorEventRepository extends BaseRepository<MonitorEvent> {
   constructor() {
@@ -9,16 +10,18 @@ export class MonitorEventRepository extends BaseRepository<MonitorEvent> {
 
   async findRecentEvents(startDate: Date): Promise<MonitorEvent[]> {
     try {
-      const snapshot = await db.collection(this.collectionPath)
-        .where('collectedAt', '>=', startDate.toISOString())
-        .get();
+      const q = query(
+        collection(db, this.collectionPath),
+        where('collectedAt', '>=', startDate.toISOString())
+      );
+      const snapshot = await getDocs(q);
         
       const results: MonitorEvent[] = [];
       snapshot.forEach(doc => {
         const item = { id: doc.id, ...doc.data() } as any;
         const parsed = this.schema.safeParse(item);
         if (parsed.success) {
-          results.push(parsed.data);
+          results.push(parsed.data as MonitorEvent);
         }
       });
       return results;
@@ -29,9 +32,9 @@ export class MonitorEventRepository extends BaseRepository<MonitorEvent> {
   }
 
   async saveBatch(events: Omit<MonitorEvent, 'id'>[]): Promise<void> {
-    const batch = db.batch();
+    const batch = writeBatch(db);
     events.forEach(event => {
-      const docRef = db.collection(this.collectionPath).doc(event.hash);
+      const docRef = doc(db, this.collectionPath, event.hash);
       const parsed = this.schema.parse({ ...event, id: event.hash });
       batch.set(docRef, parsed, { merge: true });
     });
