@@ -685,7 +685,6 @@ export function useAimeeActions(
     manageShopping,
     manageFinance,
     manageTasks,
-    manageMonitorConfig,
     manageChat: {
       markAsRead: async (msgId: string) => {
         if (!user) return;

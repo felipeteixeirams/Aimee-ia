@@ -89,6 +89,14 @@ service cloud.firestore {
       }
       
       match /events/{id} { allow read, write: if isApproved() && isOwner(userId); }
+      match /monitor_config/{id} { allow read, write: if isApproved() && isOwner(userId); }
+    }
+
+    match /monitor_events/{eventId} {
+      // Anyone authenticated can read global monitor events
+      allow read: if isApproved();
+      // Only admins or backend can write (backend bypasses rules)
+      allow write: if isAdmin();
     }
 
     match /shares/{shareId} {
