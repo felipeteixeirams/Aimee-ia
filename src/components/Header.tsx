@@ -57,10 +57,10 @@ export function Header({
   const navItems = [
     { id: 'chat' as Tab, label: 'Conversão', icon: MessageSquare },
     { id: 'finance' as Tab, label: 'Finanças', icon: Wallet },
-    { id: 'shopping' as Tab, label: 'Compras', icon: ShoppingCart, hideIfEmpty: true },
+    { id: 'shopping' as Tab, label: 'Compras', icon: ShoppingCart },
     { id: 'routines' as Tab, label: 'Rotinas', icon: Calendar },
     { id: 'settings' as Tab, label: 'Ajustes', icon: Settings },
-  ].filter(item => !item.hideIfEmpty || shoppingItemsCount > 0);
+  ];
   
   return (
     <>
