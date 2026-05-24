@@ -10,7 +10,7 @@
     "dev": "tsx server.ts",
     "build:client": "vite build",
     "build:server": "esbuild server.ts --platform=node --bundle --packages=external --format=esm --outfile=dist-server/server.js",
-    "build": "npm test && npm run build:client && npm run build:server",
+    "build": "node scripts/build-orch.js",
     "preview": "vite preview",
     "start": "node dist-server/server.js",
     "clean": "rm -rf dist dist-server",
