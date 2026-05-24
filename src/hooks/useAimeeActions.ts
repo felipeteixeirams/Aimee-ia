@@ -2,7 +2,8 @@ import { auth, signOut, googleProvider, signInWithPopup } from '../lib/firebase.
 import { 
   ChatMessage, UserProfile, Share, ShoppingItem, 
   GlobalConfig, ChatRole, UserStatus,
-  Transaction, FinancialGoal, HouseholdTask, FamilyEvent
+  Transaction, FinancialGoal, HouseholdTask, FamilyEvent,
+  MonitorEvent, EventMonitorConfig
 } from '../types/index.js';
 import { 
   taskRepository, 
@@ -31,6 +32,8 @@ interface AimeeData {
   events: FamilyEvent[];
   shares: Share[];
   globalConfig: GlobalConfig;
+  monitorEvents?: MonitorEvent[];
+  monitorConfig?: EventMonitorConfig | null;
 }
 
 export function useAimeeActions(
@@ -725,6 +728,20 @@ export function useAimeeActions(
           const configRef = doc(db, `users/${targetId}/monitor_config`, config.id || 'default');
           await setDoc(configRef, { ...config, userId: targetId });
           showToast('Configurações atualizadas', 'success', 2000);
+
+          // Se o monitor foi configurado como ativo e não há eventos salvos ainda,
+          // podemos triggar a primeira execução em background!
+          if (config.active && (!aimeeData.monitorEvents || aimeeData.monitorEvents.length === 0)) {
+            logger.info('Primeiro trigger de descoberta de eventos iniciado em background.');
+            fetch('/events/discovery/trigger', { method: 'POST' })
+              .then(res => res.json())
+              .then(data => {
+                logger.info('Job de descoberta inicial concluído', data);
+              })
+              .catch(err => {
+                logger.error('Erro ao triggar descoberta inicial', { err });
+              });
+          }
         } catch (error: any) {
           logger.error('Error saving monitor config', { error });
           showToast('Erro ao salvar monitor', 'error');

@@ -91,6 +91,14 @@ Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focad
       
       const rawResponse = response.text || '';
 
+      // Imprime o retorno documentado e os metadados de uso no log para mapeamento e auditoria exata das LLMs
+      logger.info('EventDiscoverySkill: Gemini API response metadata captured', {
+        usageMetadata: response.usageMetadata,
+        promptTokenCount: response.usageMetadata?.promptTokenCount,
+        candidatesTokenCount: response.usageMetadata?.candidatesTokenCount,
+        totalTokenCount: response.usageMetadata?.totalTokenCount
+      });
+
       try {
         const { UsageRepository } = await import('../../infrastructure/repositories/UsageRepository.js');
         const usageRepo = new UsageRepository();
