@@ -94,7 +94,8 @@ Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focad
       try {
         const { UsageRepository } = await import('../../infrastructure/repositories/UsageRepository.js');
         const usageRepo = new UsageRepository();
-        await usageRepo.saveUsage('system-event-discovery', {
+        await usageRepo.logUsage({
+          userId: 'system-event-discovery',
           model: 'gemini-2.5-flash',
           promptTokens: response.usageMetadata?.promptTokenCount || 0,
           completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
