@@ -189,6 +189,7 @@ export const ShoppingView = ({
               <button 
                 onClick={toggleShoppingMode}
                 className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-500 active:scale-90 transition-all border border-neutral-200/50 dark:border-neutral-700/50"
+                aria-label="Sair do Modo Compra"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -222,6 +223,7 @@ export const ShoppingView = ({
               <button 
                 onClick={() => onToggleWithLocation(item)}
                 className="shrink-0 relative z-10"
+                aria-label={item.purchased ? `Marcar ${item.name} como não comprado` : `Marcar ${item.name} como comprado`}
               >
                 <div className={cn(
                   "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
@@ -243,9 +245,17 @@ export const ShoppingView = ({
                 {!item.purchased && item.id ? (
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
-                      <button onClick={() => updateQuantity(item.id!, -1)} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 rounded-lg text-neutral-500 font-black transition-colors">-</button>
-                      <span className="text-xs text-neutral-800 dark:text-neutral-200 font-black w-6 text-center">{recordedQuantities[item.id] || item.quantity || 1}</span>
-                      <button onClick={() => updateQuantity(item.id!, 1)} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 rounded-lg text-neutral-500 font-black transition-colors">+</button>
+                      <button
+                        onClick={() => updateQuantity(item.id!, -1)}
+                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 rounded-lg text-neutral-500 font-black transition-colors"
+                        aria-label={`Diminuir quantidade de ${item.name}`}
+                      >-</button>
+                      <span className="text-xs text-neutral-800 dark:text-neutral-200 font-black w-6 text-center" aria-label={`Quantidade: ${recordedQuantities[item.id] || item.quantity || 1}`}>{recordedQuantities[item.id] || item.quantity || 1}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id!, 1)}
+                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-neutral-700 rounded-lg text-neutral-500 font-black transition-colors"
+                        aria-label={`Aumentar quantidade de ${item.name}`}
+                      >+</button>
                     </div>
                     <span className="text-[10px] text-neutral-400 font-black uppercase tracking-widest px-2">{item.unit}</span>
                   </div>
@@ -264,6 +274,7 @@ export const ShoppingView = ({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
+                    aria-label={`Preço de ${item.name}`}
                     value={item.id && recordedPrices[item.id] ? recordedPrices[item.id] : ''}
                     onChange={(e) => item.id && handlePriceChange(item.id, e.target.value)}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl pl-10 pr-4 py-4 text-sm font-black text-neutral-800 dark:text-white focus:ring-2 focus:ring-brand/30 outline-none"
@@ -319,6 +330,7 @@ export const ShoppingView = ({
               onClick={toggleShoppingMode}
               className="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center transition-all hover:bg-brand/20 active:scale-95"
               title="Modo Compra"
+              aria-label="Ativar Modo Compra"
             >
               <Zap className="w-5 h-5" />
             </button>
@@ -326,6 +338,8 @@ export const ShoppingView = ({
           <button 
             onClick={() => setShowAddForm(!showAddForm)}
             className="w-10 h-10 bg-brand text-brand-foreground rounded-xl flex items-center justify-center shadow-lg transition-transform active:scale-95"
+            aria-label={showAddForm ? "Fechar formulário de adição" : "Adicionar novo item"}
+            aria-expanded={showAddForm}
           >
             <Plus className={cn("w-5 h-5 transition-transform", showAddForm && "rotate-45")} />
           </button>
@@ -428,6 +442,7 @@ export const ShoppingView = ({
               <button 
                 onClick={() => onToggleWithLocation(item)}
                 className="text-neutral-300 dark:text-neutral-700 hover:text-brand transition-colors shrink-0"
+                aria-label={item.purchased ? `Marcar ${item.name} como não comprado` : `Marcar ${item.name} como comprado`}
               >
                 {item.purchased ? <CheckCircle2 className="w-6 h-6 text-emerald-500" /> : <Circle className="w-6 h-6" />}
               </button>
@@ -460,6 +475,7 @@ export const ShoppingView = ({
                   onClick={() => handleMoveToStock(item)}
                   className="p-1.5 md:p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-neutral-400 hover:text-brand transition-colors"
                   title="Mover para Estoque"
+                  aria-label={`Mover ${item.name} para o estoque`}
                 >
                   <Package className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 </button>
@@ -468,6 +484,7 @@ export const ShoppingView = ({
                   onClick={() => handleMoveToList(item)}
                   className="p-1.5 md:p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-neutral-400 hover:text-brand transition-colors"
                   title="Mover para Lista"
+                  aria-label={`Mover ${item.name} para a lista de compras`}
                 >
                   <ShoppingCart className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 </button>
@@ -476,6 +493,7 @@ export const ShoppingView = ({
                 onClick={() => handleDeleteShoppingItem(item)}
                 className="p-1.5 md:p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 rounded-xl text-neutral-400 hover:text-red-500 transition-colors"
                 title="Excluir"
+                aria-label={`Excluir ${item.name}`}
               >
                 <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
               </button>
