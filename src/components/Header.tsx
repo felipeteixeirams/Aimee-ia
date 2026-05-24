@@ -70,7 +70,6 @@ export function Header({
             <button 
               onClick={() => setShowSidebar(true)}
               className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-              aria-label="Abrir menu lateral"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -81,7 +80,6 @@ export function Header({
                   "relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95",
                   unreadInsightsCount > 0 ? "cursor-pointer" : "cursor-default"
                 )}
-                aria-label={unreadInsightsCount > 0 ? `Ver ${unreadInsightsCount} novos insights` : "Perfil da Aimee"}
               >
                 {unreadInsightsCount > 0 && (
                   <div className="absolute inset-0 rounded-2xl overflow-hidden z-0 scale-110">
@@ -159,7 +157,6 @@ export function Header({
               <button 
                 onClick={() => setShowAdminPanel(true)}
                 className="relative w-10 h-10 flex items-center justify-center bg-brand/10 text-brand rounded-2xl hover:bg-brand/20 transition-all group active:scale-95"
-                aria-label={`Painel de administração - ${pendingUsersCount} usuários pendentes`}
               >
                 <Users className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand text-brand-foreground text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-900 shadow-sm animate-pulse">
@@ -193,7 +190,6 @@ export function Header({
                 <button 
                   onClick={() => setShowSidebar(false)}
                   className="p-2 -mr-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                  aria-label="Fechar menu lateral"
                 >
                   <X className="w-5 h-5" />
                 </button>

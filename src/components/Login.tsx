@@ -378,7 +378,6 @@ export const Login: React.FC<LoginProps> = ({
               <button 
                 onClick={() => setStep('options')}
                 className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
-                aria-label="Voltar para opções de login"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -523,7 +522,6 @@ export const Login: React.FC<LoginProps> = ({
               <button 
                 onClick={() => { setShowSupport(false); setSupportSent(false); }}
                 className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
-                aria-label="Fechar suporte"
               >
                 <X className="w-5 h-5" />
               </button>
