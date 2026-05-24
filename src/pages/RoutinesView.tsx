@@ -1,15 +1,18 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info, Users, RotateCcw } from 'lucide-react';
-import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage, RecurrenceType, Share } from '../types/index.js';
+import { Home, Calendar, RefreshCw, AlertCircle, Link as LinkIcon, Clock, CheckSquare, Check, Trash2, Sparkles, Plus, X, User, Info, Users, RotateCcw, Search, Filter } from 'lucide-react';
+import { FamilyEvent, HouseholdTask, GlobalConfig, ChatMessage, RecurrenceType, Share, MonitorEvent, EventMonitorConfig, EVENT_TAXONOMY } from '../types/index.js';
 import { cn, safeFormatDate } from '../lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useState, useMemo } from 'react';
 import { HouseholdTaskSchema } from '../models/index.js';
+import { EventMonitorComponent } from '../components/EventMonitorComponent.js';
 
 interface RoutinesViewProps {
   events: FamilyEvent[];
   tasks: HouseholdTask[];
+  monitorEvents: MonitorEvent[];
+  monitorConfig: EventMonitorConfig | null;
   insights: ChatMessage[];
   shares: Share[];
   isSuperAdmin: boolean;
@@ -23,11 +26,14 @@ interface RoutinesViewProps {
   handleUpdateTask: (taskId: string, updates: Partial<HouseholdTask>, scope: 'single' | 'following' | 'all') => void;
   handleDeleteTask: (taskId: string, scope: 'single' | 'following' | 'all') => void;
   handleDeleteEvent: (eventId: string) => void;
+  handleSaveMonitorConfig: (config: any) => void;
 }
 
 export const RoutinesView = ({
   events,
   tasks,
+  monitorEvents,
+  monitorConfig,
   insights,
   shares,
   isSuperAdmin,
@@ -41,6 +47,7 @@ export const RoutinesView = ({
   handleUpdateTask,
   handleDeleteTask,
   handleDeleteEvent,
+  handleSaveMonitorConfig,
   isGoogleEmail
 }: RoutinesViewProps & { isGoogleEmail: boolean }) => {
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -162,6 +169,13 @@ export const RoutinesView = ({
             <Home className="w-6 h-6 text-brand" />
           </div>
         </div>
+
+      {/* Discovery Hub - Event Monitor */}
+      <EventMonitorComponent
+        monitorEvents={monitorEvents}
+        monitorConfig={monitorConfig}
+        handleSaveConfig={handleSaveMonitorConfig}
+      />
 
       {/* Family Agenda */}
       <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">

@@ -685,6 +685,7 @@ export function useAimeeActions(
     manageShopping,
     manageFinance,
     manageTasks,
+    manageMonitorConfig,
     manageChat: {
       markAsRead: async (msgId: string) => {
         if (!user) return;
@@ -711,6 +712,23 @@ export function useAimeeActions(
         } catch (error) {
           logger.error('Error deleting event', { error });
           showToast('Erro ao remover evento', 'error');
+        }
+      }
+    },
+    manageMonitorConfig: {
+      save: async (config: any, targetId: string) => {
+        try {
+          // Send to API or save directly if repository
+          // Wait, I didn't create a repository in FE for this. 
+          // I can save via profileRepository? No, let's create a direct Firestore call to "users/userId/monitor_config"
+          const { db } = await import('../lib/firebase.js');
+          const { collection, addDoc, setDoc, doc } = await import('firebase/firestore');
+          const configRef = doc(db, `users/${targetId}/monitor_config`, config.id || 'default');
+          await setDoc(configRef, { ...config, userId: targetId });
+          showToast('Configurações atualizadas', 'success', 2000);
+        } catch (error: any) {
+          logger.error('Error saving monitor config', { error });
+          showToast('Erro ao salvar monitor', 'error');
         }
       }
     },

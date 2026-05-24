@@ -9,8 +9,22 @@ import { validateRequest } from "./middlewares.js";
 import { aiRequestSchema, notificationSchema, supportSchema } from '../../models/index.js';
 import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.js";
 import { google } from "googleapis";
+import { EventDiscoverySkill } from "../../domain/skills/EventDiscoverySkill.js";
 
 export default async function (fastify: FastifyInstance) {
+  // Event Discovery Route (Can be triggered by a Cron or Manually)
+  fastify.post("/events/discovery/trigger", async (req, reply) => {
+    try {
+      logger.info("Triggering global event discovery...");
+      const skill = new EventDiscoverySkill();
+      const events = await skill.runGlobalDiscoveryJob();
+      return { success: true, count: events.length };
+    } catch (error: any) {
+      logger.error("Error triggering event discovery", { error: error.message });
+      reply.status(500).send({ error: "Failed to trigger discovery job" });
+    }
+  });
+
   // Health check endpoint
   fastify.get("/health", async (req, reply) => {
     try {

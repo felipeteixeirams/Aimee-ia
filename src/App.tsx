@@ -109,6 +109,8 @@ export default function App() {
     tasks,
     events,
     shares,
+    monitorEvents,
+    monitorConfig,
     globalConfig
   } = aimeeData;
 
@@ -123,6 +125,7 @@ export default function App() {
     manageTasks,
     manageChat,
     manageEvents,
+    manageMonitorConfig,
     updateGamification
   } = useAimeeActions(user, profile, aimeeData);
 
@@ -948,6 +951,8 @@ export default function App() {
                   <RoutinesView 
                     events={events}
                     tasks={tasks}
+                    monitorEvents={monitorEvents}
+                    monitorConfig={monitorConfig}
                     insights={messages.filter(m => m.isInsight)}
                     shares={shares}
                     isSuperAdmin={isSuperAdmin}
@@ -963,6 +968,7 @@ export default function App() {
                     handleDeleteEvent={async (id) => {
                       manageEvents.delete(id, activeSpace || user!.uid);
                     }}
+                    handleSaveMonitorConfig={(config) => manageMonitorConfig.save(config, activeSpace || user!.uid)}
                     isGoogleEmail={isGoogleEmail}
                   />
                 )}

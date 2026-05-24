@@ -1,53 +1,55 @@
 # Aimee - Agente Pessoal IA
 
-Aimee é uma **Agente Orquestradora de Inteligência Pessoal** projetada para simplificar a gestão da vida cotidiana. Atuando como uma consultora proativa, ela integra finanças, compras domésticas e rotinas familiares em uma interface intuitiva e gamificada.
+Aimee é uma **Agente Orquestradora de Inteligência Pessoal** projetada para simplificar a gestão da vida cotidiana. Atuando como uma consultora proativa, ela integra finanças, compras domésticas, rotinas familiares e calendário em uma interface incrivelmente polida, imersiva e gamificada — com um toque *Premium*.
 
 ## 🚀 Funcionalidades Principais
 
 ### 💰 Gestão Financeira Inteligente
-- **Registro de Transações**: Acompanhamento de ganhos e gastos com categorização automática.
+- **Registro de Transações**: Acompanhamento de ganhos e gastos com categorização e validação robusta.
 - **Metas Financeiras**: Planejamento e acompanhamento de objetivos de longo prazo (viagens, reformas, etc.).
-- **Análise de Comportamento**: Insights sobre padrões de consumo e alertas de gastos impulsivos.
-- **Dashboards Interativos**: Visualização de tendências e distribuição de gastos por categoria.
+- **Análise de Comportamento**: Insights proativos sobre padrões de consumo e alertas.
+- **Dashboards Premium**: Interface visual rica, transições fluidas e componentes *glassmorphism*.
 
 ### 🛒 Compras e Estoque Doméstico
-- **Lista de Compras Dinâmica**: Adição inteligente de itens com níveis de urgência.
+- **Lista de Compras Dinâmica**: Adição inteligente de itens com níveis de urgência e categorias visuais.
 - **Controle de Estoque**: Gestão da despensa com previsão de quando os itens irão acabar.
-- **Foco Nutricional**: Sugestões de compras alinhadas a metas de saúde (ex: redução de açúcar).
-- **Sustentabilidade**: Recomendações de produtos ecológicos e locais.
+- **UX Polida**: Navegação em abas suaves (Stock / Shopping List) e formulários robustos com tratamento de erros.
 
 ### 🏠 Rotinas e Agenda Familiar
-- **Gestão de Tarefas Advanced**: Organização de limpeza, manutenção e recados com suporte a **recorrências complexas** (diárias, semanais, mensais e anuais).
-- **Ajuste Inteligente de Datas**: Correção automática de tarefas agendadas para dias inexistentes (ex: 31 de fevereiro) com notas explicativas.
-- **Família e Compartilhamento**: Convide membros da família e gerencie o espaço doméstico de forma colaborativa com permissões de SuperAdmin.
-- **Agenda Multimodal**: Registro de eventos sociais sincronizados com as tarefas da casa.
+- **Gestão de Tarefas Advanced**: Organização de limpeza, manutenção e recados com suporte a recorrentes complexas (diárias, semanais, mensais e anuais).
+- **Google Calendar Sync**: Sincronização proativa de eventos da conta Google com a agenda familiar.
+- **Família e Compartilhamento**: Convide membros da família e gerencie o espaço doméstico de modo colaborativo.
 
-### 🤖 Inteligência Artificial (Arquitetura Aimee 2.0)
-Aimee utiliza uma arquitetura híbrida determinística para garantir precisão e reduzir drasticamente alucinações.
-- **Intent Router**: Classifica a intenção do usuário antes do processamento, roteando para a Skill correta.
-- **Insight Engine & Confidence Layer**: Gera insights estruturados com níveis de confiança (*confirmed, inferred, weak*) baseados em evidências reais dos dados.
-- **Skills Analíticas**: Lógica determinística (cálculo de taxa de poupança, previsão de estoque, saúde da rotina) executada fora da LLM.
-- **Multi-Provedor**: Suporte nativo para **Google Gemini** e **DeepSeek** (via adapter compatível).
-- **Concisão Extrema**: Respostas otimizadas para serem curtas, diretas e factuais (máximo 2 frases).
+### 🤖 Inteligência Artificial Imersiva
+A interface de chat foi redesenhada para oferecer uma experiência "mágica" e responsiva:
+- **Interface de Vidro (Glassmorphism)**: Efeitos de blur 3D, sombras suaves e texturas refinadas.
+- **Feedback Háptico e Visual**: Animações na gravação de áudio, pulsações contextuais, tooltips "copiar/editar".
+- **Identidade Adaptável (Personas)**: A Aimee conversa no modo Analítico, Frugal ou Divertido.
+- **Multi-Provedor**: Suporte nativo para **Google Gemini** servido de forma segura no backend.
 
-## 🛠️ Tech Stack
+## 🎨 UI/UX Design System
+O sistema visual foi completamente redesenhado para atingir um padrão "World Class":
+- **Tipografia**: Uso sofisticado de *Inter* e *Cal Sans / Space Grotesk*.
+- **Motion Design**: Telas com animações suaves de desfoque, entrada e saída via `framer-motion`.
+- **Modo Escuro Avançado**: Paletas "Cosmic Slate", sombras coloridas, malhas de gradientes complexos de fundo e opacidades otimizadas.
+- **Prevenção de Erros**: Formulários com validação estrita baseada em `Zod` (Spec-Driven).
+
+## 🛠️ Tech Stack & Arquitetura
 
 - **Frontend**: React 19, TypeScript, Vite
-- **Backend/API**: Express (Full-stack mode com `tsx`)
-- **Estilização**: Tailwind CSS 4
-- **Animações**: Motion (formely motion/react)
-- **IA/Orchestration**: Arquitetura Aimee 2.0 (Intent Router + Insight Engine)
-- **Modelos**: Gemini 1.5 Flash (Nativo/Local) e DeepSeek Chat (Backend)
-- **Persistência**: Firebase Firestore & Auth
-- **Utilidade**: `date-fns` para lógica de recorrência complexa
+- **Backend/API**: Express (Full-stack mode com `tsx`/`esbuild`)
+- **Estilização**: Tailwind CSS 4, Lucide Icons
+- **Animações**: Motion (former `framer-motion`)
+- **Validação & Contratos**: `zod`
+- **Modelos de IA**: `@google/genai` (SDK moderno) via backend para proteção das chaves (Gemini 1.5 Flash).
+- **Persistência**: Firebase Firestore & Firebase Auth
 
 ## 📋 Pré-requisitos
 
-Antes de começar, você precisará ter instalado em sua máquina:
-- [Node.js](https://nodejs.org/) (versão 18 ou superior)
+- [Node.js](https://nodejs.org/) (versão 18+)
 - [npm](https://www.npmjs.com/) ou [yarn](https://yarnpkg.com/)
-- Uma conta no [Firebase](https://console.firebase.google.com/)
-- Uma chave de API do [Google Gemini](https://aistudio.google.com/app/apikey)
+- Conta no [Firebase](https://console.firebase.google.com/)
+- Chave de API do [Google Gemini](https://aistudio.google.com/app/apikey)
 
 ## 🔧 Instalação e Configuração
 
@@ -63,71 +65,36 @@ Antes de começar, você precisará ter instalado em sua máquina:
    ```
 
 3. **Configure as variáveis de ambiente:**
-   Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
+   Crie um arquivo `.env` baseado no `.env.example`:
    ```bash
    cp .env.example .env
    ```
-   Preencha as variáveis:
-   - `GEMINI_API_KEY`: Sua chave da API do Gemini.
-   - `APP_URL`: URL local (geralmente `http://localhost:3000`).
+   *Atente-se para definir `GEMINI_API_KEY` (usada no servidor).*
 
 4. **Configure o Firebase:**
-   - Crie um projeto no Firebase Console.
-   - Ative o **Firestore Database** e o **Authentication** (Google Provider).
-   - Crie um arquivo `firebase-applet-config.json` na raiz com suas credenciais:
-     ```json
-     {
-       "apiKey": "SUA_API_KEY",
-       "authDomain": "SEU_AUTH_DOMAIN",
-       "projectId": "SEU_PROJECT_ID",
-       "appId": "SEU_APP_ID",
-       "firestoreDatabaseId": "(default)"
-     }
-     ```
+   Defina suas credenciais no arquivo `firebase-applet-config.json` para que as regras de segurança locais sejam aplicadas.
 
-## 💻 Executando Localmente
+## 💻 Executando Localmente (Full-Stack)
 
-Para iniciar o servidor de desenvolvimento:
+A aplicação utiliza um servidor Express que serve a API (para encapsular chamadas de IA) e a interface React simultaneamente.
 
 ```bash
 npm run dev
 ```
 
-O projeto estará disponível em `http://localhost:3000`.
+Acesse via `http://localhost:3000`. 
+*(Para produção, utilize `npm run build` seguido de `npm run start`).*
 
 ## 🐳 Executando com Docker
 
-Se você prefere usar Docker, pode iniciar a aplicação facilmente:
-
-1. **Certifique-se de ter o Docker e Docker Compose instalados.**
-2. **Configure o arquivo `.env` e `firebase-applet-config.json`** conforme as instruções acima.
-3. **Inicie os containers:**
-   ```bash
-   docker-compose up --build
-   ```
-
-A aplicação estará disponível em `http://localhost:3000`. O volume está configurado para refletir alterações no código em tempo real (Hot Reload).
-
-## 🏗️ Estrutura do Projeto (Clean Architecture)
-
-- `src/domain/intelligence/`: Núcleo da Arquitetura 2.0 (`IntentRouter`, `InsightEngine`, `AimeePrompts`).
-- `src/domain/skills/`: Lógica analítica e operacional (Finance, Shopping, Routine).
-- `src/infrastructure/llm/`: Adapters especializados para diferentes provedores (Gemini, DeepSeek, OpenAI).
-- `src/infrastructure/tools/`: Definições de ferramentas disponíveis para a IA (Function Calling).
-- `src/services/`: Orquestradores de aplicação (Client e Server).
-- `src/components/`: Interface do usuário modularizada e PWA.
-- `src/lib/`: Utilitários e configurações (recurrence, logger, shadcn).
+Se preferir usar Docker:
+```bash
+docker-compose up --build
+```
+Acesse `http://localhost:3000`. O hot reload já está configurado.
 
 ## 📜 Versão e Histórico
-
-A Aimee segue o projeto de versionamento semântico. 
-
-- **Versão Atual**: 1.0.0
-- **Histórico de Mudanças**: Veja o arquivo [CHANGELOG.md](./CHANGELOG.md) para detalhes de todas as atualizações.
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+Consulte o [CHANGELOG.md](./CHANGELOG.md) para detalhes. (Versão atual: 1.0.0).
 
 ---
-*Lembre-se: Aimee é uma assistente baseada em IA. Valide dados críticos antes de tomar decisões financeiras importantes.*
+*Aimee prioriza a beleza analítica e a eficácia arquitetural, unindo Spec-Driven Development com design funcional responsivo.*

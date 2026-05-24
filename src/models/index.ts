@@ -287,6 +287,60 @@ export const LLMUsageSchema = z.object({
 export type LLMUsage = z.infer<typeof LLMUsageSchema>;
 export type LLMUsageInput = z.infer<typeof LLMUsageSchema>;
 
+export const EVENT_TAXONOMY = {
+  "Tecnologia": {
+    "Inteligência Artificial": ["LLMs", "RAG", "Agentes", "Multimodal", "Fine-tuning", "Open Source AI", "Prompt Engineering", "MLOps"],
+    "Desenvolvimento": ["Node.js", "React", "DevOps", "Cloud", "Kubernetes"]
+  },
+  "Pessoal": {
+    "Culinária": ["Workshops", "Cursos", "Gastronomia"],
+    "Entretenimento": ["Shows", "Eventos Geek", "Festivais"]
+  }
+} as const;
+
+export const MonitorEventSchema = z.object({
+  id: z.string().optional(),
+  hash: z.string(),
+  title: z.string(),
+  summary: z.string(),
+  categories: z.array(z.string()),
+  targetAudience: z.string().optional().nullable(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+  time: z.string().optional().nullable(),
+  format: z.enum(['presencial', 'online', 'hibrido', 'desconhecido']),
+  location: z.string().optional().nullable(),
+  language: z.string().optional().nullable(),
+  cost: z.number().optional().nullable(),
+  currency: z.string().optional().nullable(),
+  registrationLink: z.string().optional().nullable(),
+  sourceLink: z.string().optional().nullable(),
+  organizer: z.string().optional().nullable(),
+  source: z.string(),
+  freeTextTags: z.array(z.string()),
+  mentionedTechs: z.array(z.string()),
+  techFocus: z.array(z.string()),
+  collectedAt: z.string(),
+  confidence: z.number().min(0).max(1),
+  rawExcerpt: z.string().optional()
+});
+export type MonitorEvent = z.infer<typeof MonitorEventSchema>;
+
+export const EventMonitorConfigSchema = z.object({
+  id: z.string().optional(),
+  userId: z.string(),
+  active: z.boolean().default(false),
+  frequency: z.enum(['daily', 'weekly']),
+  interests: z.array(z.string()), // From the TAXONOMY
+  preferences: z.object({
+    freeOnly: z.boolean().default(false),
+    onlineOnly: z.boolean().default(false),
+    languages: z.array(z.string()).default(['pt', 'en'])
+  }),
+  lastNotifiedAt: z.string().optional()
+});
+export type EventMonitorConfig = z.infer<typeof EventMonitorConfigSchema>;
+
 // Server/Misc Schemas
 export const notificationSchema = z.object({
   type: z.nativeEnum(NotificationType),

@@ -15,7 +15,7 @@ import {
 import { 
   ChatMessage, Transaction, ShoppingItem, FinancialGoal, 
   HouseholdTask, FamilyEvent, GlobalConfig, Share,
-  AIProvider
+  AIProvider, MonitorEvent, EventMonitorConfig
 } from '../types/index.js';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils.js';
 import { User } from 'firebase/auth';
@@ -27,6 +27,8 @@ export function useAimeeData(user: User | null, activeSpace: string | null, isAp
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [tasks, setTasks] = useState<HouseholdTask[]>([]);
   const [events, setEvents] = useState<FamilyEvent[]>([]);
+  const [monitorEvents, setMonitorEvents] = useState<MonitorEvent[]>([]);
+  const [monitorConfig, setMonitorConfig] = useState<EventMonitorConfig | null>(null);
   const [shares, setShares] = useState<Share[]>([]);
   const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({ 
     aiProvider: AIProvider.GEMINI, 
@@ -43,6 +45,8 @@ export function useAimeeData(user: User | null, activeSpace: string | null, isAp
       setGoals([]);
       setTasks([]);
       setEvents([]);
+      setMonitorEvents([]);
+      setMonitorConfig(null);
       setShares([]);
       return;
     }
@@ -92,6 +96,26 @@ export function useAimeeData(user: User | null, activeSpace: string | null, isAp
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, chatPath);
     });
+    
+    const monitorConfigPath = `users/${user.uid}/monitor_config`;
+    const unsubMonitorConfig = onSnapshot(collection(db, monitorConfigPath), (snap) => {
+      if (!snap.empty) {
+        setMonitorConfig({ id: snap.docs[0].id, ...snap.docs[0].data() } as EventMonitorConfig);
+      } else {
+        setMonitorConfig(null);
+      }
+    });
+
+    // We can fetch recent monitor events globally
+    const monitorEventsPath = `monitor_events`;
+    const monitorEventsQuery = query(
+      collection(db, monitorEventsPath),
+      orderBy('collectedAt', 'desc'),
+      limit(100)
+    );
+    const unsubMonitorEvents = onSnapshot(monitorEventsQuery, (snap) => {
+      setMonitorEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as MonitorEvent)));
+    });
 
     // 3. Listen to Space-related Data
     const targetId = activeSpace || user.uid;
@@ -130,6 +154,8 @@ export function useAimeeData(user: User | null, activeSpace: string | null, isAp
       unsubTasks();
       unsubEvents();
       unsubConfig();
+      unsubMonitorConfig();
+      unsubMonitorEvents();
     };
   }, [user, activeSpace, isApproved]);
 
@@ -140,6 +166,8 @@ export function useAimeeData(user: User | null, activeSpace: string | null, isAp
     goals,
     tasks,
     events,
+    monitorEvents,
+    monitorConfig,
     shares,
     globalConfig
   };
