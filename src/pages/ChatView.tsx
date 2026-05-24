@@ -1,7 +1,7 @@
 import { ChatMessage, UserProfile } from '../types/index.js';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square, RefreshCcw } from 'lucide-react';
+import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square, RefreshCcw, Wallet, Calendar, Sparkles, ShoppingCart } from 'lucide-react';
 import { cn } from '../lib/utils.js';
 import { format } from 'date-fns';
 import { AimeeAvatar } from '../components/AimeeAvatar.js';
@@ -379,11 +379,93 @@ export const ChatView = memo(({
         className="flex-1 overflow-y-auto overflow-x-hidden pt-4 px-4 pb-[140px] md:pb-[160px] space-y-4"
       >
         {messages.length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="w-8 h-8 text-neutral-300 dark:text-neutral-700" />
+          <div className="max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col items-center">
+            {/* Elegant Logo / Greeting */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="text-center mb-8 md:mb-12"
+            >
+              <div className="relative inline-flex items-center justify-center p-0.5 rounded-full bg-linear-to-tr from-brand via-amber-400 to-rose-400 dark:from-brand dark:to-emerald-400 mb-6 group">
+                <div className="w-16 h-16 bg-white dark:bg-neutral-900 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-105 duration-300 overflow-hidden">
+                  <AimeeAvatar src={GLOBAL_AIMEE_AVATAR} size="lg" className="w-14 h-14 rounded-full" />
+                </div>
+                {/* Floating active dot */}
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950 shadow-sm" />
+              </div>
+
+              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight text-neutral-950 dark:text-white leading-tight">
+                Olá, <span className="bg-linear-to-r from-brand via-brand-muted to-brand/80 bg-clip-text text-transparent dark:from-brand dark:to-emerald-400">{profile?.displayName ? profile.displayName.split(' ')[0] : 'aí'}</span>.
+              </h2>
+              <p className="text-sm md:text-base font-medium text-neutral-400 dark:text-neutral-500 mt-2">
+                Como posso facilitar seu dia hoje?
+              </p>
+            </motion.div>
+
+            {/* Starter Bento Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full">
+              {[
+                {
+                  id: 'finance',
+                  title: 'Análise de Gastos',
+                  caption: 'Analisar despesas recentes por categoria e ver conselhos.',
+                  prompt: 'Gostaria de uma análise detalhada dos meus gastos recentes e conselhos de como atingir minhas economias.',
+                  icon: Wallet,
+                  colorClass: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400'
+                },
+                {
+                  id: 'saving_challenge',
+                  title: 'Desafio Financeiro',
+                  caption: 'Criar um plano prático para poupar nos próximos 7 dias.',
+                  prompt: 'Mande ideias para um plano prático ou desafio financeiro de 7 dias para me ajudar a economizar R$ 100 essa semana.',
+                  icon: Sparkles,
+                  colorClass: 'text-amber-500 bg-amber-500/10 dark:text-amber-400'
+                },
+                {
+                  id: 'shopping_list',
+                  title: 'Lista de Compras',
+                  caption: 'Planejar minhas compras de forma eficiente.',
+                  prompt: 'Ajude-me a planejar minha lista de compras adicionando itens essenciais e saudáveis para a semana.',
+                  icon: ShoppingCart,
+                  colorClass: 'text-rose-500 bg-rose-500/10 dark:text-rose-400'
+                },
+                {
+                  id: 'smart_routine',
+                  title: 'Rotinas Inteligentes',
+                  caption: 'Otimizar minha rotina de hábitos diários.',
+                  prompt: 'Sugira uma rotina saudável e produtiva de 15 minutos para otimizar meu foco e bem-estar no dia-a-dia.',
+                  icon: Calendar,
+                  colorClass: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400'
+                }
+              ].map((card, idx) => {
+                const CardIcon = card.icon;
+                return (
+                  <motion.button
+                    key={card.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.08, ease: "easeOut" }}
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => handleSendMessage(card.prompt)}
+                    className="text-left p-5 rounded-[2rem] bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 shadow-[0_2px_8px_rgba(0,0,0,0.015)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:bg-white dark:hover:bg-neutral-800 focus:outline-none transition-all flex flex-col justify-between h-[140px] group cursor-pointer"
+                  >
+                    <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center border-0 font-bold", card.colorClass)}>
+                      <CardIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-neutral-800 dark:text-white group-hover:text-brand dark:group-hover:text-amber-400 transition-colors">
+                        {card.title}
+                      </h4>
+                      <p className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500 leading-normal mt-1 line-clamp-2">
+                        {card.caption}
+                      </p>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
-            <p className="text-neutral-400 text-sm">Como posso te ajudar hoje?</p>
           </div>
         )}
         {renderedMessages}
@@ -449,7 +531,7 @@ export const ChatView = memo(({
             </motion.div>
           )}
           
-          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-800 rounded-full border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-1 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 transition-all px-1 shadow-sm">
+          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-900/40 rounded-[2rem] border border-neutral-200/50 dark:border-neutral-800/60 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-2 focus-within:ring-brand/20 focus-within:border-brand/30 dark:focus-within:ring-brand/20 dark:focus-within:border-brand/30 transition-all px-1 shadow-[0_4px_12px_rgba(0,0,0,0.015)] focus-within:shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:focus-within:shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
             <textarea
               value={inputText}
               onChange={(e) => {
@@ -495,7 +577,7 @@ export const ChatView = memo(({
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
-                className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 shrink-0"
+                className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 shrink-0"
               >
                 <Send className="w-3.5 h-3.5" />
               </button>
