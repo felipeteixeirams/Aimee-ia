@@ -64,20 +64,20 @@ export function Header({
   
   return (
     <>
-      <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-2 sm:pb-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-b border-neutral-100 dark:border-neutral-800 shrink-0 z-40 sticky top-0">
-        <div className="max-w-5xl mx-auto flex items-center justify-between py-1 sm:py-2">
-          <div className="flex items-center gap-3 sm:gap-4">
+      <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-3 sm:pb-4 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-3xl shrink-0 z-40 sticky top-0 border-b border-neutral-200/50 dark:border-neutral-800/50 shadow-[0_4px_32px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_32px_rgba(0,0,0,0.3)]">
+        <div className="max-w-5xl mx-auto flex items-center justify-between py-1.5 sm:py-2">
+          <div className="flex items-center gap-4 sm:gap-5">
             <button 
               onClick={() => setShowSidebar(true)}
               className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <div className="relative group">
               <button 
                 onClick={() => unreadInsightsCount > 0 && setShowInsightsModal(true)}
                 className={cn(
-                  "relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95",
+                  "relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm hover:shadow-md",
                   unreadInsightsCount > 0 ? "cursor-pointer" : "cursor-default"
                 )}
               >
@@ -114,19 +114,19 @@ export function Header({
               )}
             </div>
 
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-1 sm:gap-0.5 justify-center">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-display font-black tracking-tight text-neutral-800 dark:text-white leading-none">Aimee</h1>
+                <h1 className="text-xl sm:text-2xl font-display font-black tracking-tighter text-neutral-900 dark:text-white leading-none">Aimee</h1>
                 {isSuperAdmin && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 bg-brand text-brand-foreground rounded-full">
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full shadow-sm">
                     <Shield className="w-2.5 h-2.5" />
-                    <span className="text-[8px] font-black uppercase tracking-widest">Admin</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest">Admin</span>
                   </div>
                 )}
               </div>
               
               <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[9px] text-neutral-400 uppercase tracking-widest font-bold whitespace-nowrap flex items-center gap-1.5">
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 uppercase tracking-widest font-extrabold whitespace-nowrap flex items-center gap-1.5">
                   {activeSpace ? `Espaço` : 
                    profile?.selectedPersona === 'analytical' ? 'Analítico' : 
                    profile?.selectedPersona === 'frugal' ? 'Frugal' : 

@@ -5,6 +5,7 @@ import { cn, safeFormatDate } from '../lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import React, { useState, useMemo } from 'react';
+import { HouseholdTaskSchema } from '../models/index.js';
 
 interface RoutinesViewProps {
   events: FamilyEvent[];
@@ -64,6 +65,8 @@ export const RoutinesView = ({
     daysOfMonth: []
   });
 
+  const [formError, setFormError] = useState<string | null>(null);
+
   const [scopeModal, setScopeModal] = useState<{
     show: boolean;
     type: 'edit' | 'delete';
@@ -86,17 +89,14 @@ export const RoutinesView = ({
 
   const onCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
-    if (newTaskRecurrence.enabled && !newTaskDueDate) {
-      alert('Selecione uma data de início para a recorrência.');
-      return;
-    }
+    setFormError(null);
 
     const task: Partial<HouseholdTask> = {
       title: newTaskTitle,
       category: newTaskCategory as any,
+      status: 'todo',
       assignedTo: newTaskAssigned || undefined,
-      participants: newTaskParticipants.length > 0 ? newTaskParticipants : undefined,
+      participants: newTaskParticipants.length > 0 ? newTaskParticipants : [],
       dueDate: newTaskDueDate || undefined,
       time: newTaskTime || undefined,
       isAllDay: newTaskIsAllDay,
@@ -108,6 +108,12 @@ export const RoutinesView = ({
         endTime: newTaskRecurrence.endTime
       } : undefined
     };
+
+    const result = HouseholdTaskSchema.safeParse(task);
+    if (!result.success) {
+      setFormError(result.error.issues[0].message);
+      return;
+    }
 
     handleCreateTask(task);
     resetForm();
@@ -652,12 +658,20 @@ export const RoutinesView = ({
 
                 <button 
                   type="submit"
-                  disabled={!newTaskTitle.trim()}
-                  className="w-full max-w-[280px] py-5 bg-brand text-brand-foreground rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 mx-auto block"
+                  className="w-full max-w-[280px] py-5 bg-brand text-brand-foreground rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all active:scale-95 mt-4 mx-auto block"
                 >
                   Adicionar Tarefa
                 </button>
               </form>
+              {formError && (
+                <motion.p 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  className="text-xs font-medium text-rose-500 mt-4 text-center"
+                >
+                  {formError}
+                </motion.p>
+              )}
             </motion.div>
           </div>
         )}

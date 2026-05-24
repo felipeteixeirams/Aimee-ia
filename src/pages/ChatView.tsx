@@ -73,18 +73,18 @@ const ChatMessageItem = memo(({
       </div>
 
       <div className={cn(
-        "relative flex flex-col gap-1 w-full max-w-[85%] md:max-w-[80%]",
+        "relative flex flex-col gap-1 w-full max-w-[88%] md:max-w-[82%]",
         msg.role === 'user' ? "items-end" : "items-start"
       )}>
         <div className={cn(
-          "relative text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap",
+          "relative text-[15px] leading-relaxed transition-all break-words whitespace-pre-wrap group-hover:shadow-md",
           msg.role === 'user' 
-            ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-[1.5rem] px-5 py-3 font-medium" 
+            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 rounded-[1.5rem] rounded-tr-[0.5rem] px-5 py-3.5 font-medium shadow-[0_4px_14px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_14px_rgba(255,255,255,0.05)]" 
             : msg.status === 'error'
-              ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100 rounded-[1.5rem] px-5 py-3 shadow-sm"
+              ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100 rounded-[1.5rem] rounded-tl-[0.5rem] px-5 py-3.5 shadow-sm"
               : msg.isInsight
-                ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-[1.5rem] px-5 py-3 shadow-sm ring-1 ring-amber-500/10 ai-bubble"
-                : "bg-transparent text-neutral-800 dark:text-neutral-200 py-2 px-1"
+                ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 rounded-[1.5rem] rounded-tl-[0.5rem] px-5 py-3.5 shadow-sm ring-1 ring-amber-500/10 ai-bubble"
+                : "bg-transparent text-neutral-800 dark:text-neutral-200 py-2 pt-1 px-1"
         )}>
           {msg.isInsight && msg.status !== 'error' && (
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
@@ -131,18 +131,18 @@ const ChatMessageItem = memo(({
                 </button>
               )}
               <div className={cn(
-                "mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1",
-                msg.role === 'user' ? "justify-end" : "justify-start"
+                "mt-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-1.5",
+                msg.role === 'user' ? "justify-end absolute -bottom-8 right-0" : "justify-start"
               )}>
                 <button 
                   onClick={() => copyToClipboard(msg.content, msg.id || index.toString())}
-                  className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                  className="p-2 bg-white/80 dark:bg-neutral-800/80 backdrop-blur border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full shadow-xs hover:shadow-sm hover:scale-105 active:scale-95 transition-all"
                   title="Copiar"
                 >
                   {copiedId === (msg.id || index.toString()) ? (
-                    <Check className="w-4 h-4 text-green-500" />
+                    <Check className="w-3.5 h-3.5 text-green-500" />
                   ) : (
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-3.5 h-3.5" />
                   )}
                 </button>
                 {msg.role === 'user' && (
@@ -151,10 +151,10 @@ const ChatMessageItem = memo(({
                       setEditingMessage(msg);
                       setEditValue(msg.content);
                     }}
-                    className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                    className="p-2 bg-white/80 dark:bg-neutral-800/80 backdrop-blur border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full shadow-xs hover:shadow-sm hover:scale-105 active:scale-95 transition-all"
                     title="Editar"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -515,8 +515,8 @@ export const ChatView = memo(({
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-800 z-20">
-        <div className="max-w-3xl mx-auto flex flex-col gap-2">
+      <div className="absolute bottom-0 left-0 right-0 pt-6 pb-4 px-4 bg-gradient-to-t from-white via-white to-transparent dark:from-neutral-950 dark:via-neutral-950 dark:to-transparent z-20 pointer-events-none">
+        <div className="max-w-3xl mx-auto flex flex-col gap-2 pointer-events-auto">
           {isRecording && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
@@ -531,7 +531,7 @@ export const ChatView = memo(({
             </motion.div>
           )}
           
-          <div className="relative group flex items-end bg-neutral-100 dark:bg-neutral-900/40 rounded-[2rem] border border-neutral-200/50 dark:border-neutral-800/60 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-2 focus-within:ring-brand/20 focus-within:border-brand/30 dark:focus-within:ring-brand/20 dark:focus-within:border-brand/30 transition-all px-1 shadow-[0_4px_12px_rgba(0,0,0,0.015)] focus-within:shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:focus-within:shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+          <div className="relative group flex items-end bg-white/70 dark:bg-neutral-900/70 backdrop-blur-3xl rounded-[2rem] border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-4 focus-within:ring-brand/10 focus-within:border-brand/30 dark:focus-within:ring-brand/20 dark:focus-within:border-brand/30 transition-all p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] focus-within:shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:focus-within:shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
             <textarea
               value={inputText}
               onChange={(e) => {
@@ -549,19 +549,19 @@ export const ChatView = memo(({
               placeholder={isRecording ? "Solte para enviar..." : isTranscribing ? "Aimee está ouvindo..." : "Mensagem para Aimee"}
               disabled={isRecording || isTranscribing}
               rows={1}
-              className="w-full bg-transparent border-none rounded-full pl-5 pr-[100px] py-2.5 text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none leading-relaxed"
-              style={{ minHeight: '42px', maxHeight: '200px' }}
+              className="w-full bg-transparent border-none rounded-[1.5rem] pl-5 pr-[100px] py-3 text-[15px] focus:ring-0 outline-none dark:text-white disabled:opacity-50 resize-none leading-relaxed font-medium"
+              style={{ minHeight: '44px', maxHeight: '200px' }}
             />
-            <div className="absolute right-1.5 bottom-1 flex items-center gap-1 pb-0.5">
+            <div className="absolute right-2 bottom-1.5 flex items-center gap-1.5 pb-0">
               <button
                 onClick={isRecording ? onStopRecording : startRecording}
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
                 title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada" : "Falar"}
                 className={cn(
-                  "w-8 h-8 flex items-center justify-center rounded-full transition-all",
+                  "w-10 h-10 flex items-center justify-center rounded-full transition-all group-hover/btn:scale-105 active:scale-95",
                   isRecording 
-                    ? "bg-red-500 text-white" 
-                    : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white bg-transparent hover:bg-neutral-200 dark:hover:bg-neutral-700",
+                    ? "bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse" 
+                    : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800",
                   (isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))) && "opacity-50 cursor-not-allowed"
                 )}
               >
@@ -577,9 +577,9 @@ export const ChatView = memo(({
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
-                className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 shrink-0"
+                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-[1.2rem] flex items-center justify-center transition-all hover:scale-105 hover:shadow-xl hover:shadow-black/20 dark:hover:shadow-white/20 active:scale-95 disabled:hover:scale-100 disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 disabled:shadow-none shrink-0"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4 ml-0.5" />
               </button>
             </div>
           </div>

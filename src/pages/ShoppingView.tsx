@@ -4,6 +4,7 @@ import { ShoppingItem, UserProfile } from '../types/index.js';
 import { cn } from '../lib/utils.js';
 import React, { useState } from 'react';
 import { locationService, MarketLocation } from '../services/locationService.js';
+import { ShoppingItemSchema } from '../models/index.js';
 
 interface ShoppingViewProps {
   shoppingFilter: 'list' | 'stock';
@@ -37,15 +38,25 @@ export const ShoppingView = ({
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('grocery');
   const [newItemQuantity, setNewItemQuantity] = useState('1');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const onAddItem = () => {
-    if (!newItemName.trim()) return;
+    setFormError(null);
     const qty = parseInt(newItemQuantity, 10);
-    handleAddItem({
+    
+    const payload = {
       name: newItemName,
       category: newItemCategory,
       quantity: isNaN(qty) || qty < 1 ? 1 : qty,
-    });
+    };
+    
+    const result = ShoppingItemSchema.safeParse(payload);
+    if (!result.success) {
+      setFormError(result.error.issues[0].message);
+      return;
+    }
+    
+    handleAddItem(payload);
     setNewItemName('');
     setNewItemQuantity('1');
     setShowAddForm(false);
@@ -386,6 +397,15 @@ export const ShoppingView = ({
                   Adicionar
                 </button>
               </div>
+              {formError && (
+                <motion.p 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  className="text-xs font-medium text-rose-500 px-1"
+                >
+                  {formError}
+                </motion.p>
+              )}
             </div>
           </motion.div>
         )}

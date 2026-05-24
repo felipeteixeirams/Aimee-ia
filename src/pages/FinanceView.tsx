@@ -5,7 +5,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Transaction, FinancialGoal, UserProfile, Period, Tab } from '../types/index.js';
 import { cn, safeFormatDate } from '../lib/utils.js';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { TransactionSchema } from '../models/index.js';
 
 interface FinanceViewProps {
   profile: UserProfile | null;
@@ -61,18 +62,27 @@ export const FinanceView = ({
   const [description, setDescription] = React.useState('');
   const [type, setType] = React.useState<'income' | 'expense'>('expense');
   const [category, setCategory] = React.useState('others');
+  const [formError, setFormError] = React.useState<string | null>(null);
 
   const onAddTx = () => {
+    setFormError(null);
     const numAmount = parseFloat(amount.replace(',', '.'));
-    if (isNaN(numAmount) || !description.trim()) return;
     
-    handleAddTransaction({
-      amount: numAmount,
+    const payload = {
+      amount: isNaN(numAmount) ? 0 : numAmount,
       description,
       type,
       category,
       date: new Date().toISOString()
-    });
+    };
+    
+    const result = TransactionSchema.safeParse(payload);
+    if (!result.success) {
+      setFormError(result.error.issues[0].message);
+      return;
+    }
+    
+    handleAddTransaction(payload);
     
     setAmount('');
     setDescription('');
@@ -585,6 +595,15 @@ export const FinanceView = ({
                     Confirmar
                   </button>
                 </div>
+                {formError && (
+                  <motion.p 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className="text-xs font-medium text-rose-500 mt-2 px-1"
+                  >
+                    {formError}
+                  </motion.p>
+                )}
               </div>
             </motion.div>
           )}
