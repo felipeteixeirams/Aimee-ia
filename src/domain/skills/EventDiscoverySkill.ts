@@ -4,6 +4,8 @@ import { MonitorEventRepository } from '../../infrastructure/repositories/Monito
 import { EventMonitorConfigRepository } from '../../infrastructure/repositories/EventMonitorConfigRepository.js';
 import { MonitorEvent, EVENT_TAXONOMY } from '../../models/index.js';
 import crypto from 'crypto';
+import { config } from '../../lib/config.js';
+import { getAdminFirestore } from '../../infrastructure/server/firebaseAdmin.js';
 
 export class EventDiscoverySkill {
   private repository: MonitorEventRepository;
@@ -21,7 +23,7 @@ export class EventDiscoverySkill {
     logger.info('EventDiscoverySkill: Searching for events', { query, interests });
     
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = config.geminiApiKey;
       if (!apiKey) throw new Error('GEMINI_API_KEY is missing');
       
       const ai = new GoogleGenAI({ apiKey });
@@ -178,8 +180,25 @@ Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focad
     // Coleta eventos dos últimos 7 dias para evitar duplicatas completas
     const recentDate = new Date();
     recentDate.setDate(recentDate.getDate() - 7);
-    const recentEvents = await this.repository.findRecentEvents(recentDate);
-    const recentHashes = recentEvents.map(e => e.hash);
+    
+    let recentHashes: string[] = [];
+    const adminDb = getAdminFirestore();
+
+    if (adminDb) {
+      try {
+        const snapshot = await adminDb.collection('monitor_events')
+          .where('collectedAt', '>=', recentDate.toISOString())
+          .get();
+        recentHashes = snapshot.docs.map(d => d.id);
+      } catch (err) {
+         logger.error('Admin DB failed to read recent events', { error: err });
+         const recentEvents = await this.repository.findRecentEvents(recentDate);
+         recentHashes = recentEvents.map(e => e.hash);
+      }
+    } else {
+      const recentEvents = await this.repository.findRecentEvents(recentDate);
+      recentHashes = recentEvents.map(e => e.hash);
+    }
 
     // Get all interests from taxonomy, just to populate cache
     // Let's do a couple of broad queries
@@ -196,7 +215,21 @@ Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focad
     }
 
     if (allNewEvents.length > 0) {
-      await this.repository.saveBatch(allNewEvents);
+      if (adminDb) {
+        try {
+          const batch = adminDb.batch();
+          allNewEvents.forEach(event => {
+            const docRef = adminDb.collection('monitor_events').doc(event.hash);
+            batch.set(docRef, event, { merge: true });
+          });
+          await batch.commit();
+        } catch (err) {
+          logger.error('Admin DB failed to write new events', { error: err });
+          await this.repository.saveBatch(allNewEvents);
+        }
+      } else {
+        await this.repository.saveBatch(allNewEvents);
+      }
     }
     
     logger.info('EventDiscoverySkill: Job completed', { newEvents: allNewEvents.length });
