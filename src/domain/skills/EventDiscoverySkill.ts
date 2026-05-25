@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 import { logger } from '../../lib/logger.js';
 import { MonitorEventRepository } from '../../infrastructure/repositories/MonitorEventRepository.js';
 import { EventMonitorConfigRepository } from '../../infrastructure/repositories/EventMonitorConfigRepository.js';
@@ -22,23 +23,19 @@ export class EventDiscoverySkill {
   async searchEvents(query: string, interests: string[], ignoreHashes: string[]): Promise<MonitorEvent[]> {
     logger.info('EventDiscoverySkill: Searching for events', { query, interests });
     
-    try {
-      const apiKey = config.geminiApiKey;
-      if (!apiKey) throw new Error('GEMINI_API_KEY is missing');
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const tzOffset = new Date().getTimezoneOffset();
-      const collectionDate = new Date().toISOString();
+    let rawResponse = '';
+    let usedModel = '';
+    let promptTokenCount = 0;
+    let candidatesTokenCount = 0;
+    let totalTokenCount = 0;
 
-      const systemInstruction = `Você é um assistente pesquisador especializado em encontrar eventos profissionais. 
-Retorne APENAS um JSON válido. Não inclua Markdown (como \`\`\`json).
-Você deve utilizar as informações da Busca do Google.
+    const systemInstruction = `Você é um assistente pesquisador especializado em encontrar eventos profissionais. 
+Retorne APENAS um JSON válido. Não inclua Markdown (como \`\`\`json) ou textos adicionais de introdução/conclusão.
 
 Regras de Filtragem e Higienização:
 1. Agnosticismo de Plataforma e Varredura Ampla.
 2. Formatar as datas em ISO8601.
-3. Não inventar ou deduzir informações. Use os dados da pesquisa.
+3. Não inventar ou deduzir informações.
 4. NUNCA DEVOLVA JSON INVÁLIDO.
 
 Formato OBRIGATÓRIO de Saída:
@@ -70,57 +67,148 @@ Formato OBRIGATÓRIO de Saída:
 }
 `;
 
-      const prompt = `
+    const prompt = `
 Tema: "${query}"
 Interesses do usuário: ${interests.join(', ')}
-Data de coleta: ${collectionDate}
+Data de coleta: ${new Date().toISOString()}
 
 Tente evitar os seguintes eventos (deduplicação): ${ignoreHashes.join(', ')}
 
-Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focados nos temas acima e retorne o JSON estruturado OBRIGATORIAMENTE.
+Foque em listar eventos futuros conhecidos reais em comunidades de tecnologia (como Meetups, Sympla, etc.) relacionados a essa pesquisa no Brasil.
+Retorne o JSON estritamente formatado de acordo com a instrução de saída.
 `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          systemInstruction,
-          temperature: 0.2, // Low temperature for extraction
-          tools: [{ googleSearch: {} }],
-          responseMimeType: "application/json"
-        }
-      });
-      
-      const rawResponse = response.text || '';
-
-      // Imprime o retorno documentado e os metadados de uso no log para mapeamento e auditoria exata das LLMs
-      logger.info('EventDiscoverySkill: Gemini API response metadata captured', {
-        usageMetadata: response.usageMetadata,
-        promptTokenCount: response.usageMetadata?.promptTokenCount,
-        candidatesTokenCount: response.usageMetadata?.candidatesTokenCount,
-        totalTokenCount: response.usageMetadata?.totalTokenCount
-      });
-
+    // 1. Tentar com Gemini se configurado
+    if (config.geminiApiKey) {
       try {
-        const { UsageRepository } = await import('../../infrastructure/repositories/UsageRepository.js');
-        const usageRepo = new UsageRepository();
-        await usageRepo.logUsage({
-          userId: 'system-event-discovery',
-          model: 'gemini-2.5-flash',
-          promptTokens: response.usageMetadata?.promptTokenCount || 0,
-          completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
-          totalTokens: response.usageMetadata?.totalTokenCount || 0,
-          context: 'event_discovery'
+        usedModel = 'gemini-2.5-flash';
+        const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
+        
+        const response = await ai.models.generateContent({
+          model: usedModel,
+          contents: prompt,
+          config: {
+            systemInstruction,
+            temperature: 0.2, // Baixa temperatura para melhor extração estruturada
+            tools: [{ googleSearch: {} }],
+            responseMimeType: "application/json"
+          }
         });
-      } catch (usageError) {
-        logger.error('Failed to log usage for EventDiscoverySkill', { error: usageError });
+        
+        rawResponse = response.text || '';
+        promptTokenCount = response.usageMetadata?.promptTokenCount || 0;
+        candidatesTokenCount = response.usageMetadata?.candidatesTokenCount || 0;
+        totalTokenCount = response.usageMetadata?.totalTokenCount || 0;
+
+        logger.info('EventDiscoverySkill: Gemini API response and usage captured', {
+          model: usedModel,
+          promptTokenCount,
+          candidatesTokenCount,
+          totalTokenCount
+        });
+      } catch (geminiError: any) {
+        logger.warn('EventDiscoverySkill: Gemini search failed, checking fallbacks...', { error: geminiError.message });
       }
-      
+    }
+
+    // 2. Fallback para DeepSeek se Gemini não disponível ou falhou
+    if (!rawResponse && config.deepseekApiKey) {
+      try {
+        usedModel = 'deepseek-chat';
+        logger.info('EventDiscoverySkill: Trying fallback discovery with DeepSeek', { model: usedModel });
+        
+        const openai = new OpenAI({
+          apiKey: config.deepseekApiKey,
+          baseURL: "https://api.deepseek.com"
+        });
+
+        const completion = await openai.chat.completions.create({
+          model: usedModel,
+          messages: [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: prompt }
+          ],
+          response_format: { type: "json_object" }
+        });
+
+        rawResponse = completion.choices[0].message.content || '';
+        promptTokenCount = completion.usage?.prompt_tokens || 0;
+        candidatesTokenCount = completion.usage?.completion_tokens || 0;
+        totalTokenCount = completion.usage?.total_tokens || 0;
+
+        logger.info('EventDiscoverySkill: DeepSeek API response and usage captured', {
+          model: usedModel,
+          promptTokenCount,
+          candidatesTokenCount,
+          totalTokenCount
+        });
+      } catch (dsError: any) {
+        logger.warn('EventDiscoverySkill: DeepSeek search fallback failed...', { error: dsError.message });
+      }
+    }
+
+    // 3. Fallback para OpenAI se os anteriores não disponíveis ou falharam
+    if (!rawResponse && config.openaiApiKey) {
+      try {
+        usedModel = 'gpt-4o';
+        logger.info('EventDiscoverySkill: Trying fallback discovery with OpenAI', { model: usedModel });
+        
+        const openai = new OpenAI({
+          apiKey: config.openaiApiKey
+        });
+
+        const completion = await openai.chat.completions.create({
+          model: usedModel,
+          messages: [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: prompt }
+          ],
+          response_format: { type: "json_object" }
+        });
+
+        rawResponse = completion.choices[0].message.content || '';
+        promptTokenCount = completion.usage?.prompt_tokens || 0;
+        candidatesTokenCount = completion.usage?.completion_tokens || 0;
+        totalTokenCount = completion.usage?.total_tokens || 0;
+
+        logger.info('EventDiscoverySkill: OpenAI API response and usage captured', {
+          model: usedModel,
+          promptTokenCount,
+          candidatesTokenCount,
+          totalTokenCount
+        });
+      } catch (oaiError: any) {
+        logger.error('EventDiscoverySkill: OpenAI search fallback failed', { error: oaiError.message });
+      }
+    }
+
+    if (!rawResponse) {
+      logger.error('EventDiscoverySkill: All LLM discovery options failed or are unconfigured.');
+      return [];
+    }
+
+    // Registrar o uso auditado exato das LLMs
+    try {
+      const { UsageRepository } = await import('../../infrastructure/repositories/UsageRepository.js');
+      const usageRepo = new UsageRepository();
+      await usageRepo.logUsage({
+        userId: 'system-event-discovery',
+        model: usedModel,
+        promptTokens: promptTokenCount,
+        completionTokens: candidatesTokenCount,
+        totalTokens: totalTokenCount,
+        context: 'event_discovery'
+      });
+    } catch (usageError) {
+      logger.error('Failed to log usage for EventDiscoverySkill', { error: usageError });
+    }
+    
+    try {
       let parsedResponse: any;
       try {
         parsedResponse = JSON.parse(rawResponse);
       } catch (parseError) {
-        // Fallback for markdown stripping just in case
+        // Fallback para strip de tags markdown caso tenham sido incluídas incorretamente
         const stripped = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
         parsedResponse = JSON.parse(stripped);
       }
@@ -170,7 +258,7 @@ Pesquise eventos na web (Sympla, Eventbrite, Meetup, Comunidades) futuros, focad
       return events;
 
     } catch (error) {
-      logger.error('EventDiscoverySkill: Search failed', { error });
+      logger.error('EventDiscoverySkill: Search failed to parse or construct events', { error });
       return [];
     }
   }
