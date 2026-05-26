@@ -69,6 +69,7 @@ export function Header({
           <div className="flex items-center gap-4 sm:gap-5">
             <button 
               onClick={() => setShowSidebar(true)}
+              aria-label="Abrir menu"
               className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -76,6 +77,7 @@ export function Header({
             <div className="relative group">
               <button 
                 onClick={() => unreadInsightsCount > 0 && setShowInsightsModal(true)}
+                aria-label={unreadInsightsCount > 0 ? `${unreadInsightsCount} novos insights disponíveis` : "Perfil da Aimee"}
                 className={cn(
                   "relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm hover:shadow-md",
                   unreadInsightsCount > 0 ? "cursor-pointer" : "cursor-default"
@@ -99,6 +101,8 @@ export function Header({
                 {/* Health Dot */}
                 <motion.div 
                   initial={false}
+                  role="status"
+                  aria-label={isOnline ? "Sistema Online" : "Sistema Offline"}
                   animate={{ 
                     scale: isOnline ? [1, 1.2, 1] : 1,
                     backgroundColor: isOnline ? '#22c55e' : '#ef4444' 
@@ -189,6 +193,7 @@ export function Header({
                 <h2 className="text-2xl font-display font-black tracking-tighter">Menu</h2>
                 <button 
                   onClick={() => setShowSidebar(false)}
+                  aria-label="Fechar menu"
                   className="p-2 -mr-2 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-all hover:scale-105 active:scale-95"
                 >
                   <X className="w-5 h-5" />

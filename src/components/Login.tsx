@@ -70,7 +70,7 @@ const FireBackground = () => {
   const [sparks] = useState(() => Array.from({ length: 45 }));
 
   return (
-    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#050a14]">
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#050a14]" aria-hidden="true">
       {/* Base deep glow */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(75,142,255,0.1)_0%,transparent_60%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(233,179,255,0.05)_0%,transparent_50%)]"></div>
@@ -138,7 +138,7 @@ const TypingHero = () => {
         borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
       }}>
         <div className="absolute inset-4 rounded-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-secondary/40 to-transparent"></div>
-        <svg className="w-16 h-16 text-secondary font-light z-10 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-16 h-16 text-secondary font-light z-10 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
            <path d="m9 12 2 2 4-4"/>
         </svg>
@@ -378,6 +378,7 @@ export const Login: React.FC<LoginProps> = ({
               <button 
                 onClick={() => setStep('options')}
                 className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
+                aria-label="Voltar para opções de login"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -406,6 +407,7 @@ export const Login: React.FC<LoginProps> = ({
                     value={step === 'email' ? email : password}
                     onChange={(e) => step === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
                     placeholder={step === 'email' ? "Seu email" : (isNewUser ? "Mínimo 6 caracteres" : "Senha")}
+                    aria-label={step === 'email' ? "Endereço de e-mail" : "Senha"}
                     className="w-full bg-[rgba(14,14,14,0.6)] border border-outline-variant/30 rounded-full py-3 pl-5 pr-12 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-medium placeholder:text-neutral-500 shadow-inner"
                   />
                   {step === 'email' && <Mail className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />}
@@ -522,6 +524,7 @@ export const Login: React.FC<LoginProps> = ({
               <button 
                 onClick={() => { setShowSupport(false); setSupportSent(false); }}
                 className="absolute top-6 right-6 p-2 bg-white/5 rounded-full text-neutral-500 hover:text-white transition-colors"
+                aria-label="Fechar suporte"
               >
                 <X className="w-5 h-5" />
               </button>
