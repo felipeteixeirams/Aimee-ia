@@ -37,7 +37,7 @@ export function InsightsModal({
             <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-800/50">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-brand/10 rounded-2xl flex items-center justify-center text-brand">
-                  <Sparkles className="w-6 h-6" />
+                  <Sparkles className="w-6 h-6" aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="text-xl font-black tracking-tight">Insights de IA</h3>
@@ -47,8 +47,9 @@ export function InsightsModal({
               <button 
                 onClick={() => setShowInsightsModal(false)}
                 className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-neutral-900 transition-all shadow-sm"
+                aria-label="Fechar insights"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -61,21 +62,21 @@ export function InsightsModal({
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0 mt-1">
-                      <TrendingUp className="w-4 h-4 text-amber-600" />
+                      <TrendingUp className="w-4 h-4 text-amber-600" aria-hidden="true" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-neutral-800 dark:text-neutral-200 leading-relaxed line-clamp-3">
                         {insight.content}
                       </p>
                       <div className="flex items-center gap-2 mt-3">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" aria-hidden="true" />
                         <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
                           {format(new Date(insight.timestamp), "HH:mm '•' d 'de' MMMM", { locale: ptBR })}
                         </span>
                       </div>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronDown className="w-5 h-5 text-brand -rotate-90" />
+                      <ChevronDown className="w-5 h-5 text-brand -rotate-90" aria-hidden="true" />
                     </div>
                   </div>
                 </button>
