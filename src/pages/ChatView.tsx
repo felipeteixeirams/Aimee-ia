@@ -555,7 +555,7 @@ export const ChatView = memo(({
                 onClick={isRecording ? onStopRecording : startRecording}
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
                 title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada" : "Falar"}
-                aria-label={isRecording ? "Parar gravação" : "Começar a gravar"}
+                aria-label={isRecording ? "Parar gravação" : "Começar gravação de voz"}
                 className={cn(
                   "w-10 h-10 flex items-center justify-center rounded-full transition-all group-hover/btn:scale-105 active:scale-95",
                   isRecording 
@@ -593,4 +593,3 @@ export const ChatView = memo(({
 });
 
 ChatView.displayName = 'ChatView';
-

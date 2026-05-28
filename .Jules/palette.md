@@ -1,8 +1,8 @@
 # Palette's Journal - Critical UX/Accessibility Learnings
 
-## 2025-05-14 - [ARIA Labels for Icon-only Buttons]
-**Learning:** In a project with a strong visual-first design like Aimee, many buttons use icons exclusively for a clean look. However, this renders them invisible to screen readers and makes the interface less accessible.
-**Action:** Always audit new components for icon-only buttons and provide descriptive `aria-label` attributes in the primary language of the application (Portuguese in this case).
+## 2026-05-25 - Project-wide ARIA Label Consistency
+**Learning:** Many interactive icon-only elements (sidebar toggles, copy/edit buttons, voice recorders) across the app were missing descriptive `aria-label` attributes, making them inaccessible to screen readers.
+**Action:** Always audit new components for icon-only buttons and apply descriptive `aria-label`s, especially for state-dependent buttons (like recording toggles) where the label should update dynamically.
 
 ## 2025-05-14 - [Decorative Element Management]
 **Learning:** Visual-heavy elements like SVG backgrounds and "hero" illustrations can clutter the screen reader's view if not explicitly marked as decorative.
