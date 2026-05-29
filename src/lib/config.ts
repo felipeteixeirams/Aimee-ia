@@ -62,11 +62,21 @@ const isServer = typeof window === 'undefined';
  * Accesses environment variables safely depending on the runtime (Vite vs Node).
  */
 function getEnv(key: string, defaultValue = ''): string {
+  let val = '';
   if (isServer) {
-    return process.env[key] || defaultValue;
+    val = process.env[key] || defaultValue;
+  } else {
+    // Try import.meta.env first (standard Vite), then fallback to process.env (Vite-injected define)
+    val = (import.meta as any).env[key] || (window as any).process?.env?.[key] || defaultValue;
   }
-  // Try import.meta.env first (standard Vite), then fallback to process.env (Vite-injected define)
-  return (import.meta as any).env[key] || (window as any).process?.env?.[key] || defaultValue;
+
+  if (val) {
+    val = val.trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+  }
+  return val;
 }
 
 /**
@@ -75,10 +85,20 @@ function getEnv(key: string, defaultValue = ''): string {
 function getViteEnv(key: string, defaultValue = ''): string {
   // Vite prefixes client-side variables with VITE_
   const viteKey = key.startsWith('VITE_') ? key : `VITE_${key}`;
+  let val = '';
   if (isServer) {
-    return process.env[viteKey] || process.env[key] || defaultValue;
+    val = process.env[viteKey] || process.env[key] || defaultValue;
+  } else {
+    val = (import.meta as any).env[viteKey] || defaultValue;
   }
-  return (import.meta as any).env[viteKey] || defaultValue;
+
+  if (val) {
+    val = val.trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+  }
+  return val;
 }
 
 // Helper to filter out placeholder keys
@@ -159,11 +179,14 @@ export function validateConfig(): boolean {
   if (!config.firebase.apiKey) missingCritical.push('FIREBASE_API_KEY');
   if (!config.firebase.projectId) missingCritical.push('FIREBASE_PROJECT_ID');
   
-  // Critical for Email (Server-only)
+  // Critical for Email & Firebase Admin (Server-only)
   if (isServer) {
     if (!config.email.user) missingCritical.push('SMTP_USER');
     if (!config.email.pass) missingCritical.push('SMTP_PASS');
     if (!config.email.adminEmail) missingCritical.push('ADMIN_EMAIL');
+    if (!config.firebaseAdmin.projectId) missingCritical.push('FIREBASE_PROJECT_ID');
+    if (!config.firebaseAdmin.clientEmail) missingCritical.push('FIREBASE_CLIENT_EMAIL');
+    if (!config.firebaseAdmin.privateKey) missingCritical.push('FIREBASE_PRIVATE_KEY');
   }
   
   if (missingCritical.length > 0) {

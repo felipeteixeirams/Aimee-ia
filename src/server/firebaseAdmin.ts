@@ -1,11 +1,5 @@
 import admin from 'firebase-admin';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
 import { config as appConfig } from '../lib/config.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 let firebaseAdminInstance: admin.app.App | null = null;
 
@@ -13,36 +7,36 @@ export function getFirebaseAdmin() {
   if (firebaseAdminInstance) return firebaseAdminInstance;
 
   try {
-    const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      
-      const clientEmail = appConfig.firebaseAdmin.clientEmail || process.env.FIREBASE_CLIENT_EMAIL || '';
-      let privateKey = appConfig.firebaseAdmin.privateKey || process.env.FIREBASE_PRIVATE_KEY || '';
-      
-      const options: admin.AppOptions = {
-        projectId: config.projectId,
-      };
+    const projectId = appConfig.firebaseAdmin.projectId;
+    const clientEmail = appConfig.firebaseAdmin.clientEmail;
+    const privateKey = appConfig.firebaseAdmin.privateKey;
 
-      if (clientEmail && privateKey) {
-        options.credential = admin.credential.cert({
-          projectId: config.projectId,
-          clientEmail,
-          privateKey: privateKey.replace(/\\n/g, '\n'),
-        });
-        
-        firebaseAdminInstance = admin.initializeApp(options);
-        return firebaseAdminInstance;
-      }
-      
-      console.warn("getFirebaseAdmin: No service account credentials found in environment or config. Using Application Default Credentials...");
-      firebaseAdminInstance = admin.initializeApp({
-        projectId: config.projectId,
+    if (!projectId) {
+      console.error("getFirebaseAdmin: No Firebase Project ID found in config. Cannot initialize Admin SDK.");
+      return null;
+    }
+
+    const options: admin.AppOptions = {
+      projectId,
+    };
+
+    if (clientEmail && privateKey) {
+      options.credential = admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
       });
+
+      firebaseAdminInstance = admin.initializeApp(options);
+      console.log(`getFirebaseAdmin: Initialized successfully using Service Account for project: ${projectId}`);
       return firebaseAdminInstance;
     }
+
+    console.warn("getFirebaseAdmin: Service Account credentials (clientEmail or privateKey) are missing. Falling back to Application Default Credentials...");
+    firebaseAdminInstance = admin.initializeApp(options);
+    return firebaseAdminInstance;
   } catch (error) {
-    console.error("Failed to initialize firebase-admin", error);
+    console.error("Failed to initialize firebase-admin SDK", error);
   }
   return null;
 }
