@@ -11,6 +11,29 @@ export function getFirebaseAdmin() {
     const clientEmail = appConfig.firebaseAdmin.clientEmail;
     const privateKey = appConfig.firebaseAdmin.privateKey;
 
+    console.log(`[FirebaseAdmin Diagnostic] Initializing Firebase Admin SDK...`);
+    console.log(`[FirebaseAdmin Diagnostic] Configured Project ID: "${projectId}"`);
+    console.log(`[FirebaseAdmin Diagnostic] Configured Client Email: "${clientEmail}"`);
+    
+    if (privateKey) {
+      const hasBeginHeader = privateKey.includes("-----BEGIN PRIVATE KEY-----");
+      const hasEndHeader = privateKey.includes("-----END PRIVATE KEY-----");
+      const containsLiteralSlashN = privateKey.includes("\\n");
+      const containsRealNewline = privateKey.includes("\n");
+      
+      console.log(`[FirebaseAdmin Diagnostic] Private Key exists. Length: ${privateKey.length} chars.`);
+      console.log(`[FirebaseAdmin Diagnostic] Contains -----BEGIN PRIVATE KEY-----: ${hasBeginHeader}`);
+      console.log(`[FirebaseAdmin Diagnostic] Contains -----END PRIVATE KEY-----: ${hasEndHeader}`);
+      console.log(`[FirebaseAdmin Diagnostic] Contains raw/literal '\\n': ${containsLiteralSlashN}`);
+      console.log(`[FirebaseAdmin Diagnostic] Contains actual newline character: ${containsRealNewline}`);
+      
+      if (!hasBeginHeader || !hasEndHeader) {
+        console.warn(`[FirebaseAdmin Diagnostic] WARNING: Private key is missing the standard PEM headers!`);
+      }
+    } else {
+      console.log(`[FirebaseAdmin Diagnostic] Private Key is missing or empty!`);
+    }
+
     if (!projectId) {
       console.error("getFirebaseAdmin: No Firebase Project ID found in config. Cannot initialize Admin SDK.");
       return null;
