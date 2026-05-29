@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
-import { logger } from './lib/logger.js';
+import { logger } from '../lib/logger.js';
 import { 
   auth, 
   db, 
@@ -14,7 +14,7 @@ import {
   sendPasswordResetEmail,
   updateProfile as updateAuthProfile,
   testConnection
-} from './lib/firebase.js';
+} from '../lib/firebase.js';
 import { 
   collection, 
   query, 
@@ -40,8 +40,8 @@ import {
   HouseholdTask, FamilyEvent, GlobalConfig, Tab, Period,
   AIProvider, UserRole, UserStatus, ChatRole, PermissionLevel, ShareStatus, TaskStatus,
   AIRecommendedPersona
-} from './types/index.js';
-import { handleFirestoreError, OperationType } from './lib/firestoreUtils.js';
+} from '../types/index.js';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils.js';
 import { Login } from './components/Login.js';
 import { Register } from './components/Register.js';
 import { StatusScreen } from './components/StatusScreen.js';
@@ -74,7 +74,7 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn, safeFormatDate } from './lib/utils.js';
+import { cn, safeFormatDate } from '../lib/utils.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from './hooks/useAuth.js';

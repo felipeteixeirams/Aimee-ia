@@ -2,9 +2,9 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.js';
 import './index.css';
-import { validateConfig } from './lib/config.js';
-import { testConnection } from './lib/firebase.js';
-import { logger } from './lib/logger.js';
+import { validateConfig } from '../lib/config.js';
+import { testConnection } from '../lib/firebase.js';
+import { logger } from '../lib/logger.js';
 
 // Centralized configuration validation
 validateConfig();

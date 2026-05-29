@@ -1,8 +1,8 @@
-import { FamilyEvent } from "../types/index.js";
-import { config } from '../lib/config.js';
+import { FamilyEvent } from "../../types/index.js";
+import { config } from '../../lib/config.js';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase.js';
-import { logger } from '../lib/logger.js';
+import { db } from '../../lib/firebase.js';
+import { logger } from '../../lib/logger.js';
 
 export const calendarService = {
   async fetchGoogleCalendarEvents(accessToken: string): Promise<Omit<FamilyEvent, 'id' | 'userId' | 'createdAt' | 'updatedAt'>[]> {

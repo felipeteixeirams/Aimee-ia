@@ -1,5 +1,5 @@
-import { ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent, ShoppingItem, Transaction } from "../types/index.js";
-import { logger } from "../lib/logger.js";
+import { ChatMessage, FinancialGoal, HouseholdTask, FamilyEvent, ShoppingItem, Transaction } from "../../types/index.js";
+import { logger } from "../../lib/logger.js";
 
 /**
  * Aimee Client Orchestrator
@@ -60,7 +60,7 @@ export const aimeeClientOrchestrator = async (
     // and this ensures reactive UI updates via Firebase listeners.
     let feedback = "";
     if (functionCalls && functionCalls.length > 0) {
-      const { financeSkill, routineSkill, shoppingSkill } = await import("../domain/skills/index.js");
+      const { financeSkill, routineSkill, shoppingSkill } = await import("../../domain/skills/index.js");
       
       for (const call of functionCalls) {
         const name = call.name;
