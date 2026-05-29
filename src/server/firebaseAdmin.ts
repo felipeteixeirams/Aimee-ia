@@ -11,6 +11,12 @@ export function getFirebaseAdmin() {
     const clientEmail = appConfig.firebaseAdmin.clientEmail;
     const privateKey = appConfig.firebaseAdmin.privateKey;
 
+    if (admin.apps.length > 0) {
+      console.log(`[FirebaseAdmin] Default app already exists. Reusing existing instance.`);
+      firebaseAdminInstance = admin.app();
+      return firebaseAdminInstance;
+    }
+
     console.log(`[FirebaseAdmin Diagnostic] Initializing Firebase Admin SDK...`);
     console.log(`[FirebaseAdmin Diagnostic] Configured Project ID: "${projectId}"`);
     console.log(`[FirebaseAdmin Diagnostic] Configured Client Email: "${clientEmail}"`);
