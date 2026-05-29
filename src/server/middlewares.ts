@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply, FastifyError } from 'fastify';
 import { z, ZodTypeAny } from 'zod';
-import { logger } from '../../lib/logger.js';
+import { logger } from '../lib/logger.js';
 
 export const validateRequest = (schema: ZodTypeAny) => {
   return async (req: FastifyRequest) => {

@@ -6,7 +6,7 @@ import { EventMonitorConfigRepository } from '../../infrastructure/repositories/
 import { MonitorEvent, EVENT_TAXONOMY } from '../../models/index.js';
 import crypto from 'crypto';
 import { config } from '../../lib/config.js';
-import { getAdminFirestore } from '../../infrastructure/server/firebaseAdmin.js';
+import { getAdminFirestore } from '../../server/firebaseAdmin.js';
 
 export class EventDiscoverySkill {
   private repository: MonitorEventRepository;

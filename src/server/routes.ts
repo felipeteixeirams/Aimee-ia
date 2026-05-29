@@ -1,15 +1,15 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { logger } from "../../lib/logger.js";
-import { config } from "../../lib/config.js";
-import { NotificationType, type NotificationPayload } from "../../types/index.js";
-import { EmailService } from "../../services/EmailService.js";
-import { AimeeOrchestrator } from "../../infrastructure/llm/AimeeOrchestrator.js";
-import { container } from "../../infrastructure/container.js";
+import { logger } from "../lib/logger.js";
+import { config } from "../lib/config.js";
+import { NotificationType, type NotificationPayload } from "../types/index.js";
+import { EmailService } from "./services/EmailService.js";
+import { AimeeOrchestrator } from "./llm/AimeeOrchestrator.js";
+import { container } from "./container.js";
 import { validateRequest } from "./middlewares.js";
-import { aiRequestSchema, notificationSchema, supportSchema } from '../../models/index.js';
+import { aiRequestSchema, notificationSchema, supportSchema } from '../models/index.js';
 import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.js";
 import { google } from "googleapis";
-import { EventDiscoverySkill } from "../../domain/skills/EventDiscoverySkill.js";
+import { EventDiscoverySkill } from "../domain/skills/EventDiscoverySkill.js";
 
 export default async function (fastify: FastifyInstance) {
   // Event Discovery Route (Can be triggered by a Cron or Manually)

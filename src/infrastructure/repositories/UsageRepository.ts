@@ -16,7 +16,7 @@ export class UsageRepository extends BaseRepository<LLMUsage> {
 
     if (isServer) {
       try {
-        const { getAdminFirestore } = await import('../server/firebaseAdmin.js');
+        const { getAdminFirestore } = await import('../../server/firebaseAdmin.js');
         const db = getAdminFirestore();
         if (db) {
           const docRef = await db.collection('llm_usage').add({

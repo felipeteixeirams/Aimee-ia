@@ -13,10 +13,10 @@ async function initServer() {
     // Dynamically import everything to capture evaluation errors
     const { logger } = await import("../src/lib/logger.js");
     const { validateConfig } = await import("../src/lib/config.js");
-    const { requestLogger, globalErrorHandler } = await import("../src/infrastructure/server/middlewares.js");
-    const { default: apiRoutes } = await import("../src/infrastructure/server/routes.js");
-    const { container } = await import("../src/infrastructure/container.js");
-    const { AimeeOrchestrator } = await import("../src/infrastructure/llm/AimeeOrchestrator.js");
+    const { requestLogger, globalErrorHandler } = await import("../src/server/middlewares.js");
+    const { default: apiRoutes } = await import("../src/server/routes.js");
+    const { container } = await import("../src/server/container.js");
+    const { AimeeOrchestrator } = await import("../src/server/llm/AimeeOrchestrator.js");
 
     validateConfig();
 

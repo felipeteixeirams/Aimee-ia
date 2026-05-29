@@ -10,8 +10,8 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import { logger } from "./src/lib/logger.js";
 import { validateConfig } from "./src/lib/config.js";
-import { requestLogger, globalErrorHandler } from "./src/infrastructure/server/middlewares.js";
-import apiRoutes from "./src/infrastructure/server/routes.js";
+import { requestLogger, globalErrorHandler } from "./src/server/middlewares.js";
+import apiRoutes from "./src/server/routes.js";
 
 dotenv.config();
 
