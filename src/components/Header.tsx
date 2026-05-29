@@ -70,7 +70,7 @@ export function Header({
             <button 
               onClick={() => setShowSidebar(true)}
               className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-              aria-label="Abrir menu"
+              aria-label="Abrir menu lateral"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
             </button>
@@ -195,7 +195,7 @@ export function Header({
                 <button 
                   onClick={() => setShowSidebar(false)}
                   className="p-2 -mr-2 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-all hover:scale-105 active:scale-95"
-                  aria-label="Fechar menu"
+                  aria-label="Fechar menu lateral"
                 >
                   <X className="w-5 h-5" aria-hidden="true" />
                 </button>

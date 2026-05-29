@@ -47,7 +47,7 @@ export function InsightsModal({
               <button 
                 onClick={() => setShowInsightsModal(false)}
                 className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-neutral-900 transition-all shadow-sm"
-                aria-label="Fechar insights"
+                aria-label="Fechar"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>

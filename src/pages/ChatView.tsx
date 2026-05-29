@@ -555,6 +555,7 @@ export const ChatView = memo(({
                 onClick={isRecording ? onStopRecording : startRecording}
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}
                 title={!isSupported && !availableAIProviders.includes('gemini') ? "Transcrição não suportada" : "Falar"}
+                aria-label={isRecording ? "Parar gravação" : "Começar gravação de voz"}
                 className={cn(
                   "w-10 h-10 flex items-center justify-center rounded-full transition-all group-hover/btn:scale-105 active:scale-95",
                   isRecording 
@@ -562,7 +563,6 @@ export const ChatView = memo(({
                     : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800",
                   (isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))) && "opacity-50 cursor-not-allowed"
                 )}
-                aria-label={isRecording ? "Parar gravação" : "Começar gravação de voz"}
               >
                 {isTranscribing ? (
                   <div className="w-4 h-4 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
@@ -576,8 +576,8 @@ export const ChatView = memo(({
               <button 
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
-                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-[1.2rem] flex items-center justify-center transition-all hover:scale-105 hover:shadow-xl hover:shadow-black/20 dark:hover:shadow-white/20 active:scale-95 disabled:hover:scale-100 disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 disabled:shadow-none shrink-0"
                 aria-label="Enviar mensagem"
+                className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-[1.2rem] flex items-center justify-center transition-all hover:scale-105 hover:shadow-xl hover:shadow-black/20 dark:hover:shadow-white/20 active:scale-95 disabled:hover:scale-100 disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 disabled:shadow-none shrink-0"
               >
                 <Send className="w-4 h-4 ml-0.5" aria-hidden="true" />
               </button>
