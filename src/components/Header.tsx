@@ -70,7 +70,6 @@ export function Header({
             <button 
               onClick={() => setShowSidebar(true)}
               className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-              aria-label="Abrir menu"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
@@ -81,7 +80,6 @@ export function Header({
                   "relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm hover:shadow-md",
                   unreadInsightsCount > 0 ? "cursor-pointer" : "cursor-default"
                 )}
-                aria-label={unreadInsightsCount > 0 ? `${unreadInsightsCount} novos insights disponíveis` : "Ver insights e status da Aimee"}
               >
                 {unreadInsightsCount > 0 && (
                   <div className="absolute inset-0 rounded-2xl overflow-hidden z-0 scale-110">
@@ -101,8 +99,6 @@ export function Header({
                 {/* Health Dot */}
                 <motion.div 
                   initial={false}
-                  role="status"
-                  aria-label={isOnline ? "Sistema Online" : "Sistema Offline"}
                   animate={{ 
                     scale: isOnline ? [1, 1.2, 1] : 1,
                     backgroundColor: isOnline ? '#22c55e' : '#ef4444' 
@@ -161,7 +157,6 @@ export function Header({
               <button 
                 onClick={() => setShowAdminPanel(true)}
                 className="relative w-10 h-10 flex items-center justify-center bg-brand/10 text-brand rounded-2xl hover:bg-brand/20 transition-all group active:scale-95"
-                aria-label="Ver usuários pendentes"
               >
                 <Users className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand text-brand-foreground text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-900 shadow-sm animate-pulse">
@@ -195,7 +190,6 @@ export function Header({
                 <button 
                   onClick={() => setShowSidebar(false)}
                   className="p-2 -mr-2 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-all hover:scale-105 active:scale-95"
-                  aria-label="Fechar menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
