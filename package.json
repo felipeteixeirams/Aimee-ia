@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build:client": "vite build",
-    "build:server": "esbuild server.ts --platform=node --bundle --packages=external --format=esm --outfile=dist-server/server.js",
+    "build:server": "esbuild server.ts --platform=node --bundle --packages=external --format=esm --outfile=dist-server/server.js --alias:@=./src",
     "build": "node scripts/build-orch.js",
     "preview": "vite preview",
     "start": "node dist-server/server.js",
