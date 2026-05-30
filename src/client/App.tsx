@@ -746,17 +746,18 @@ export default function App() {
         <NetworkStatus />
         <Header 
           unreadInsightsCount={unreadInsights.length}
-        setShowInsightsModal={setShowInsightsModal}
-        profile={profile}
-        activeSpace={activeSpace}
-        isSuperAdmin={isSuperAdmin}
-        pendingUsersCount={pendingUsers.length}
-        setShowAdminPanel={setShowAdminPanel}
-        onLogout={() => signOut(auth)}
-        GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
-        globalConfig={globalConfig}
-        updateGlobalConfig={updateGlobalConfig}
-        health={{
+          setShowInsightsModal={setShowInsightsModal}
+          profile={profile}
+          activeSpace={activeSpace}
+          isSuperAdmin={isSuperAdmin}
+          pendingUsersCount={pendingUsers.length}
+          setShowAdminPanel={setShowAdminPanel}
+          onLogout={() => signOut(auth)}
+          GLOBAL_AIMEE_AVATAR={globalConfig.aimeeAvatarUrl || GLOBAL_AIMEE_AVATAR}
+          globalConfig={globalConfig}
+          updateGlobalConfig={updateGlobalConfig}
+          updateProfile={updateProfile}
+          health={{
           firebase: health.firebase,
           ai: globalConfig.aiProvider === AIProvider.GEMINI 
             ? (health.gemini || health.deepseek) // If Gemini fails, Deepseek fallback makes it "online"
