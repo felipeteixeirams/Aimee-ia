@@ -311,12 +311,21 @@ Retorne o JSON estritamente formatado de acordo com a instrução de saída.
             batch.set(docRef, event, { merge: true });
           });
           await batch.commit();
+          logger.info('EventDiscoverySkill: Successfully wrote new events using Admin DB');
         } catch (err) {
-          logger.error('Admin DB failed to write new events', { error: err });
-          await this.repository.saveBatch(allNewEvents);
+          logger.error('Admin DB failed to write new events, nested fallback to Client Repo', { error: { message: err instanceof Error ? err.message : String(err) } });
+          try {
+            await this.repository.saveBatch(allNewEvents);
+          } catch (fallbackErr) {
+            logger.error('Client DB also failed to write new events (expected on unauthenticated serverless runtime)', { error: { message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr) } });
+          }
         }
       } else {
-        await this.repository.saveBatch(allNewEvents);
+        try {
+          await this.repository.saveBatch(allNewEvents);
+        } catch (fallbackErr) {
+          logger.error('Client DB failed to write new events (no admin DB available)', { error: { message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr) } });
+        }
       }
     }
     

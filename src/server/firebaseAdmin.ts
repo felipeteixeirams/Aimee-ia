@@ -9,7 +9,19 @@ export function getFirebaseAdmin() {
   try {
     const projectId = appConfig.firebaseAdmin.projectId;
     const clientEmail = appConfig.firebaseAdmin.clientEmail;
-    const privateKey = appConfig.firebaseAdmin.privateKey;
+    let privateKey = appConfig.firebaseAdmin.privateKey;
+
+    if (privateKey) {
+      privateKey = privateKey.trim();
+      // Remove enclosing quotes if any survived config parsing
+      if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+        privateKey = privateKey.slice(1, -1).trim();
+      }
+      // Guarantee standard newlines
+      if (privateKey.includes('\\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
+    }
 
     if (admin.apps.length > 0) {
       console.log(`[FirebaseAdmin] Default app already exists. Reusing existing instance.`);
