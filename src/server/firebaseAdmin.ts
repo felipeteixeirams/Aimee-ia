@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import { config as appConfig } from '../lib/config.js';
 
 let firebaseAdminInstance: admin.app.App | null = null;
@@ -85,7 +86,13 @@ export function getFirebaseAdmin() {
 export function getAdminFirestore() {
   const adminApp = getFirebaseAdmin();
   if (adminApp) {
-    return adminApp.firestore();
+    const databaseId = appConfig.firebase.databaseId;
+    if (databaseId && databaseId !== 'default' && databaseId !== '(default)') {
+      console.log(`[FirebaseAdmin] Getting Firestore instance for named database: "${databaseId}"`);
+      return getFirestore(adminApp, databaseId);
+    }
+    console.log(`[FirebaseAdmin] Getting Firestore instance for default database`);
+    return getFirestore(adminApp);
   }
   return null;
 }
