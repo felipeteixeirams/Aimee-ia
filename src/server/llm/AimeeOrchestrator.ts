@@ -1,13 +1,13 @@
 import "reflect-metadata";
 import { singleton, container } from "tsyringe";
-import { logger } from "../../lib/logger.js";
-import { allAimeeTools } from "../tools/AimeeTools.js";
-import { config } from "../../lib/config.js";
-import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider.js";
-import { GeminiAdapter } from "./GeminiAdapter.js";
-import { DeepSeekAdapter } from "./DeepSeekAdapter.js";
-import { OpenAICompatibleAdapter } from "./OpenAICompatibleAdapter.js";
-import { usageRepository } from "../../infrastructure/repositories/UsageRepository.js";
+import { logger } from "@/lib/logger";
+import { allAimeeTools } from "@/server/tools/AimeeTools";
+import { config } from "@/lib/config";
+import { ILLMProvider, LLMRequest, LLMResponse } from "./ILLMProvider";
+import { GeminiAdapter } from "./GeminiAdapter";
+import { DeepSeekAdapter } from "./DeepSeekAdapter";
+import { OpenAICompatibleAdapter } from "./OpenAICompatibleAdapter";
+import { usageRepository } from "@/infrastructure/repositories/UsageRepository";
 import { LRUCache } from "lru-cache";
 
 @singleton()
