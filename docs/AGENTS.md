@@ -17,6 +17,7 @@ graph TD
     AGENTS --> INTEGRATIONS[Integrações & Outros]
     AGENTS --> CONVENTIONS[Contratos & Convenções]
 
+    DOMAINS --> BUSINESS["[[domains/core_business_logic.md]]"]
     REVIEWS --> DIAG["[[reviews/DIAGNOSTIC.md]]"]
     SPECS --> BLUEPRINT["[[specs/IMPLEMENTATION_BLUEPRINT.md]]"]
     SPECS --> ROADMAP["[[specs/DOCUMENTATION_ROADMAP.md]]"]
@@ -25,6 +26,9 @@ graph TD
     PIPELINES --> AUTO["[[pipelines/automation_and_scripts.md]]"]
     INTEGRATIONS --> MOBILE["[[integrations/mobile_platforms.md]]"]
     INTEGRATIONS --> CLOUD["[[architecture/api_and_server_extensions.md]]"]
+    INTEGRATIONS --> DB["[[integrations/database_and_repositories.md]]"]
+    INTEGRATIONS --> BACKEND["[[architecture/backend_express_orchestration.md]]"]
+    INTEGRATIONS --> CLIENT["[[architecture/client_react_spa.md]]"]
     CONVENTIONS --> CONTRACTS["[[conventions/contracts_and_models.md]]"]
     LEGACY --> CHANGE["[[legacy/CHANGELOG.md]]"]
 ```
@@ -39,6 +43,10 @@ graph TD
 | **MOBILE_PLATFORMS.md** | `docs/integrations/mobile_platforms.md` | **Alta** | Documentação técnica da Fase 2 - Hibridismo físico nativo com CapacitorJS, Android e iOS. |
 | **API_AND_SERVER_EXTENSIONS.md** | `docs/architecture/api_and_server_extensions.md` | **Alta** | Documentação técnica da Fase 3 - Gateways Vercel, compilador esbuild, Fastify e PWA. |
 | **CONTRACTS_AND_MODELS.md** | `docs/conventions/contracts_and_models.md` | **Alta** | Documentação técnica da Fase 4 - Contratos core do domínio e especificações de validação Zod. |
+| **CORE_BUSINESS_LOGIC.md** | `docs/domains/core_business_logic.md` | **Alta** | Documentação técnica da Fase 5 - Regras de negócio, Skills e inteligência da Aimee. |
+| **DATABASE_AND_REPOSITORIES.md** | `docs/integrations/database_and_repositories.md` | **Alta** | Documentação técnica da Fase 6 - Persistência Firestore e design pattern de repositórios. |
+| **BACKEND_EXPRESS_ORCHESTRATION.md** | `docs/architecture/backend_express_orchestration.md` | **Alta** | Documentação técnica da Fase 7 - Servidor Fastify, injeção de dependências e provedores IA. |
+| **CLIENT_REACT_SPA.md** | `docs/architecture/client_react_spa.md` | **Alta** | Documentação técnica da Fase 8 - Cliente SPA React, hooks de estado, e transições motion/react. |
 | **UI_UX_SPECIFICATION.md** | `docs/specs/UI_UX_SPECIFICATION.md` | **Média** | Filosofia visual inspirada no iOS/Apple Music, guia de motion e experiência do usuário. |
 | **LAUNCH_STRATEGY.md** | `docs/specs/LAUNCH_STRATEGY.md` | **Média** | Regras go-to-market, PWA, encapsulamento nativo com CapacitorJS e integradores de plataforma. |
 | **CHANGELOG.md** | `docs/legacy/CHANGELOG.md` | **Baixa** | Log de alterações e histórico de evolução técnica pré-consolidação. |
