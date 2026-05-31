@@ -20,11 +20,31 @@ O sistema é segmentado em cinco contextos bem definidos:
 
 ## 📐 2. Modelagem Determinística de Dados (Zod Schemas)
 
-Para robustez no processamento e resiliência contra corrupção residual de dados (Data Corruption), Aimee adota as validações em tempo de execução baseadas na biblioteca **Zod** (`/src/models/index.ts` e `/src/types/schemas.ts`).
+Para robustez no processamento e resiliência contra corrupção residual de dados (Data Corruption), Aimee adota as validações em tempo de execução baseadas na biblioteca **Zod** (`/src/models/index.ts`).
 
 Seguindo o padrão de projeto **Single Source of Truth (SSOT)**, as tipagens estáticas em TypeScript são inferidas de forma matemática a partir dos declaradores funcionais do Zod, eliminando duplicações redundantes de código:
 
 $$\text{TypeScript Types} \equiv \text{z.infer}\langle\text{typeof ZodSchema}\rangle$$
+
+### 🏛️ A Abstração Universal de Entidades (`BaseEntity`)
+
+Para unificar as propriedades indispensáveis à indexação nas subcoleções e coleções do Firestore (como chaves de auditoria e identificação de inquilino), toda entidade ativa herda as propriedades primitivas definidas no contrato `/src/domain/entities/BaseEntity.ts`:
+
+*   **`id`**: Identificador físico universal gerado pelo Firestore ao persistir o documento.
+*   **`userId`**: Identificador estrito do proprietário do dado (Inquilino / Tenant Isolation).
+*   **`createdAt`**: Data de criação do registro no padrão ISO 8601.
+*   **`updatedAt`**: Data da última modificação do registro no padrão ISO 8601.
+
+```typescript
+export interface BaseEntity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+}
+```
+
+Essa disciplina de design impõe que todas as classes que herdam de `BaseRepository` conheçam essa interface canônica, permitindo que as rotinas de herança (como sanitização de nulos, gravação automática de timestamps e validações parciais em requisições PUT) operem sobre uma base sólida determinística de dados.
 
 ```mermaid
 graph TD

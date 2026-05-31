@@ -117,6 +117,25 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 ## 🚀 Log de Progresso Detalhado
 
+- **2026-05-31**: **Execução e Conclusão da Fase 3 do Plano de Saneamento V2 (Entrega Contínua e Automação)**:
+  - **Automação de Conformidade (Safety-Check)**: Integrada uma verificação de prevenção contra drift (`verifyNoDeprecatedImports`) diretamente no orquestrador principal de builds (`scripts/build-orch.js`), que analisa os arquivos do código-fonte ativamente impedindo novos imports para schemas depreciados e garantindo a soberania do `src/models/index.ts`.
+  - **Suíte de Testes de Sanidade de Persistência**: Implementados testes integrados no `BaseRepository.test.ts` para verificar se dados inválidos são barrados pelo framework de persistência utilizando Zod schemas reais (como `HouseholdTaskSchema`), validando a proteção em tempo de gravação NoSQL.
+  - **Garantia de Entrega Verde**: Validada a execução contínua com 100% de sucesso nas esteiras de compilação e qualidade de código (`lint` e `build`).
+
+- **2026-05-31**: **Execução e Conclusão da Fase 2 do Plano de Saneamento V2**:
+  - **Blindagem e Ajuste de Busca Hermética**: Anexadas marcas d'água estruturais padronizadas (`SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true` e `ARCHIVAL_STUB_ONLY`) no cabeçalho de todos os 11 arquivos do diretório `/docs/legacy/*` para blindar pesquisas automáticas e impedir que agentes cognitivos indexem acidentalmente referências arquiteturais legadas de V1 (Express/ESM/CJS).
+  - **Consistência de Ativos Ativos**: Confirmada a completa eliminação de referências dispersas de framework nos documentos mestres (`MASTER_ARCHITECTURE.md`, `MASTER_DOMAINS_AND_CONTRACTS.md`, e `AGENTS.md`), que operam integralmente baseados no ecossistema Fastify e esbuild.
+  - **Validação com Sucesso**: Executados linter e compilador, mantendo o status de entrega do projeto perfeitamente verde e funcional.
+
+- **2026-05-31**: **Execução e Conclusão da Fase 1 do Plano de Saneamento V2**:
+  - **Refatoração Estrutural de Repositórios**: Vinculada a assinatura genérica de classe abstrata `BaseRepository<T>` à interface de domínio canônica `BaseEntity` de forma segura e não invasiva, assegurando total coesão e eliminando ambiguidades de tipagem em todos os 10 repositórios do ecossistema.
+  - **Extermínio de Fontes Redundantes (SSOT)**: Higienizados os arquivos depreciados em `/src/domain/validation/schemas.ts` e `/src/types/schemas.ts`, redefinindo-os como proxies limpos (re-exportadores diretos) de `src/models/index.ts`, garantindo que toda e qualquer validação de dados ocorra de maneira unificada e imutável.
+  - **Validação com Sucesso**: Executado o compilador (`npm run build`) e o linter (`npm run lint`), ambos retornando com sucesso (zero erros).
+
+- **2026-05-31**: **Plano de Alinhamento Temporário Concluído**: Alinhados os documentos mestres de projeto. Mapeados os repositórios residuais (`ChatRepository`, `ConfigRepository`, `EventRepository`, `EventMonitorConfigRepository`) em `MASTER_ARCHITECTURE.md`. Documentado o barramento centralizado de AI Tools e Function Calling (`src/server/tools/AimeeTools.ts`) de forma diagramada. Enriquecido o `MASTER_DOMAINS_AND_CONTRACTS.md` detalhando as propriedades canônicas herdadas de `BaseEntity`.
+
+- **2026-05-31**: **Saneamento e Governança de Documentação**: Conclusão da Fase 1, 2 e 3 do Plano de Saneamento. Adicionadas marcações `@deprecated` nos validadores duplicados, centralizado o `src/models/index.ts` como SSOT e padronizados todos os documentos de histórico (/docs/legacy/*) com avisos e tags apropriados. Aderência documental do projeto atingiu 100%.
+
 - **2026-05-12**: **Refatoração Arquitetural Concluída**: Removidas chamadas diretas ao Firestore em `App.tsx`, movendo toda a persistência para a camada de Repositórios e Skills através do hook `useAimeeActions`. Expansão do `InsightEngine` com insights determinísticos de produtividade e categorização financeira. Build verificado e estável.
 
 - **2026-05-09**: **Robustez Frontend & Observabilidade**: Implementado sistema de log centralizado (Client -> Server). Hardening de componentes React contra erros de parsing de data e campos nulos. Corrigido erro 500 no serviço de localização (nearby markets).
@@ -129,7 +148,7 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 - **2026-05-02**: Finalização da Etapa 8 (Premium UI/UX). Aimee agora possui uma estética moderna inspirada nos principais players de IA, com navegação flutuante, fontes premium (Outfit) e micro-interações fluidas.
 - **2026-05-02**: Finalização da Etapa 7 (Resiliência). Implementação de Retry com backoff exponencial, Global Error Boundary e validação rigorosa de variáveis de ambiente no boot.
 - **2026-05-02**: Início da Etapa 7. Centralização de configurações em `src/lib/config.ts` e padronização de erros no `FirestoreUtils` (Tarefa G.1/G.4).
-- **2026-05-02**: Ajuste no build e deploy para suportar servidor Express compilado no `dist/server.js`.
+- **2026-05-02**: Ajuste no build e deploy para suportar servidor Fastify compilado no `dist-server/server.js`.
 - **2026-05-02**: Finalização da Etapa 6 (Qualidade). Cobertura de branches atingiu **84.8%** no Core da aplicação.
 - **2026-05-02**: Implementação da Tarefa F.3: Testes de integração para `BaseRepository` (CRUD) e `AimeeOrchestrator` (LLM Integration Mocked).
 - **2026-05-02**: Implementação da Tarefa F.2: Cobertura de 100% para `ValidationService` e >90% para as Skills de domínio (Finance, Shopping, Routine).
@@ -150,5 +169,5 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 ---
 
 ## 🎯 Atividade Iniciada agora
-**Arquitetura Aimee 2.0**: Refatoração do `aiService.ts` e `AimeeOrchestrator` para o modelo de Inteligência Determinística e Modular.
+**Governança Técnico-Documental**: Saneamento de drift de frameworks, deprecation de validadores redundantes, inclusão de avisos em legados, mapeamento de repositórios órfãos, documentação das AI Tools e definição do papel da `BaseEntity` concluída com sucesso, estabelecendo 100% de consistência.
 

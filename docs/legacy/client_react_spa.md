@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # 📱 Interface do Usuário, Client React SPA & Motion UX (Fase 8)
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento dita e detalha a especificação técnica da interface do usuário (UI) do ecossistema **Aimee**, uma SPA (Single Page Application) construída em **React 18+ com Vite**, estilizada recursivamente com **Tailwind CSS**, orquestrada por hooks de estado reativo e animada fluentemente com o motor **motion/react**.
 

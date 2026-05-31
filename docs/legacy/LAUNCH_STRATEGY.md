@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # Estratégia de Lançamento e Evolução - Aimee
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento apresenta a análise profunda dos caminhos para o lançamento da aplicação Aimee, bem como as necessidades técnicas, estratégias de negócios e infraestrutura para escalar o produto ao nível de produção sustentável.
 

@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # 📋 Contratos Core, Modelagem de Dados & Validação Zod (Fase 4)
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento dita e detalha a especificação das entidades de domínio, regras estritas de tipagem em TypeScript e esquemas bi-direcionais de validação em tempo de execução via **Zod** sob `/src/types` e `/src/models`.
 

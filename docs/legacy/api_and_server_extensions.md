@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # ☁️ Gateways de Nuvem, Extensões & PWA Assets (Fase 3)
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento dita e detalha a especificação arquitetural da infraestrutura de hospedagem serveless (Vercel Functions), do orquestrador compilado de servidor e dos metadados de PWA contidos nos diretórios `/api`, `/dist-server` e `/public`.
 

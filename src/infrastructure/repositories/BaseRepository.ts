@@ -15,6 +15,7 @@ import {
 import { db, auth } from '../../lib/firebase.js';
 
 import { z, ZodTypeAny } from 'zod';
+import { BaseEntity } from '../../domain/entities/BaseEntity.js';
 
 export enum OperationType {
   CREATE = 'create',
@@ -36,7 +37,7 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export class BaseRepository<T extends { id?: string; createdAt?: any; updatedAt?: any; userId?: string }> {
+export class BaseRepository<T extends Partial<BaseEntity> & { createdAt?: any; updatedAt?: any }> {
   protected collectionPath: string;
   protected schema?: ZodTypeAny;
 

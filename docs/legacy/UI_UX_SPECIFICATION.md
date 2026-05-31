@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # Especificação de UI/UX - Aimee (Inteligência Pessoal)
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento serve como guia para a criação de wireframes, layouts e fluxos de experiência do usuário para o ecossistema **Aimee**.
 

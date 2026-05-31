@@ -1,10 +1,48 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 const skipTests = process.env.SKIP_TESTS === 'true' || process.env.SKIP_BUILD_TESTS === 'true';
 
 console.log('🚀 \x1b[36mIniciando Orquestrador de Build Otimizado (Aimee AI)...\x1b[0m');
 console.log(`- Modo: Execução em Paralelo (Paralelismo Máximo Habilitado ⚡)`);
 console.log(`- Pular Testes: ${skipTests ? '✅ Ativado' : '❌ Desativado (Testes rodarão em paralelo)'}`);
+
+function verifyNoDeprecatedImports() {
+  console.log('🔍 \x1b[36m[Safety-Check]\x1b[0m Analisando código em busca de importações depreciadas...');
+  let hasErrors = false;
+  
+  function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const fullPath = path.join(dir, file);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        walk(fullPath);
+      } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
+        // Ignorar stubs históricos de re-exportação
+        if (fullPath.includes('src/domain/validation/schemas.ts') || fullPath.includes('src/types/schemas.ts')) {
+          continue;
+        }
+        
+        const content = fs.readFileSync(fullPath, 'utf8');
+        if (content.includes('domain/validation/schemas') || content.includes('types/schemas')) {
+          console.error(`❌ \x1b[31m[Safety-Check-Error]\x1b[0m O arquivo "${path.relative(process.cwd(), fullPath)}" contém referências a schemas legados. Favor importar de "src/models/index.js".`);
+          hasErrors = true;
+        }
+      }
+    }
+  }
+  
+  walk(path.join(process.cwd(), 'src'));
+  
+  if (hasErrors) {
+    console.error('🛑 \x1b[31m[Safety-Check]\x1b[0m Falha na checagem de conformidade de imports. Build cancelado.');
+    process.exit(1);
+  }
+  console.log('🟢 \x1b[32m[Safety-Check]\x1b[0m Nenhum import depreciado encontrado nos módulos ativos.');
+}
 
 function runCommand(command, args, prefix, colorCode = '\x1b[36m') {
   return new Promise((resolve, reject) => {
@@ -73,6 +111,9 @@ function runCommand(command, args, prefix, colorCode = '\x1b[36m') {
 }
 
 async function start() {
+  // Executar checagem de conformidade de imports antes de disparar buils paralelos
+  verifyNoDeprecatedImports();
+
   const startTime = Date.now();
   const tasks = [];
 

@@ -67,7 +67,7 @@ A **Aimee** é uma assistente pessoal e planejadora orquestrada inteligente com 
 │   │   ├── pages/        # Views principais ligadas às abas funcionais do sistema
 │   │   ├── services/     # Serviços auxiliares de comunicação, push e notificações locais
 │   │   └── hooks/        # State Hooks de autenticação e manipulação das ações da Aimee
-│   ├── server/           # Back-end: Express, Firebase Admin, endpoints/rotas de API dedicadas
+│   ├── server/           # Back-end: Fastify, Firebase Admin, endpoints/rotas de API dedicadas
 │   ├── domain/           # Camada de Domínio: Regras de negócio puras (validação, inteligência)
 │   ├── infrastructure/   # Camada de Infraestrutura: Repositórios acoplados ao Firestore
 │   ├── models/           # Schemas de validação determinística utilizando a biblioteca Zod 
@@ -79,7 +79,7 @@ A **Aimee** é uma assistente pessoal e planejadora orquestrada inteligente com 
 ## 4. Regras Operacionais para Agentes de IA
 
 ### 🚨 Documentos Obrigatórios antes de Analisar ou Implementar
-* Antes de qualquer alteração estrutural nas entidades ou banco de dados, você **deve ler obrigatoriamente** `docs/reviews/DIAGNOSTIC.md` para evitar quebrar o padrão arquitetural implementado.
+* Antes de qualquer alteração estrutural nas entidades ou banco de dados, você **deve ler obrigatoriamente** `docs/MASTER_DOMAINS_AND_CONTRACTS.md` (e opcionalmente o histórico em `docs/legacy/DIAGNOSTIC_ARCHIVED.md`) para evitar quebrar o padrão arquitetural implementado.
 * Em refatorações e adições de escopo, atualize sempre `docs/specs/IMPLEMENTATION_BLUEPRINT.md`.
 
 ### 🔄 fluxo de Implementação Recomendado (Clean Architecture / Spec-Driven)
@@ -104,4 +104,4 @@ A **Aimee** é uma assistente pessoal e planejadora orquestrada inteligente com 
 
 * **Typography & Styling**: Uso exclusivo de Tailwind CSS (`@import "tailwindcss";` em `index.css`). Sem múltiplos arquivos CSS legados. Fontes geométricas limpas (Inter, Space Grotesk ou Fira Code/JetBrains Mono para visualizadores de status e dados).
 * **Animations**: Animações suaves criadas obrigatoriamente com a biblioteca `motion/react` para mudanças de telas, abertura de modais e ações do assistente.
-* **Zod Schemas**: Localizados em `src/models/index.ts` e duplicados em `src/domain/validation/schemas.ts` para validação bidirecional do backend/frontend, servindo de base de confiança dos fluxos operacionais de IA.
+* **Zod Schemas**: Localizados exclusivamente em `src/models/index.ts` como fonte única da verdade para validação de dados e types (inferidos via z.infer) tanto no frontend quanto no backend.

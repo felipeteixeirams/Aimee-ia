@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BaseRepository } from './BaseRepository.js';
 import * as firestore from 'firebase/firestore';
 import { auth } from '../../lib/firebase.js';
+import { HouseholdTaskSchema } from '../../models/index.js';
 
 // Mock Firebase
 vi.mock('firebase/firestore', () => ({
@@ -105,5 +106,38 @@ describe('BaseRepository', () => {
       .rejects.toThrow('Permission Denied');
     
     expect(consoleSpy).toHaveBeenCalled();
+  });
+
+  describe('Zod Schema Integration & Validation', () => {
+    it('should successfully validate valid data against a real schema', async () => {
+      const taskRepository = new BaseRepository<any>('users/{userId}/tasks', HouseholdTaskSchema);
+      vi.mocked(firestore.addDoc).mockResolvedValue({ id: 'task-abc' } as any);
+
+      const validTask = {
+        title: 'Mow the lawn',
+        category: 'cleaning',
+        status: 'todo',
+        priority: 'high',
+        assignedTo: 'John Doe',
+        tags: ['garden'],
+      };
+
+      const docId = await taskRepository.create(validTask);
+      expect(docId).toBe('task-abc');
+      expect(firestore.addDoc).toHaveBeenCalled();
+    });
+
+    it('should throw validation error on invalid data', async () => {
+      const taskRepository = new BaseRepository<any>('users/{userId}/tasks', HouseholdTaskSchema);
+      
+      const invalidTask = {
+        title: '', // Empty title should fail (required, min 1)
+        category: 'invalid-category', // Should fail native enum
+        status: 'todo'
+      };
+
+      await expect(taskRepository.create(invalidTask))
+        .rejects.toThrow(/Erro de Validação/);
+    });
   });
 });

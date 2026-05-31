@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # 🧠 Regras de Domínio, Inteligência & Habilidades da Aimee (Fase 5)
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento dita e detalha a especificação das regras de negócio, da arquitetura de inteligência artificial baseada em habilidades (skills), classificação de intenções e do motor preditivo de insights contidos na pasta `/src/domain`.
 

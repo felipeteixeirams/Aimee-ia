@@ -1,4 +1,9 @@
+<!-- SYSTEM_METADATA_IGNORE_COGNITIVE_SEARCH: true -->
+<!-- ARCHIVAL_STUB_ONLY -->
+
 # 📱 Portabilidade Hidráulica e Plataformas Mobile (Fase 2)
+
+> ⚠️ **HISTORICAL DOCUMENT**: Este documento faz parte do histórico arquitetural do projeto (Aimee V1) e pode conter referências obsoletas a Express, CommonJS ou estruturas legadas de banco de dados. Para a arquitetura ativa de produção, consulte sempre a raiz `/docs/*.md` e `/docs/AGENTS.md`.
 
 Este documento dita e detalha a especificação técnica de portabilidade híbrida do ecossistema **Aimee** para os sistemas operacionais nativos **Google Android** e **Apple iOS** por meio da ponte de abstração do **CapacitorJS**.
 
