@@ -4,51 +4,45 @@ Este documento é a raiz do ecossistema e o principal ponto de entrada contextua
 
 ---
 
-## 🌐 Grafo de Conhecimento e Index de Documentações
-Abaixo é apresentada a hierarquia estruturada do nosso sistema documental. **Sempre comece consultando esta raiz antes de inspecionar ou alterar código.**
+## 🌐 Grafo de Conhecimento e Index de Documentações (Geração 2.0)
+Abaixo é apresentada a hierarquia simplificada e consolidada do nosso sistema documental. **Sempre comece consultando esta raiz antes de inspecionar ou alterar código.**
 
 ```mermaid
 graph TD
-    AGENTS[Ponto de Entrada: AGENTS.md] --> DOMAINS[Bounded Contexts & Regras]
-    AGENTS --> REVIEWS[Contratos & Reviews]
-    AGENTS --> SPECS[Planos & Especificações]
-    AGENTS --> LEGACY[Histórico & Logs]
-    AGENTS --> PIPELINES[Pipelines & Scripts]
-    AGENTS --> INTEGRATIONS[Integrações & Outros]
-    AGENTS --> CONVENTIONS[Contratos & Convenções]
+    AGENTS[🎯 Main Portal: docs/AGENTS.md] --> ARCH[🏗️ docs/MASTER_ARCHITECTURE.md]
+    AGENTS --> DOMAINS[🧠 docs/MASTER_DOMAINS_AND_CONTRACTS.md]
+    AGENTS --> BLUEPRINT[📋 docs/specs/IMPLEMENTATION_BLUEPRINT.md]
+    
+    ARCH --> UIUX[🎨 docs/UI_UX_GUIDELINES.md]
+    ARCH --> MOBL[📱 docs/DISTRIBUTION_AND_MOBILE.md]
+    ARCH --> PIPE[⚡ docs/pipelines/automation_and_scripts.md]
+    
+    DOMAINS -.-> ARCH
+    BLUEPRINT -.-> DOMAINS
+    
+    %% Camadas de Arquivamento
+    AGENTS -.-> LEGACY_DIAG[🗄️ legacy/DIAGNOSTIC_ARCHIVED.md]
+    AGENTS -.-> LEGACY_CHAN[🗄️ legacy/CHANGELOG.md]
 
-    DOMAINS --> BUSINESS["[[domains/core_business_logic.md]]"]
-    REVIEWS --> DIAG["[[reviews/DIAGNOSTIC.md]]"]
-    SPECS --> BLUEPRINT["[[specs/IMPLEMENTATION_BLUEPRINT.md]]"]
-    SPECS --> ROADMAP["[[specs/DOCUMENTATION_ROADMAP.md]]"]
-    SPECS --> UIUX["[[specs/UI_UX_SPECIFICATION.md]]"]
-    SPECS --> LAUNCH["[[specs/LAUNCH_STRATEGY.md]]"]
-    PIPELINES --> AUTO["[[pipelines/automation_and_scripts.md]]"]
-    INTEGRATIONS --> MOBILE["[[integrations/mobile_platforms.md]]"]
-    INTEGRATIONS --> CLOUD["[[architecture/api_and_server_extensions.md]]"]
-    INTEGRATIONS --> DB["[[integrations/database_and_repositories.md]]"]
-    INTEGRATIONS --> BACKEND["[[architecture/backend_express_orchestration.md]]"]
-    INTEGRATIONS --> CLIENT["[[architecture/client_react_spa.md]]"]
-    CONVENTIONS --> CONTRACTS["[[conventions/contracts_and_models.md]]"]
-    LEGACY --> CHANGE["[[legacy/CHANGELOG.md]]"]
+    classDef master fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef satellite fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef archive fill:#eee,stroke:#999,stroke-dasharray: 5, 5;
+    
+    class AGENTS,ARCH,DOMAINS,BLUEPRINT master;
+    class UIUX,MOBL,PIPE satellite;
+    class LEGACY_DIAG,LEGACY_CHAN archive;
 ```
 
 | Documento | Caminho | Prioridade | Propósito Principal |
 | :--- | :--- | :--- | :--- |
-| **AGENTS.md** | `docs/AGENTS.md` | **Crítica** | Bootstrap de IA, mapa mental de monorepo, regras do domínio e economia de tokens. |
-| **DOCUMENTATION_ROADMAP.md** | `docs/specs/DOCUMENTATION_ROADMAP.md` | **Alta** | Plano incremental de cobertura documental e tracking de status por fase. |
-| **DIAGNOSTIC.md** | `docs/reviews/DIAGNOSTIC.md` | **Alta** | Auditoria e plano de transição seguro para arquitetura baseada em contratos e repositórios. |
-| **BLUEPRINT.md** | `docs/specs/IMPLEMENTATION_BLUEPRINT.md` | **Alta** | Status das tarefas do backlog, pendências, implementações concluídas e planos de melhoria. |
-| **AUTOMATION_AND_SCRIPTS.md** | `docs/pipelines/automation_and_scripts.md` | **Alta** | Documentação técnica da Fase 1 - Infraestrutura de build, git hooks (.husky) e automação. |
-| **MOBILE_PLATFORMS.md** | `docs/integrations/mobile_platforms.md` | **Alta** | Documentação técnica da Fase 2 - Hibridismo físico nativo com CapacitorJS, Android e iOS. |
-| **API_AND_SERVER_EXTENSIONS.md** | `docs/architecture/api_and_server_extensions.md` | **Alta** | Documentação técnica da Fase 3 - Gateways Vercel, compilador esbuild, Fastify e PWA. |
-| **CONTRACTS_AND_MODELS.md** | `docs/conventions/contracts_and_models.md` | **Alta** | Documentação técnica da Fase 4 - Contratos core do domínio e especificações de validação Zod. |
-| **CORE_BUSINESS_LOGIC.md** | `docs/domains/core_business_logic.md` | **Alta** | Documentação técnica da Fase 5 - Regras de negócio, Skills e inteligência da Aimee. |
-| **DATABASE_AND_REPOSITORIES.md** | `docs/integrations/database_and_repositories.md` | **Alta** | Documentação técnica da Fase 6 - Persistência Firestore e design pattern de repositórios. |
-| **BACKEND_EXPRESS_ORCHESTRATION.md** | `docs/architecture/backend_express_orchestration.md` | **Alta** | Documentação técnica da Fase 7 - Servidor Fastify, injeção de dependências e provedores IA. |
-| **CLIENT_REACT_SPA.md** | `docs/architecture/client_react_spa.md` | **Alta** | Documentação técnica da Fase 8 - Cliente SPA React, hooks de estado, e transições motion/react. |
-| **UI_UX_SPECIFICATION.md** | `docs/specs/UI_UX_SPECIFICATION.md` | **Média** | Filosofia visual inspirada no iOS/Apple Music, guia de motion e experiência do usuário. |
-| **LAUNCH_STRATEGY.md** | `docs/specs/LAUNCH_STRATEGY.md` | **Média** | Regras go-to-market, PWA, encapsulamento nativo com CapacitorJS e integradores de plataforma. |
+| **AGENTS.md** | `docs/AGENTS.md` | **Crítica** | Bootstrap de IA, mapa mental do monorepo, regras do domínio e economia de tokens. |
+| **MASTER_ARCHITECTURE.md** | `docs/MASTER_ARCHITECTURE.md` | **Crítica** | Especificação consolidada do backend BFF Fastify, Repositórios, Firestore e Gateway Serverless. |
+| **MASTER_DOMAINS_AND_CONTRACTS.md** | `docs/MASTER_DOMAINS_AND_CONTRACTS.md` | **Crítica** | Fonte de verdade de dados (Zod, Types TS) unificada com regras de negócio e Skills do assistente. |
+| **IMPLEMENTATION_BLUEPRINT.md** | `docs/specs/IMPLEMENTATION_BLUEPRINT.md` | **Alta** | Status das tarefas do backlog, pendências, implementações concluídas e planos de melhoria. |
+| **UI_UX_GUIDELINES.md** | `docs/UI_UX_GUIDELINES.md`| **Alta** | Direcionamento estético iOS/Apple Music, motion/react transitions e Views do Cliente React SPA. |
+| **DISTRIBUTION_AND_MOBILE.md**| `docs/DISTRIBUTION_AND_MOBILE.md`| **Alta** | Portabilidade híbrida via CapacitorJS (Android e iOS) emparelhado ao plano tático go-to-market. |
+| **AUTOMATION_AND_SCRIPTS.md** | `docs/pipelines/automation_and_scripts.md` | **Alta** | Documentação técnica - Infraestrutura de build, git hooks (.husky) e automação de ENVs. |
+| **DIAGNOSTIC_ARCHIVED.md** | `docs/legacy/DIAGNOSTIC_ARCHIVED.md` | **Baixa** | Histórico - Auditoria arquitetural primitiva com mapeamento estrutural de transição (Arquivado). |
 | **CHANGELOG.md** | `docs/legacy/CHANGELOG.md` | **Baixa** | Log de alterações e histórico de evolução técnica pré-consolidação. |
 
 ---
