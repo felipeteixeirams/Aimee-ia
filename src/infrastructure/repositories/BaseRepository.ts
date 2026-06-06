@@ -13,6 +13,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase.js';
+import { logMappedError } from '../../lib/errorMapper.js';
 
 import { z, ZodTypeAny } from 'zod';
 import { BaseEntity } from '../../domain/entities/BaseEntity.js';
@@ -47,17 +48,25 @@ export class BaseRepository<T extends Partial<BaseEntity> & { createdAt?: any; u
   }
 
   protected handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+    const authInfo = {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+    };
+
+    // Centralized mapping and logging of infrastructure errors to ensure visual clean-up of logs
+    const mapped = logMappedError(error, `firestore:${operationType}`, {
+      path,
+      ...authInfo
+    });
+
     const errInfo: FirestoreErrorInfo = {
-      error: error instanceof Error ? error.message : String(error),
-      authInfo: {
-        userId: auth.currentUser?.uid,
-        email: auth.currentUser?.email,
-        emailVerified: auth.currentUser?.emailVerified,
-      },
+      error: mapped.friendlyMessage,
+      authInfo,
       operationType,
       path
     };
-    console.error(`Firestore Error [${operationType}] at ${path}:`, JSON.stringify(errInfo));
+    
     throw new Error(JSON.stringify(errInfo));
   }
 

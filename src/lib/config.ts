@@ -162,10 +162,49 @@ export const config: AppConfig = {
 };
 
 /**
+ * Recursively scans the config object to find and log all and nested environment/config variables
+ * that are currently empty, null, or undefined at startup.
+ */
+function logUnconfiguredVars() {
+  const findMissing = (obj: any, prefix = ''): string[] => {
+    const missing: string[] = [];
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const fullPath = prefix ? `${prefix}.${key}` : key;
+        const val = obj[key];
+        if (val === null || val === undefined || val === '') {
+          missing.push(fullPath);
+        } else if (typeof val === 'object' && !Array.isArray(val)) {
+          // Avoid trying to traverse complex objects or instances if they should be treated as leaves, but all our config objects are raw objects
+          missing.push(...findMissing(val, fullPath));
+        }
+      }
+    }
+    return missing;
+  };
+
+  const missing = findMissing(config);
+  if (missing.length > 0) {
+    logger.warn(`📌 ATENÇÃO: Constatadas ${missing.length} variáveis de configuração vazias, nulas ou não configuradas:`, {
+      unconfiguredCount: missing.length,
+      unconfiguredVars: missing,
+      context: isServer ? 'BACKEND/SERVER' : 'FRONTEND/BROWSER'
+    });
+  } else {
+    logger.info('✅ Todas as variáveis de configuração do sistema possuem valores definidos de forma bem-sucedida.', {
+      context: isServer ? 'BACKEND/SERVER' : 'FRONTEND/BROWSER'
+    });
+  }
+}
+
+/**
  * Validates that all required configuration variables are present.
  * Throws an error or logs warnings if critical variables are missing.
  */
 export function validateConfig(): boolean {
+  // Primeiramente, logamos todas as variáveis de configuração vazias/nulas presentes na inicialização do sistema
+  logUnconfiguredVars();
+
   const missingCritical: string[] = [];
   const missingRecommended: string[] = [];
   

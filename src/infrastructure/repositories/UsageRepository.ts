@@ -1,6 +1,7 @@
 import { LLMUsage, LLMUsageSchema } from '../../models/index.js';
 import { BaseRepository, OperationType } from './BaseRepository.js';
 import { logger } from '../../lib/logger.js';
+import { logMappedError } from '../../lib/errorMapper.js';
 
 export class UsageRepository extends BaseRepository<LLMUsage> {
   constructor() {
@@ -24,10 +25,13 @@ export class UsageRepository extends BaseRepository<LLMUsage> {
             timestamp: new Date().toISOString()
           });
           return docRef.id;
+        } else {
+          logger.warn('UsageRepository: Firebase Admin Firestore não pôde ser iniciado por falta de credenciais (servidor)');
         }
       } catch (error) {
-        logger.error('UsageRepository: Falha ao registrar log no servidor', { error });
+        logMappedError(error, 'usage:logUsage:server', { path: 'llm_usage', userId: usage.userId });
       }
+      return '';
     }
 
     // Fallback para logic de BaseRepository (Cliente)
@@ -37,7 +41,7 @@ export class UsageRepository extends BaseRepository<LLMUsage> {
         timestamp: new Date().toISOString()
       } as any, usage.userId);
     } catch (error) {
-      logger.error('UsageRepository: Falha ao registrar log no cliente', { error });
+      logMappedError(error, 'usage:logUsage:client', { path: 'llm_usage', userId: usage.userId });
       return '';
     }
   }

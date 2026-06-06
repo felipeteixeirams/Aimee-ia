@@ -74,9 +74,20 @@ export function getFirebaseAdmin() {
       return firebaseAdminInstance;
     }
 
-    console.warn("getFirebaseAdmin: Service Account credentials (clientEmail or privateKey) are missing. Falling back to Application Default Credentials...");
-    firebaseAdminInstance = admin.initializeApp(options);
-    return firebaseAdminInstance;
+    console.warn("getFirebaseAdmin: Service Account credentials (clientEmail or privateKey) are missing.");
+    
+    // Application Default Credentials (ADC) are only available inside GCP environments (like Cloud Run).
+    // Specifically NOT available on serverless/static platforms like Vercel. We shouldn't fallback if running on Vercel.
+    const isGcpEnvironment = process.env.K_SERVICE || process.env.GOOGLE_CLOUD_PROJECT || !process.env.VERCEL;
+    
+    if (isGcpEnvironment) {
+      console.log("getFirebaseAdmin: Initializing using Application Default Credentials...");
+      firebaseAdminInstance = admin.initializeApp(options);
+      return firebaseAdminInstance;
+    } else {
+      console.error("getFirebaseAdmin: Missing service account credentials on a non-GCP environment. Admin SDK cannot start safely.");
+      return null;
+    }
   } catch (error) {
     console.error("Failed to initialize firebase-admin SDK", error);
   }

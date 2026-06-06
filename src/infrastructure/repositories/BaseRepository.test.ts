@@ -3,6 +3,7 @@ import { BaseRepository } from './BaseRepository.js';
 import * as firestore from 'firebase/firestore';
 import { auth } from '../../lib/firebase.js';
 import { HouseholdTaskSchema } from '../../models/index.js';
+import { logger } from '../../lib/logger.js';
 
 // Mock Firebase
 vi.mock('firebase/firestore', () => ({
@@ -100,12 +101,12 @@ describe('BaseRepository', () => {
 
   it('should throw and log on Firestore error', async () => {
     vi.mocked(firestore.addDoc).mockRejectedValue(new Error('Permission Denied'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     await expect(repository.create({ name: 'Fail' }))
-      .rejects.toThrow('Permission Denied');
+      .rejects.toThrow('Permissão negada ou privilégios');
     
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(loggerSpy).toHaveBeenCalled();
   });
 
   describe('Zod Schema Integration & Validation', () => {
