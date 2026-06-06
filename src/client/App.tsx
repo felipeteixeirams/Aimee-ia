@@ -71,7 +71,8 @@ import {
   AlertCircle,
   Sparkles,
   Wallet,
-  ShoppingCart
+  ShoppingCart,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, safeFormatDate } from '../lib/utils.js';
@@ -94,7 +95,9 @@ export default function App() {
     setIsDarkMode,
     setProfile,
     health,
-    criticalUnavailable
+    criticalUnavailable,
+    isRefreshingSession,
+    refreshProgress
   } = useAuth();
 
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
@@ -1009,6 +1012,44 @@ export default function App() {
         unreadInsights={unreadInsights}
         handleGoToInsight={handleGoToInsight}
       />
+
+      {/* Session Recovery Glassmorphism Overlay */}
+      <AnimatePresence>
+        {isRefreshingSession && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex flex-col items-center justify-center p-6 bg-neutral-950/40 dark:bg-black/60 backdrop-blur-xl"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="flex flex-col items-center bg-white/80 dark:bg-neutral-900/80 border border-neutral-200/50 dark:border-neutral-800/50 p-8 rounded-[2rem] shadow-2xl max-w-xs w-full text-center"
+            >
+              <div className="relative mb-6">
+                <span className="absolute inset-0 rounded-full bg-brand/20 animate-ping" />
+                <div className="relative w-16 h-16 bg-brand/10 dark:bg-brand/20 text-brand rounded-full flex items-center justify-center">
+                  <RefreshCw className="w-8 h-8 animate-spin" style={{ animationDuration: '3s' }} />
+                </div>
+              </div>
+
+              <h3 className="text-lg font-display font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+                Conectando ao Aimee
+              </h3>
+              
+              <div className="h-5 flex items-center justify-center">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono tracking-wide animate-pulse">
+                  {refreshProgress || 'Renovando sessão...'}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       </div>
     </div>
   );

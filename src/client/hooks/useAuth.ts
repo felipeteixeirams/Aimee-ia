@@ -180,6 +180,75 @@ export function useAuth() {
     }
   }, [profile?.themeColor]);
 
+  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
+  const [refreshProgress, setRefreshProgress] = useState('');
+
+  // Detecting app foreground/resume and running visual session renewal
+  useEffect(() => {
+    let lastActive = Date.now();
+    localStorage.setItem('aimee_last_active', String(lastActive));
+
+    const handleAppResume = async () => {
+      const now = Date.now();
+      const storedLastActive = Number(localStorage.getItem('aimee_last_active') || now);
+      const timeElapsed = now - storedLastActive;
+      
+      // Update the active timestamp
+      localStorage.setItem('aimee_last_active', String(now));
+      lastActive = now;
+
+      // If app was inactive in background/offline for more than 15 minutes (900.000 ms)
+      const currentUser = auth.currentUser;
+      if (currentUser && timeElapsed > 15 * 60 * 1000) {
+        logger.info('📱 App retomado do segundo plano após período inativo. Iniciando renovação de sessão...', { timeElapsedMs: timeElapsed });
+        
+        setIsRefreshingSession(true);
+        setRefreshProgress('Restaurando conexão...');
+        
+        try {
+          await new Promise(resolve => setTimeout(resolve, 400));
+          setRefreshProgress('Renovando suas credenciais...');
+          
+          // Força a renovação do ID Token no Firebase
+          await currentUser.getIdToken(true);
+          logger.info('🔑 ID Token do Firebase renovado com sucesso.');
+          
+          setRefreshProgress('Verificando integridade com o servidor...');
+          await testConnection();
+          
+          setRefreshProgress('Sessão restaurada com sucesso!');
+        } catch (error: any) {
+          logger.warn('⚠️ Falha parcial ou total ao tentar renovar ID Token no resume.', { error: error.message });
+        } finally {
+          setTimeout(() => {
+            setIsRefreshingSession(false);
+            setRefreshProgress('');
+          }, 800);
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleAppResume();
+      } else {
+        localStorage.setItem('aimee_last_active', String(Date.now()));
+      }
+    };
+
+    const handleFocus = () => {
+      handleAppResume();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   return {
     user,
     profile,
@@ -190,6 +259,8 @@ export function useAuth() {
     setIsDarkMode,
     setProfile,
     health,
-    criticalUnavailable
+    criticalUnavailable,
+    isRefreshingSession,
+    refreshProgress
   };
 }
