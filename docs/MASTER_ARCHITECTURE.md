@@ -183,7 +183,7 @@ A assinatura abstrata unifica tratamentos de concorrência, higienização de nu
 | **`TransactionRepository`** | `users/{userId}/transactions` | `TransactionSchema` | Orquestrador de fluxo de caixa familiar (receitas e despesas). |
 | **`ShoppingRepository`** | `users/{userId}/shopping_items` | `ShoppingItemSchema` | Consolida despensas e listas inteligentes de compras. |
 | **`ProfileRepository`** | `users` (Global) | `UserProfileSchema` | Perfis gerais de usuários, com suporte customizado do Google OAuth. |
-| **`MonitorEventRepository`** | `monitor_events` (Global) | `MonitorEventSchema` | Cache global de eventos colhidos. Gravações transacionais em lote. |
+| **`MonitorEventRepository`** | `monitor_events` (Global) | `MonitorEventSchema` | Cache global de eventos colhidos por [[EVENT_DISCOVERY_ENGINE.md]]. Gravações transacionais em lote. |
 | **`UsageRepository`** | `users/{userId}/usage` | `LLMUsageSchema` | Controle cumulativo e auditoria de faturamento de IA. |
 | **`ChatRepository`** | `users/{userId}/chatHistory` | `ChatMessageSchema` | Histórico permanente de conversações e insights ativos do chat da Aimee. |
 | **`ConfigRepository`** | `config` (Global) | `GlobalConfigSchema` | Configurações globais de provedores de IA e avatar da Aimee. |

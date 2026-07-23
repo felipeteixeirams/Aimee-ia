@@ -55,6 +55,7 @@ graph TD
 | **Satélite** | [[DISTRIBUTION_AND_MOBILE.md]] | `docs/DISTRIBUTION_AND_MOBILE.md` | Portabilidade híbrida via CapacitorJS (Android e iOS). |
 | **Satélite** | [[automation_and_scripts.md]] | `docs/pipelines/automation_and_scripts.md` | Infraestrutura de build, automação de variáveis de ambiente e hooks de git. |
 | **Backlog** | [[IMPLEMENTATION_BLUEPRINT.md]] | `docs/specs/IMPLEMENTATION_BLUEPRINT.md` | Status das tarefas do backlog, pendências de roadmap e log de progresso. |
+| Especificação | [[EVENT_DISCOVERY_ENGINE.md]] | `docs/specs/current/EVENT_DISCOVERY_ENGINE.md` | Arquitetura técnica e pipeline de fallback do motor de descoberta de novos eventos. |
 | **Auditorias** | [[AVALIACAO_MACRO_SISTEMICA.md]] | `docs/reviews/AVALIACAO_MACRO_SISTEMICA.md` | Diagnóstico de maturidade (resiliência, erros, logs, performance e coverage). |
 
 ---

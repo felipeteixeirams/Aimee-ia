@@ -124,6 +124,9 @@ Governa o sequenciamento de eventos e tarefas colaborativas entre familiares:
 *   **Exclusão Bidirecional Inteligente**: Permite que ao alterar ou deletar uma instância repetitiva, o usuário opte por modificar somente a instância atual (`single`), as sucessoras (`following`), ou a cadeia total de registros históricos (`all`).
 
 ### 🔍 D. Varredura e Descoberta de Eventos (`EventDiscoverySkill`)
+
+*Documentação Detalhada do Motor: [[EVENT_DISCOVERY_ENGINE.md]]*
+
 Executa auditoria cibernética ampla sobre eventos profissionais e culturais de interesse do usuário nas capitais do Brasil. Implementa um pipeline de robustez baseado em **Multi-Model Fallback com Grounding e Rastreabilidade de Tokens**:
 
 ```mermaid
