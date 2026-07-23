@@ -4,6 +4,8 @@
 **Status:** Versão 1.0 (Analítico e Baseado em Evidências)
 **Data:** Fevereiro de 2025
 
+<- Voltar para o portal: [[AGENTS.md]]
+
 ---
 
 ## 🎯 1. Introdução e Objetivo

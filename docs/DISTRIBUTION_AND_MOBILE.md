@@ -1,5 +1,7 @@
 # 📱 DISTRIBUTION_AND_MOBILE.md — Empacotamento Híbrido, CapacitorJS e Estratégia de Lançamento (Geração 2.0)
 
+<- Voltar para o portal: [[AGENTS.md]]
+
 Este documento dita e detalha a especificação técnica de portabilidade híbrida e o plano tático go-to-market do ecossistema **Aimee** para os canais de distribuição Web, Progressive Web App (PWA) e as lojas oficiais para dispositivos móveis Apple App Store e Google Play Store.
 
 ---

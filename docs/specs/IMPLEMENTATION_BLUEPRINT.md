@@ -1,5 +1,7 @@
 # 🏛️ Aimee: Blueprint de Implementação e Progresso
 
+<- Voltar para o portal: [[AGENTS.md]]
+
 Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcional da Aimee. Organizamos o progresso em etapas modulares alinhadas à nossa **Clean Architecture**.
 
 ---

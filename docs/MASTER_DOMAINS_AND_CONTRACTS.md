@@ -1,5 +1,7 @@
 # 🧠 MASTER_DOMAINS_AND_CONTRACTS.md — Regras de Negócio, Modelos de Dados, Validações e Inteligência (Geração 2.0)
 
+<- Voltar para o portal: [[AGENTS.md]] | Ver arquitetura: [[MASTER_ARCHITECTURE.md]] | Backlog: [[IMPLEMENTATION_BLUEPRINT.md]]
+
 Este documento consolidado serve como a especificação conceitual de domínio e validação lógica do ecossistema **Aimee**. Projetado sob princípios de Clean Architecture, este arquivo rege as regras de negócio puras, a modelagem determinística de dados e o motor de inteligência por trás dos Bounded Contexts.
 
 ---

@@ -1,5 +1,7 @@
 # 🏗️ MASTER_ARCHITECTURE.md — Servidor, Repositórios, Infraestrutura de Dados e Implantação (Geração 2.0)
 
+<- Voltar para o portal: [[AGENTS.md]] | Ver regras de dados: [[MASTER_DOMAINS_AND_CONTRACTS.md]] | Backlog: [[IMPLEMENTATION_BLUEPRINT.md]]
+
 Este documento consolidado serve como a especificação de engenharia definitiva do ecossistema backend e da infraestrutura de persistência de dados da **Aimee**. Ele governa a operação do servidor BFF (Backends for Frontends), o motor de banco de dados NoSQL, a injeção de dependências e a esteira de conteinerização.
 
 ---
