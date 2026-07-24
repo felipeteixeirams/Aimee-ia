@@ -6,12 +6,30 @@ import { EmailService } from "./services/EmailService.js";
 import { AimeeOrchestrator } from "./llm/AimeeOrchestrator.js";
 import { container } from "./container.js";
 import { validateRequest } from "./middlewares.js";
-import { aiRequestSchema, notificationSchema, supportSchema } from '../models/index.js';
+import { aiRequestSchema, notificationSchema, supportSchema, VisionRequestSchema, VisionRequest } from '../models/index.js';
 import { oauth2Client, GOOGLE_CALENDAR_SCOPES } from "./googleAuth.js";
 import { google } from "googleapis";
 import { EventDiscoverySkill } from "../domain/skills/EventDiscoverySkill.js";
+import { VisionService } from "./services/VisionService.js";
 
 export default async function (fastify: FastifyInstance) {
+  const visionService = new VisionService();
+
+  fastify.post("/vision", { preHandler: validateRequest(VisionRequestSchema) }, async (req: FastifyRequest, reply: FastifyReply) => {
+    const request = req.body as VisionRequest;
+    try {
+      const result = await visionService.processReceipt(request);
+      return result;
+    } catch (error: any) {
+      logger.error("Vision Processing Error", { error: error.message });
+      if (error.message === 'AI_SERVICE_DEGRADED') {
+        reply.status(503).send({ error: "Serviço de IA temporariamente indisponível (Circuit Breaker aberto)" });
+      } else {
+        reply.status(500).send({ error: "Erro interno no processamento de imagem" });
+      }
+    }
+  });
+
   // Event Discovery Route (Can be triggered by a Cron or Manually)
   fastify.post("/events/discovery/trigger", async (req, reply) => {
     try {

@@ -371,6 +371,26 @@ export const aiRequestSchema = z.object({
 });
 export type AiRequestInput = z.infer<typeof aiRequestSchema>;
 
+export const VisionRequestSchema = z.object({
+  imagePayloadBase64: z.string(),
+  mimeType: z.string(),
+  userId: z.string()
+});
+export type VisionRequest = z.infer<typeof VisionRequestSchema>;
+
+export const ReceiptExtractionSchema = z.object({
+  merchantName: z.string(),
+  totalAmount: z.number(),
+  date: z.string(),
+  items: z.array(z.object({
+    name: z.string(),
+    price: z.number(),
+    category: z.enum(['Alimentação', 'Higiene', 'Limpeza', 'Outros'])
+  })),
+  confidenceScore: z.number().min(0).max(1)
+});
+export type ReceiptExtraction = z.infer<typeof ReceiptExtractionSchema>;
+
 export const supportSchema = z.object({
   email: z.string().email('E-mail inválido'),
   message: z.string().min(5, 'A mensagem deve ter pelo menos 5 caracteres').max(100, 'A mensagem deve ter no máximo 100 caracteres'),

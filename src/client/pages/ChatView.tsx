@@ -1,12 +1,13 @@
 import { ChatMessage, UserProfile, ChatRole } from '../../types/index.js';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square, RefreshCcw, Wallet, Calendar, Sparkles, ShoppingCart } from 'lucide-react';
+import { MessageSquare, Send, ChevronDown, Check, Copy, Edit2, X, TrendingUp, Mic, Square, RefreshCcw, Wallet, Calendar, Sparkles, ShoppingCart, Camera } from 'lucide-react';
 import { cn } from '../../lib/utils.js';
 import { format } from 'date-fns';
 import { AimeeAvatar } from '../components/AimeeAvatar.js';
-import React, { useState, memo, useCallback, useMemo } from 'react';
+import React, { useState, memo, useCallback, useMemo, useRef } from 'react';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder.js';
+import { useVisionProcessor } from '../hooks/useVisionProcessor.js';
 import { AudioVisualizer } from '../components/AudioVisualizer.js';
 import { ReactiveFeed } from '../components/ReactiveFeed.js';
 import Markdown from 'react-markdown';
@@ -275,6 +276,26 @@ export const ChatView = memo(({
     setInputText(inputText + (inputText.endsWith(' ') || inputText === '' ? '' : ' ') + text);
   });
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const { processReceipt, isProcessing: isProcessingReceipt } = useVisionProcessor();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Add an optimistic message for feedback
+    handleSendMessage(`Analisando nota fiscal: ${file.name}...`);
+    
+    const result = await processReceipt(file);
+    if (result) {
+      handleSendMessage(`Nota fiscal de ${result.merchantName} no valor de R$ ${result.totalAmount.toFixed(2)} processada com sucesso! ${result.items.length} itens extraídos e adicionados ao financeiro/compras.`);
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const onStopRecording = useCallback(async () => {
     await stopRecording();
@@ -547,6 +568,29 @@ export const ChatView = memo(({
               style={{ minHeight: '44px', maxHeight: '200px' }}
             />
             <div className="absolute right-2 bottom-1.5 flex items-center gap-1.5 pb-0">
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment" 
+                className="hidden" 
+                ref={fileInputRef} 
+                onChange={handleFileSelect} 
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessingReceipt || isTranscribing || isRecording}
+                title="Ler Cupom Fiscal"
+                className={cn(
+                  "w-10 h-10 flex items-center justify-center rounded-full transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 group-hover/btn:scale-105",
+                  isProcessingReceipt ? "text-brand animate-pulse" : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
+                )}
+              >
+                {isProcessingReceipt ? (
+                  <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera className="w-4 h-4" />
+                )}
+              </button>
               <button
                 onClick={isRecording ? onStopRecording : startRecording}
                 disabled={isTranscribing || (!isSupported && !availableAIProviders.includes('gemini'))}

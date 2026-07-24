@@ -136,6 +136,14 @@ Este documento serve como a "Fonte da Verdade" para o roteiro técnico e funcion
 
 - **2026-05-31**: **Saneamento e Governança de Documentação**: Conclusão da Fase 1, 2 e 3 do Plano de Saneamento. Adicionadas marcações `@deprecated` nos validadores duplicados, centralizado o `src/models/index.ts` como SSOT e padronizados todos os documentos de histórico (/docs/legacy/*) com avisos e tags apropriados. Aderência documental do projeto atingiu 100%.
 
+- **2026-07-24**: **Início e Conclusão da Etapa 12 (Processamento Multimodal de Cupons)**:
+  - Implementação do endpoint de `/api/vision` com parsing via `zodToJsonSchema` no Gemini Vision (modelo `gemini-2.5-flash`).
+  - Criação de Padrão de Resiliência `CircuitBreaker` para degradação graciosa da IA em caso de timeouts ou 503.
+  - Implementação de `useVisionProcessor.ts` com downscale local otimizado via Canvas API no frontend (reduzindo bandwidth).
+  - Persistência determinística associando itens extraídos do cupom aos gastos diários no Firestore.
+  - Adição de interface de upload/câmera integrada diretamente na input bar do `ChatView`.
+  - Critérios de aceite do `AIMEE_V3_ETAPA_12_OCR_SPEC.md` atendidos 100%.
+
 - **2026-05-12**: **Refatoração Arquitetural Concluída**: Removidas chamadas diretas ao Firestore em `App.tsx`, movendo toda a persistência para a camada de Repositórios e Skills através do hook `useAimeeActions`. Expansão do `InsightEngine` com insights determinísticos de produtividade e categorização financeira. Build verificado e estável.
 
 - **2026-05-09**: **Robustez Frontend & Observabilidade**: Implementado sistema de log centralizado (Client -> Server). Hardening de componentes React contra erros de parsing de data e campos nulos. Corrigido erro 500 no serviço de localização (nearby markets).

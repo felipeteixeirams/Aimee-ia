@@ -282,7 +282,7 @@ var init_config = __esm({
 
 // src/models/index.ts
 import { z as z2 } from "zod";
-var TabEnum, PeriodEnum, FinancialGoalCategory, FinancialGoalSchema, UserRole, UserStatus, AIRecommendedPersona, AimeeSuggestionSchema, UserProfileSchema, TransactionType, TransactionSchema, ItemUrgency, ShoppingItemSchema, ChatRole, ChatMessageSchema, ShareStatus, PermissionLevel, ShareSchema, TaskCategory, TaskStatus, RecurrenceType, TaskRecurrenceSchema, HouseholdTaskSchema, EventType, FamilyEventSchema, AIProvider, NotificationType, NotificationPayloadSchema, GlobalConfigSchema, LLMUsageSchema, MonitorEventSchema, EventMonitorConfigSchema, notificationSchema, aiRequestSchema, supportSchema;
+var TabEnum, PeriodEnum, FinancialGoalCategory, FinancialGoalSchema, UserRole, UserStatus, AIRecommendedPersona, AimeeSuggestionSchema, UserProfileSchema, TransactionType, TransactionSchema, ItemUrgency, ShoppingItemSchema, ChatRole, ChatMessageSchema, ShareStatus, PermissionLevel, ShareSchema, TaskCategory, TaskStatus, RecurrenceType, TaskRecurrenceSchema, HouseholdTaskSchema, EventType, FamilyEventSchema, AIProvider, NotificationType, NotificationPayloadSchema, GlobalConfigSchema, LLMUsageSchema, MonitorEventSchema, EventMonitorConfigSchema, notificationSchema, aiRequestSchema, VisionRequestSchema, ReceiptExtractionSchema, supportSchema;
 var init_models = __esm({
   "src/models/index.ts"() {
     TabEnum = z2.enum(["chat", "finance", "shopping", "routines", "settings"]);
@@ -569,6 +569,22 @@ var init_models = __esm({
         data: z2.string(),
         mimeType: z2.string()
       }).optional()
+    });
+    VisionRequestSchema = z2.object({
+      imagePayloadBase64: z2.string(),
+      mimeType: z2.string(),
+      userId: z2.string()
+    });
+    ReceiptExtractionSchema = z2.object({
+      merchantName: z2.string(),
+      totalAmount: z2.number(),
+      date: z2.string(),
+      items: z2.array(z2.object({
+        name: z2.string(),
+        price: z2.number(),
+        category: z2.enum(["Alimenta\xE7\xE3o", "Higiene", "Limpeza", "Outros"])
+      })),
+      confidenceScore: z2.number().min(0).max(1)
     });
     supportSchema = z2.object({
       email: z2.string().email("E-mail inv\xE1lido"),
@@ -2114,8 +2130,160 @@ Retorne o JSON estritamente formatado de acordo com a instru\xE7\xE3o de sa\xEDd
   }
 };
 
+// src/server/services/VisionService.ts
+init_config();
+import { GoogleGenAI as GoogleGenAI3 } from "@google/genai";
+
+// src/server/CircuitBreaker.ts
+var CircuitBreaker = class {
+  constructor(failureThreshold = 3, resetTimeoutMs = 3e4) {
+    this.state = 0 /* CLOSED */;
+    this.failureCount = 0;
+    this.nextAttempt = Date.now();
+    this.failureThreshold = failureThreshold;
+    this.resetTimeoutMs = resetTimeoutMs;
+  }
+  async fire(action) {
+    if (this.state === 1 /* OPEN */) {
+      if (Date.now() > this.nextAttempt) {
+        this.state = 2 /* HALF_OPEN */;
+      } else {
+        throw new Error("AI_SERVICE_DEGRADED");
+      }
+    }
+    try {
+      const result = await action();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+  onSuccess() {
+    this.failureCount = 0;
+    this.state = 0 /* CLOSED */;
+  }
+  onFailure() {
+    this.failureCount++;
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = 1 /* OPEN */;
+      this.nextAttempt = Date.now() + this.resetTimeoutMs;
+    }
+  }
+};
+
+// src/server/services/VisionService.ts
+init_models();
+init_logger();
+import { zodToJsonSchema } from "zod-to-json-schema";
+
+// src/infrastructure/repositories/TransactionRepository.ts
+init_BaseRepository();
+init_models();
+var TransactionRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/transactions", TransactionSchema);
+  }
+};
+var transactionRepository = new TransactionRepository();
+
+// src/infrastructure/repositories/TaskRepository.ts
+init_BaseRepository();
+init_models();
+var TaskRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/tasks", HouseholdTaskSchema);
+  }
+};
+var taskRepository = new TaskRepository();
+
+// src/server/services/VisionService.ts
+var VisionService = class {
+  constructor() {
+    this.genAI = new GoogleGenAI3({ apiKey: config.geminiApiKey });
+    this.breaker = new CircuitBreaker(3, 3e4);
+    this.transactionRepo = new TransactionRepository();
+    this.taskRepo = new TaskRepository();
+  }
+  async processReceipt(request) {
+    return this.breaker.fire(async () => {
+      try {
+        const response = await this.genAI.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: "Extraia os itens, valores, e classifique-os a partir deste cupom fiscal ou nota fiscal de supermercado. Retorne estritamente um JSON de acordo com o esquema solicitado."
+                },
+                {
+                  inlineData: {
+                    data: request.imagePayloadBase64,
+                    mimeType: request.mimeType
+                  }
+                }
+              ]
+            }
+          ],
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: zodToJsonSchema(ReceiptExtractionSchema)
+          }
+        });
+        const text = response.text;
+        if (!text) throw new Error("Empty response from AI model");
+        const parsed = JSON.parse(text);
+        if (typeof parsed.confidenceScore !== "number") {
+          parsed.confidenceScore = 0.9;
+        }
+        const extraction = ReceiptExtractionSchema.parse(parsed);
+        await this.transactionRepo.add({
+          userId: request.userId,
+          title: `Compras em ${extraction.merchantName}`,
+          amount: extraction.totalAmount,
+          type: "expense",
+          category: "Supermercado",
+          date: (/* @__PURE__ */ new Date()).toISOString()
+        });
+        const tasks = await this.taskRepo.getByUserId(request.userId);
+        const shoppingTasks = tasks.filter((t) => t.category === "errand" && t.status === "todo");
+        for (const item of extraction.items) {
+          const lowerName = item.name.toLowerCase();
+          const match = shoppingTasks.find(
+            (t) => lowerName.includes(t.title.toLowerCase()) || t.title.toLowerCase().includes(lowerName)
+          );
+          if (match && match.id) {
+            await this.taskRepo.update(match.id, { status: "done" });
+          }
+        }
+        return extraction;
+      } catch (error) {
+        logger.error("Error processing receipt in VisionService", { error });
+        throw error;
+      }
+    });
+  }
+};
+
 // src/server/routes.ts
 async function routes_default(fastify) {
+  const visionService = new VisionService();
+  fastify.post("/vision", { preHandler: validateRequest(VisionRequestSchema) }, async (req, reply) => {
+    const request = req.body;
+    try {
+      const result = await visionService.processReceipt(request);
+      return result;
+    } catch (error) {
+      logger.error("Vision Processing Error", { error: error.message });
+      if (error.message === "AI_SERVICE_DEGRADED") {
+        reply.status(503).send({ error: "Servi\xE7o de IA temporariamente indispon\xEDvel (Circuit Breaker aberto)" });
+      } else {
+        reply.status(500).send({ error: "Erro interno no processamento de imagem" });
+      }
+    }
+  });
   fastify.post("/events/discovery/trigger", async (req, reply) => {
     try {
       logger.info("Triggering global event discovery...");
