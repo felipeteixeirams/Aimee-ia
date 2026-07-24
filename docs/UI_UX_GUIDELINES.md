@@ -1,7 +1,5 @@
 # 🎨 UI_UX_GUIDELINES.md — Manual de Identidade Visual, React Client SPA e Motion UX (Geração 2.0)
 
-<- Voltar para o portal: [[AGENTS.md]]
-
 Este documento consolidado serve como a diretriz definitiva de design, engenharia de front-end e experiência de uso do ecossistema de cliente da **Aimee**. Ele unifica a filosofia estética inspirada no iOS/Apple Music com as decisões estruturais de desenvolvimento da Single Page Application (SPA).
 
 ---

@@ -1,7 +1,5 @@
 # 🚀 Automação de Pipelines & Hooks Locais (Fase 1)
 
-<- Voltar para o portal: [[AGENTS.md]]
-
 Este documento analisa em detalhes a infraestrutura de automação local, consistência de imports e sincronização de ecossistema e ambientes contidos em `.husky/` e `/scripts/` na raiz do projeto.
 
 ---

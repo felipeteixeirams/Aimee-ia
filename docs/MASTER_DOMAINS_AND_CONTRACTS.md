@@ -1,7 +1,5 @@
 # 🧠 MASTER_DOMAINS_AND_CONTRACTS.md — Regras de Negócio, Modelos de Dados, Validações e Inteligência (Geração 2.0)
 
-<- Voltar para o portal: [[AGENTS.md]] | Ver arquitetura: [[MASTER_ARCHITECTURE.md]] | Backlog: [[IMPLEMENTATION_BLUEPRINT.md]]
-
 Este documento consolidado serve como a especificação conceitual de domínio e validação lógica do ecossistema **Aimee**. Projetado sob princípios de Clean Architecture, este arquivo rege as regras de negócio puras, a modelagem determinística de dados e o motor de inteligência por trás dos Bounded Contexts.
 
 ---
@@ -124,9 +122,6 @@ Governa o sequenciamento de eventos e tarefas colaborativas entre familiares:
 *   **Exclusão Bidirecional Inteligente**: Permite que ao alterar ou deletar uma instância repetitiva, o usuário opte por modificar somente a instância atual (`single`), as sucessoras (`following`), ou a cadeia total de registros históricos (`all`).
 
 ### 🔍 D. Varredura e Descoberta de Eventos (`EventDiscoverySkill`)
-
-*Documentação Detalhada do Motor: [[EVENT_DISCOVERY_ENGINE.md]]*
-
 Executa auditoria cibernética ampla sobre eventos profissionais e culturais de interesse do usuário nas capitais do Brasil. Implementa um pipeline de robustez baseado em **Multi-Model Fallback com Grounding e Rastreabilidade de Tokens**:
 
 ```mermaid

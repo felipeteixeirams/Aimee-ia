@@ -1,7 +1,5 @@
 # 🏗️ MASTER_ARCHITECTURE.md — Servidor, Repositórios, Infraestrutura de Dados e Implantação (Geração 2.0)
 
-<- Voltar para o portal: [[AGENTS.md]] | Ver regras de dados: [[MASTER_DOMAINS_AND_CONTRACTS.md]] | Backlog: [[IMPLEMENTATION_BLUEPRINT.md]]
-
 Este documento consolidado serve como a especificação de engenharia definitiva do ecossistema backend e da infraestrutura de persistência de dados da **Aimee**. Ele governa a operação do servidor BFF (Backends for Frontends), o motor de banco de dados NoSQL, a injeção de dependências e a esteira de conteinerização.
 
 ---
@@ -183,7 +181,7 @@ A assinatura abstrata unifica tratamentos de concorrência, higienização de nu
 | **`TransactionRepository`** | `users/{userId}/transactions` | `TransactionSchema` | Orquestrador de fluxo de caixa familiar (receitas e despesas). |
 | **`ShoppingRepository`** | `users/{userId}/shopping_items` | `ShoppingItemSchema` | Consolida despensas e listas inteligentes de compras. |
 | **`ProfileRepository`** | `users` (Global) | `UserProfileSchema` | Perfis gerais de usuários, com suporte customizado do Google OAuth. |
-| **`MonitorEventRepository`** | `monitor_events` (Global) | `MonitorEventSchema` | Cache global de eventos colhidos por [[EVENT_DISCOVERY_ENGINE.md]]. Gravações transacionais em lote. |
+| **`MonitorEventRepository`** | `monitor_events` (Global) | `MonitorEventSchema` | Cache global de eventos colhidos. Gravações transacionais em lote. |
 | **`UsageRepository`** | `users/{userId}/usage` | `LLMUsageSchema` | Controle cumulativo e auditoria de faturamento de IA. |
 | **`ChatRepository`** | `users/{userId}/chatHistory` | `ChatMessageSchema` | Histórico permanente de conversações e insights ativos do chat da Aimee. |
 | **`ConfigRepository`** | `config` (Global) | `GlobalConfigSchema` | Configurações globais de provedores de IA e avatar da Aimee. |
