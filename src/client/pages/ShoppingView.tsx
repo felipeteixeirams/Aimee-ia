@@ -193,7 +193,7 @@ export const ShoppingView = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[60] bg-white dark:bg-neutral-950 overflow-hidden flex flex-col"
       >
-        <div className="glass pb-8 pt-[env(safe-area-inset-top)] px-6 border-b-0 rounded-b-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] shrink-0 relative overflow-hidden">
+        <div className="bg-white dark:bg-neutral-900 pb-8 pt-[env(safe-area-inset-top)] px-6 border-b-0 rounded-b-3xl shadow-sm shrink-0 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand/10 rounded-full blur-3xl -mr-32 -mt-32" />
           <div className="flex items-center justify-between relative z-10 pt-4">
             <div className="flex items-center gap-4">
@@ -224,7 +224,7 @@ export const ShoppingView = ({
               key={item.id}
               layout
               className={cn(
-                "p-5 rounded-[2.5rem] border transition-all flex items-center gap-4 relative overflow-hidden",
+                "p-5 rounded-2xl border transition-all flex items-center gap-4 relative overflow-hidden",
                 item.purchased 
                   ? "bg-neutral-50 dark:bg-neutral-900/40 border-neutral-100 dark:border-neutral-800 opacity-60" 
                   : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 shadow-sm"
@@ -291,7 +291,7 @@ export const ShoppingView = ({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               whileTap={{ scale: 0.95 }}
-              className="w-full py-5 bg-brand text-brand-foreground rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/30 transition-all text-sm flex items-center justify-center gap-3"
+              className="w-full py-5 bg-brand text-brand-foreground rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-brand/30 transition-all text-sm flex items-center justify-center gap-3"
               onClick={onFinish}
             >
               <CheckCircle2 className="w-5 h-5" />
@@ -313,7 +313,7 @@ export const ShoppingView = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[180px]"
+      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)]"
     >
       <div className="flex items-center justify-between">
         <div>
@@ -351,7 +351,7 @@ export const ShoppingView = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-5 bg-white dark:bg-neutral-900 rounded-[2rem] border border-brand/20 shadow-xl shadow-brand/5 space-y-4">
+            <div className="p-5 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/20 shadow-xl shadow-brand/5 space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-brand uppercase tracking-widest px-1">Nome do Item</label>
                 <input 
@@ -517,7 +517,7 @@ export const ShoppingView = ({
                 <motion.div 
                   key={suggestion.id}
                   whileTap={{ scale: 0.95 }}
-                  className="shrink-0 w-40 aspect-square bg-gradient-to-br from-brand to-brand-light p-5 rounded-[2.5rem] flex flex-col justify-between relative overflow-hidden shadow-lg shadow-brand/20 group"
+                  className="shrink-0 w-40 aspect-square bg-gradient-to-br from-brand to-brand-light p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden shadow-lg shadow-brand/20 group"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-3xl -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700" />
                   
@@ -564,7 +564,7 @@ export const ShoppingView = ({
 
       {/* Bloco de sugestões removido para dar lugar ao novo Para Você acima */}
 
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
@@ -625,7 +625,7 @@ export const ShoppingView = ({
             ))}
           </AnimatePresence>
           {nearbyMarkets.length === 0 && !isLocating && !locationError && (
-            <div className="text-center py-6 border-2 border-dashed border-neutral-100 dark:border-neutral-800 rounded-[2rem]">
+            <div className="text-center py-6 border-2 border-dashed border-neutral-100 dark:border-neutral-800 rounded-2xl">
               <p className="text-[10px] text-neutral-300 font-bold uppercase tracking-widest leading-loose">
                 Toque no ícone acima para<br/>encontrar locais próximos
               </p>
@@ -635,7 +635,7 @@ export const ShoppingView = ({
       </div>
 
       {profile?.healthGoals && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 p-5 rounded-[2rem]">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 p-5 rounded-2xl">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center">
               <Apple className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />

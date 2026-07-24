@@ -6,26 +6,19 @@ Este documento consolidado serve como a diretriz definitiva de design, engenhari
 
 ## 🎵 1. Filosofia de Design e Direcionamento Estético
 
-A interface da Aimee é projetada para ser tátil, fluida e visualmente refinada, oferecendo uma experiência premium semelhante aos aplicativos de ponta do mercado de bens de consumo digital (Apple Music, ChatGPT Plus e Copilot Pro).
+A interface da Aimee é projetada para ser tátil, fluida e visualmente refinada, oferecendo uma experiência premium orientada pelos princípios de **Anti-Slop** e **Flatten Depth**, alinhando-se aos produtos mais maduros e esteticamente agradáveis do mercado (como Linear, Vercel e Apple).
 
 ### 🎨 Pilares Estéticos de Elite
 
-1.  **A Referência iOS / Apple Music**:
-    *   **Glassmorphism (Efeito Vidro)**: Uso extensivo de superfícies translúcidas com desfoque de fundo combinado com bordas brilhantes sutis:
-        ```css
-        background: rgba(23, 23, 23, 0.7);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        ```
-    *   **Bordas Arredondadas Robustas**: Cards e containers modulares possuem cantos com raio generoso (24px+ ou `rounded-3xl` no Tailwind CSS) para criar uma sensação acolhedora e tátil.
-    *   **Tipografia Clara e Geométrica Pairing**:
-        *   *Headings/Títulos*: **Space Grotesk** ou **Outfit** para passagens display de alta performance.
-        *   *Corpo de Texto e UI*: **Inter** para leitura limpa com alto contraste de contraste.
-        *   *Metadados/Métricas*: **Fira Code** ou **JetBrains Mono** para visualização de números, tokens e moedas.
-2.  **Harmonia Cromática**:
-    *   A interface padrão é desenhada sobre um fundo neutro minimalista (**Cosmic Slate Theme**): tons profundos de grafite e carvão (`#121212`, `#171717`) compensados por cinzas suaves de contraste alto e acentos de cor vibrantes (neon ou violeta) para botões de ação críticos.
-3.  **Arquitetura de Densidade e Respiro (Negative Space)**:
-    *   Evita-se a compactação fria de elementos. Há generosidade em preenchimentos (paddings) e espaçamentos (margins) para permitir que a interface "respire", reduzindo o cansaço cognitivo.
+1.  **Flatten Depth e Minimalismo Geométrico**:
+    *   Rejeita-se o uso excessivo de "cards dentro de cards". A hierarquia visual é criada usando **espaço em branco (whitespace)**, divisores sutis (`border-neutral-100` e `border-neutral-800`), e tipografia robusta.
+    *   **Bordas Arredondadas Geométricas**: Cards e containers modulares possuem cantos matematicamente amarrados. Em componentes premium, o padrão é o `rounded-2xl` para cards, evitando arredondamentos infantis exagerados sem padding proporcional.
+    *   **Tipografia Clara e Legível**: Adoção de limites de largura de linha para leitura e a prevenção de "quebras em componentes curtos", exigindo `whitespace-nowrap` ou truncamentos lógicos.
+2.  **Harmonia Cromática e Tons Neutros Sofisticados**:
+    *   A interface abandona "pretos puros" (`#000`) e "brancos puros" (`#FFF`) não naturais, repousando em `bg-neutral-900` para o escuro e `bg-white` compensado no fundo para o claro. O controle é rigoroso: limites de diferença de brilho entre camadas não ultrapassam 12% no dark mode e 7% no light mode.
+    *   Abandono do "glassmorphism" denso não justificado em favor de uma densidade visual plana, clean, com shadows extremamente sutis (`shadow-sm` ou `shadow-md` calibradas).
+3.  **Arquitetura Mobile-First e Acessibilidade (Touch Targets)**:
+    *   Como um PWA, garante-se alvos táteis de no mínimo 44px de área de clique, especialmente em menus-base (como o `BottomMenu`). Labels e controles dinâmicos são otimizados para se acomodarem confortavelmente sem esmagar com teclado virtual de OS.
 
 ---
 

@@ -104,12 +104,11 @@ export const FinanceView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="h-full overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 no-scrollbar pb-[180px]"
+      className="h-full overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 no-scrollbar pb-[calc(env(safe-area-inset-bottom)+5rem)]"
     >
       {/* Gamification & Goals Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glass p-5 md:p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-brand/10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:scale-125 transition-transform duration-1000" />
+        <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -142,8 +141,7 @@ export const FinanceView = ({
           </div>
         </div>
 
-        <div className="glass p-5 md:p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group">
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+        <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-[1.25rem] flex items-center justify-center backdrop-blur-xl border border-emerald-500/20">
@@ -189,7 +187,7 @@ export const FinanceView = ({
 
       {/* Graphical Dashboards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+        <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Evolução Diária</h4>
             <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -229,7 +227,7 @@ export const FinanceView = ({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+        <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Gastos por Categoria</h4>
             <PieChart className="w-4 h-4 text-brand" />
@@ -263,7 +261,7 @@ export const FinanceView = ({
       {/* Goals & Behavior Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Behavioral Analysis */}
-        <div className="lg:col-span-1 bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+        <div className="lg:col-span-1 bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Padrão Semanal</h4>
             <TrendingUp className="w-4 h-4 text-brand" />
@@ -295,7 +293,7 @@ export const FinanceView = ({
         </div>
 
         {/* Financial Goals */}
-        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider">Metas de Longo Prazo</h4>
             <button className="text-brand hover:bg-brand/10 p-2 rounded-xl transition-colors">
@@ -343,7 +341,7 @@ export const FinanceView = ({
       {/* Benchmarking Alert */}
       <motion.div 
         whileHover={{ scale: 1.02 }}
-        className="glass border border-amber-200/50 dark:border-amber-900/30 p-6 rounded-[2.5rem] flex items-start gap-4 shadow-xl shadow-amber-500/5 relative overflow-hidden group"
+        className="bg-white dark:bg-neutral-900 border border-amber-200/50 dark:border-amber-900/30 p-6 rounded-2xl flex items-start gap-4 shadow-xl shadow-amber-500/5 relative overflow-hidden group"
       >
         <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-12 -mt-12" />
         <div className="w-12 h-12 bg-amber-500/10 dark:bg-amber-500/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-xl border border-amber-500/20">
@@ -365,7 +363,7 @@ export const FinanceView = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <motion.div 
           whileHover={{ y: -4 }}
-          className="bg-emerald-500 p-4 md:p-5 rounded-[2rem] text-white shadow-lg shadow-emerald-500/20 relative overflow-hidden"
+          className="bg-emerald-500 p-4 md:p-5 rounded-2xl text-white shadow-lg shadow-emerald-500/20 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-6 -mt-6" />
           <div className="relative z-10 flex items-center gap-3 md:gap-4">
@@ -381,7 +379,7 @@ export const FinanceView = ({
 
         <motion.div 
           whileHover={{ y: -4 }}
-          className="bg-rose-500 p-4 md:p-5 rounded-[2rem] text-white shadow-lg shadow-rose-500/20 relative overflow-hidden"
+          className="bg-rose-500 p-4 md:p-5 rounded-2xl text-white shadow-lg shadow-rose-500/20 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-6 -mt-6" />
           <div className="relative z-10 flex items-center gap-3 md:gap-4">
@@ -397,7 +395,7 @@ export const FinanceView = ({
 
         <motion.div 
           whileHover={{ y: -4 }}
-          className="sm:col-span-2 md:col-span-1 bg-white dark:bg-neutral-900 p-4 md:p-5 rounded-[2rem] border border-neutral-100 dark:border-neutral-800 shadow-sm flex flex-col justify-center"
+          className="sm:col-span-2 md:col-span-1 bg-white dark:bg-neutral-900 p-4 md:p-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm flex flex-col justify-center"
         >
           <p className="text-[8px] md:text-[9px] font-bold text-neutral-400 uppercase tracking-widest mb-0.5">Saldo Atual</p>
           <p className={cn(
@@ -414,7 +412,7 @@ export const FinanceView = ({
       </div>
 
       {/* Period & Date Selection */}
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-sm font-black text-neutral-800 dark:text-white uppercase tracking-wider mb-2">Período de Visualização</h3>
@@ -523,7 +521,7 @@ export const FinanceView = ({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="mx-2 p-6 bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-brand/20 shadow-xl shadow-brand/5 space-y-5">
+              <div className="mx-2 p-6 bg-white dark:bg-neutral-900 rounded-2xl border border-brand/20 shadow-xl shadow-brand/5 space-y-5">
                 <div className="flex p-1 bg-neutral-50 dark:bg-neutral-800 rounded-2xl w-full">
                   <button 
                     onClick={() => setType('expense')}
@@ -616,7 +614,7 @@ export const FinanceView = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white dark:bg-neutral-900 p-5 rounded-[2rem] border border-neutral-100 dark:border-neutral-800 flex items-center justify-between shadow-sm hover:shadow-md transition-all group"
+              className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 flex items-center justify-between shadow-sm hover:shadow-md transition-all group"
             >
               <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                 <div className={cn(
@@ -645,7 +643,7 @@ export const FinanceView = ({
             </motion.div>
           ))}
           {filteredTransactions.length === 0 && (
-            <div className="col-span-full text-center py-20 bg-neutral-50 dark:bg-neutral-900/50 rounded-[3rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800">
+            <div className="col-span-full text-center py-20 bg-neutral-50 dark:bg-neutral-900/50 rounded-2xl border-2 border-dashed border-neutral-100 dark:border-neutral-800">
               <Wallet className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
               <p className="text-neutral-400 text-sm font-bold uppercase tracking-widest">Nenhuma transação encontrada</p>
             </div>

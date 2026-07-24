@@ -42,7 +42,7 @@ export function ReactiveFeed({ insights, onDismiss, onAction }: ReactiveFeedProp
             <motion.div
               key={insight.id}
               layoutId={insight.id}
-              className="snap-center shrink-0 w-[280px] md:w-[320px] bg-white dark:bg-neutral-900 rounded-[24px] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] border border-neutral-100 dark:border-neutral-800 relative group"
+              className="snap-center shrink-0 w-[280px] md:w-[320px] bg-white dark:bg-neutral-900 rounded-3xl p-5 shadow-sm border border-neutral-100 dark:border-neutral-800 relative group"
             >
               <button 
                 onClick={(e) => {

@@ -63,7 +63,7 @@ export const EventMonitorComponent = ({ monitorEvents, monitorConfig, handleSave
 
   if (!monitorConfig?.active && !showConfig) {
     return (
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-800/30">
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800/30">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
@@ -86,7 +86,7 @@ export const EventMonitorComponent = ({ monitorEvents, monitorConfig, handleSave
   }
 
   return (
-    <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+    <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
@@ -200,7 +200,7 @@ export const EventMonitorComponent = ({ monitorEvents, monitorConfig, handleSave
 
       <div className="space-y-4 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
         {filteredEvents.length > 0 ? filteredEvents.map((event, i) => (
-          <div key={event.id || i} className="p-5 glass rounded-[2rem] border border-neutral-100 dark:border-neutral-800 hover:shadow-lg transition-all group">
+          <div key={event.id || i} className="p-5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 hover:shadow-lg transition-all group">
             <div className="flex items-start justify-between gap-4 mb-3">
               <h4 className="text-base font-black text-neutral-800 dark:text-white leading-tight">
                 {event.title}

@@ -28,7 +28,7 @@ export const AdminPanel = ({ pendingUsers, onAction, onClose }: AdminPanelProps)
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white dark:bg-neutral-950 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-white/10"
+        className="bg-white dark:bg-neutral-950 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-white/10"
       >
         {/* Header */}
         <div className="p-8 border-b border-neutral-100 dark:border-neutral-900 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/50">

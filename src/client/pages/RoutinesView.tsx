@@ -158,7 +158,7 @@ export const RoutinesView = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[180px] no-scrollbar"
+        className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)] no-scrollbar"
       >
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -178,7 +178,7 @@ export const RoutinesView = ({
       />
 
       {/* Family Agenda */}
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
@@ -213,7 +213,7 @@ export const RoutinesView = ({
         </div>
 
         {isSuperAdmin && syncError && (
-          <div className="mb-4 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-[2rem] flex flex-col gap-3">
+          <div className="mb-4 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl flex flex-col gap-3">
             <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase">
               <AlertCircle className="w-4 h-4" />
               <span>{syncError}</span>
@@ -244,16 +244,9 @@ export const RoutinesView = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="group relative flex gap-4 p-4 glass rounded-[2rem] border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all overflow-hidden"
+              className="group relative flex gap-4 p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-xs hover:shadow-sm transition-all overflow-hidden items-center"
             >
-              <div className={cn(
-                "absolute left-0 top-0 bottom-0 w-1.5",
-                event.type === 'holiday' ? "bg-rose-500" :
-                event.type === 'social' ? "bg-purple-500" :
-                "bg-blue-500"
-              )} />
-              
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-neutral-50 dark:bg-neutral-800 rounded-2xl flex flex-col items-center justify-center shrink-0 border border-neutral-100 dark:border-neutral-700">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-neutral-50 dark:bg-neutral-800/80 rounded-xl flex flex-col items-center justify-center shrink-0 border border-neutral-100 dark:border-neutral-700">
                 <span className="text-[10px] font-black text-brand uppercase tracking-tighter leading-none mb-0.5">{safeFormatDate(event.date, 'MMM')}</span>
                 <span className="text-xl font-black text-neutral-800 dark:text-white leading-none tracking-tighter">{safeFormatDate(event.date, 'dd')}</span>
               </div>
@@ -286,7 +279,7 @@ export const RoutinesView = ({
               </div>
             </motion.div>
           )) : (
-            <div className="py-12 bg-neutral-50 dark:bg-neutral-900/50 rounded-[2.5rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800 text-center">
+            <div className="py-12 bg-neutral-50 dark:bg-neutral-900/50 rounded-2xl border-2 border-dashed border-neutral-100 dark:border-neutral-800 text-center">
               <Calendar className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
               <p className="text-neutral-400 text-sm font-black uppercase tracking-[0.2em]">Nenhum evento agendado</p>
             </div>
@@ -295,7 +288,7 @@ export const RoutinesView = ({
       </div>
 
       {/* Household Tasks */}
-      <div className="bg-white dark:bg-neutral-900 p-6 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
@@ -315,7 +308,7 @@ export const RoutinesView = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="flex items-center gap-4 p-4 md:p-5 glass rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 group transition-all hover:shadow-lg hover:shadow-brand/5 relative overflow-hidden"
+              className="flex items-center gap-4 p-4 md:p-5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 group transition-all hover:shadow-lg hover:shadow-brand/5 relative overflow-hidden"
             >
               <button 
                 onClick={() => task.id && handleToggleTask(task.id, task.status)}
@@ -394,7 +387,7 @@ export const RoutinesView = ({
               </div>
             </motion.div>
           )) : (
-            <div className="py-12 bg-neutral-50 dark:bg-neutral-900/50 rounded-[2.5rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800 text-center">
+            <div className="py-12 bg-neutral-50 dark:bg-neutral-900/50 rounded-2xl border-2 border-dashed border-neutral-100 dark:border-neutral-800 text-center">
               <CheckSquare className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
               <p className="text-neutral-400 text-sm font-black uppercase tracking-[0.2em]">Tudo limpo por aqui!</p>
             </div>
@@ -404,7 +397,7 @@ export const RoutinesView = ({
 
       {/* Cross-Insights & Contextual Awareness */}
       {insights.length > 0 && (
-        <div className="bg-brand/5 p-6 rounded-[2.5rem] border border-brand/10">
+        <div className="bg-brand/5 p-6 rounded-2xl border border-brand/10">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-brand/20 rounded-xl flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-brand" />
@@ -460,7 +453,7 @@ export const RoutinesView = ({
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-2xl p-8 shadow-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
@@ -706,7 +699,7 @@ export const RoutinesView = ({
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 shadow-2xl"
+              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-2xl p-8 shadow-2xl"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center">
@@ -746,7 +739,7 @@ export const RoutinesView = ({
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 shadow-2xl"
+              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-2xl p-8 shadow-2xl"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">

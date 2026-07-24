@@ -150,7 +150,37 @@ function getViteEnv(key, defaultValue = "") {
   }
   return val;
 }
+function logUnconfiguredVars() {
+  const findMissing = (obj, prefix = "") => {
+    const missing2 = [];
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const fullPath = prefix ? `${prefix}.${key}` : key;
+        const val = obj[key];
+        if (val === null || val === void 0 || val === "") {
+          missing2.push(fullPath);
+        } else if (typeof val === "object" && !Array.isArray(val)) {
+          missing2.push(...findMissing(val, fullPath));
+        }
+      }
+    }
+    return missing2;
+  };
+  const missing = findMissing(config);
+  if (missing.length > 0) {
+    logger.warn(`\u{1F4CC} ATEN\xC7\xC3O: Constatadas ${missing.length} vari\xE1veis de configura\xE7\xE3o vazias, nulas ou n\xE3o configuradas:`, {
+      unconfiguredCount: missing.length,
+      unconfiguredVars: missing,
+      context: isServer ? "BACKEND/SERVER" : "FRONTEND/BROWSER"
+    });
+  } else {
+    logger.info("\u2705 Todas as vari\xE1veis de configura\xE7\xE3o do sistema possuem valores definidos de forma bem-sucedida.", {
+      context: isServer ? "BACKEND/SERVER" : "FRONTEND/BROWSER"
+    });
+  }
+}
 function validateConfig() {
+  logUnconfiguredVars();
   const missingCritical = [];
   const missingRecommended = [];
   const hasAnyAiKey = config.geminiApiKey || config.deepseekApiKey || config.openaiApiKey || config.anthropicApiKey;
@@ -589,6 +619,73 @@ var init_firebase = __esm({
   }
 });
 
+// src/lib/errorMapper.ts
+function mapInfrastructureError(error, operation, path2) {
+  const rawMsg = error instanceof Error ? error.message : String(error);
+  const errorCode = error?.code ?? "";
+  const errorStatus = error?.status ?? "";
+  let friendlyMessage = "Ocorreu um erro inesperado ao acessar o servi\xE7o.";
+  let code = "UNKNOWN_ERROR";
+  let remediation = "Verifique os logs detalhados do servidor ou a conectividade.";
+  const combinedString = `${rawMsg} ${errorCode} ${errorStatus}`.toLowerCase();
+  if (combinedString.includes("permission_denied") || combinedString.includes("permission-denied") || combinedString.includes("permission denied") || combinedString.includes("insufficient permissions") || combinedString.includes("insufficient privilege") || errorCode === 7 || errorCode === "permission-denied") {
+    code = "PERMISSION_DENIED";
+    friendlyMessage = "Permiss\xE3o negada ou privil\xE9gios insuficientes para realizar esta opera\xE7\xE3o.";
+    remediation = "Verifique se as Regras de Seguran\xE7a do Firestore permitem essa a\xE7\xE3o, se o usu\xE1rio possui login ativo, ou se as credenciais do Service Account t\xEAm permiss\xE3o de Administrador do Firestore (especialmente se houver m\xFAltiplos aplicativos configurados).";
+  } else if (combinedString.includes("deadline_exceeded") || combinedString.includes("deadline-exceeded") || combinedString.includes("timeout") || errorCode === 4 || errorCode === "deadline-exceeded") {
+    code = "DEADLINE_EXCEEDED";
+    friendlyMessage = "Tempo limite de opera\xE7\xE3o excedido (Deadline Exceeded). O banco de dados demorou para responder.";
+    remediation = "Pode ser instabilidade na rede ou resolu\xE7\xE3o de nomes de servidor. Verifique as configura\xE7\xF5es de rede ou se o banco de dados est\xE1 localizado na mesma regi\xE3o geogr\xE1fica.";
+  } else if (combinedString.includes("unauthenticated") || errorCode === 16 || errorCode === "unauthenticated") {
+    code = "UNAUTHENTICATED";
+    friendlyMessage = "Sess\xE3o inv\xE1lida ou credenciais ausentes.";
+    remediation = "Certifique-se de que o usu\xE1rio est\xE1 adequadamente autenticado antes de realizar opera\xE7\xF5es de grava\xE7\xE3o/leitura.";
+  } else if (combinedString.includes("resource_exhausted") || combinedString.includes("quota exceeded") || errorCode === 8 || errorCode === "resource-exhausted") {
+    code = "RESOURCE_EXHAUSTED";
+    friendlyMessage = "Cota ou limite de recursos do banco de dados excedido.";
+    remediation = "O plano de uso pode ter atingido a cota di\xE1ria do Firestore ou o limite de requisi\xE7\xF5es por segundo. Revise o dashboard do console Firebase.";
+  } else if (combinedString.includes("name resolution") || combinedString.includes("host") || combinedString.includes("cannot resolve") || combinedString.includes("getaddrinfo")) {
+    code = "NETWORK_RESOLUTION_ERROR";
+    friendlyMessage = "Erro de rede: N\xE3o foi poss\xEDvel resolver o endere\xE7o do servidor.";
+    remediation = "Falha tempor\xE1ria de DNS ou conectividade \xE0 internet no servidor de hospedagem (Vercel/Cloud Run).";
+  } else if (combinedString.includes("project") && combinedString.includes("not found")) {
+    code = "PROJECT_NOT_FOUND";
+    friendlyMessage = "O projeto ou a base de dados configurada no Firebase n\xE3o foi encontrado.";
+    remediation = "Verifique se o Project ID do Firebase configurado \xE9 o correto e correspondente ao projeto provisionado.";
+  }
+  return {
+    friendlyMessage,
+    code,
+    rawMessage: rawMsg,
+    operation,
+    path: path2,
+    remediation
+  };
+}
+function logMappedError(error, operation, context) {
+  const mapped = mapInfrastructureError(error, operation, context?.path);
+  const isDev = process.env.NODE_ENV !== "production" || import.meta.env?.DEV;
+  const logDetails = {
+    code: mapped.code,
+    rawMessage: mapped.rawMessage,
+    friendlyMessage: mapped.friendlyMessage,
+    remediation: mapped.remediation,
+    operation: mapped.operation,
+    path: mapped.path,
+    ...context
+  };
+  if (isDev && error instanceof Error) {
+    logDetails.stack = error.stack;
+  }
+  logger.error(`[Infrastructure Error] Map: ${mapped.code} | Msg: ${mapped.friendlyMessage}`, logDetails);
+  return mapped;
+}
+var init_errorMapper = __esm({
+  "src/lib/errorMapper.ts"() {
+    init_logger();
+  }
+});
+
 // src/infrastructure/repositories/BaseRepository.ts
 import {
   collection,
@@ -606,23 +703,28 @@ var BaseRepository;
 var init_BaseRepository = __esm({
   "src/infrastructure/repositories/BaseRepository.ts"() {
     init_firebase();
+    init_errorMapper();
     BaseRepository = class {
       constructor(collectionPath, schema) {
         this.collectionPath = collectionPath;
         this.schema = schema;
       }
       handleFirestoreError(error, operationType, path2) {
+        const authInfo = {
+          userId: auth.currentUser?.uid,
+          email: auth.currentUser?.email,
+          emailVerified: auth.currentUser?.emailVerified
+        };
+        const mapped = logMappedError(error, `firestore:${operationType}`, {
+          path: path2,
+          ...authInfo
+        });
         const errInfo = {
-          error: error instanceof Error ? error.message : String(error),
-          authInfo: {
-            userId: auth.currentUser?.uid,
-            email: auth.currentUser?.email,
-            emailVerified: auth.currentUser?.emailVerified
-          },
+          error: mapped.friendlyMessage,
+          authInfo,
           operationType,
           path: path2
         };
-        console.error(`Firestore Error [${operationType}] at ${path2}:`, JSON.stringify(errInfo));
         throw new Error(JSON.stringify(errInfo));
       }
       sanitizeData(data) {
@@ -736,12 +838,22 @@ __export(firebaseAdmin_exports, {
   getFirebaseAdmin: () => getFirebaseAdmin
 });
 import admin from "firebase-admin";
+import { getFirestore as getFirestore2 } from "firebase-admin/firestore";
 function getFirebaseAdmin() {
   if (firebaseAdminInstance) return firebaseAdminInstance;
   try {
     const projectId = config.firebaseAdmin.projectId;
     const clientEmail = config.firebaseAdmin.clientEmail;
-    const privateKey = config.firebaseAdmin.privateKey;
+    let privateKey = config.firebaseAdmin.privateKey;
+    if (privateKey) {
+      privateKey = privateKey.trim();
+      if (privateKey.startsWith('"') && privateKey.endsWith('"') || privateKey.startsWith("'") && privateKey.endsWith("'")) {
+        privateKey = privateKey.slice(1, -1).trim();
+      }
+      if (privateKey.includes("\\n")) {
+        privateKey = privateKey.replace(/\\n/g, "\n");
+      }
+    }
     if (admin.apps.length > 0) {
       console.log(`[FirebaseAdmin] Default app already exists. Reusing existing instance.`);
       firebaseAdminInstance = admin.app();
@@ -783,9 +895,16 @@ function getFirebaseAdmin() {
       console.log(`getFirebaseAdmin: Initialized successfully using Service Account for project: ${projectId}`);
       return firebaseAdminInstance;
     }
-    console.warn("getFirebaseAdmin: Service Account credentials (clientEmail or privateKey) are missing. Falling back to Application Default Credentials...");
-    firebaseAdminInstance = admin.initializeApp(options);
-    return firebaseAdminInstance;
+    console.warn("getFirebaseAdmin: Service Account credentials (clientEmail or privateKey) are missing.");
+    const isGcpEnvironment = process.env.K_SERVICE || process.env.GOOGLE_CLOUD_PROJECT || !process.env.VERCEL;
+    if (isGcpEnvironment) {
+      console.log("getFirebaseAdmin: Initializing using Application Default Credentials...");
+      firebaseAdminInstance = admin.initializeApp(options);
+      return firebaseAdminInstance;
+    } else {
+      console.error("getFirebaseAdmin: Missing service account credentials on a non-GCP environment. Admin SDK cannot start safely.");
+      return null;
+    }
   } catch (error) {
     console.error("Failed to initialize firebase-admin SDK", error);
   }
@@ -794,7 +913,13 @@ function getFirebaseAdmin() {
 function getAdminFirestore() {
   const adminApp = getFirebaseAdmin();
   if (adminApp) {
-    return adminApp.firestore();
+    const databaseId = config.firebase.databaseId;
+    if (databaseId && databaseId !== "default" && databaseId !== "(default)") {
+      console.log(`[FirebaseAdmin] Getting Firestore instance for named database: "${databaseId}"`);
+      return getFirestore2(adminApp, databaseId);
+    }
+    console.log(`[FirebaseAdmin] Getting Firestore instance for default database`);
+    return getFirestore2(adminApp);
   }
   return null;
 }
@@ -818,6 +943,7 @@ var init_UsageRepository = __esm({
     init_models();
     init_BaseRepository();
     init_logger();
+    init_errorMapper();
     UsageRepository = class extends BaseRepository {
       constructor() {
         super("llm_usage", LLMUsageSchema);
@@ -838,10 +964,13 @@ var init_UsageRepository = __esm({
                 timestamp: (/* @__PURE__ */ new Date()).toISOString()
               });
               return docRef.id;
+            } else {
+              logger.warn("UsageRepository: Firebase Admin Firestore n\xE3o p\xF4de ser iniciado por falta de credenciais (servidor)");
             }
           } catch (error) {
-            logger.error("UsageRepository: Falha ao registrar log no servidor", { error });
+            logMappedError(error, "usage:logUsage:server", { path: "llm_usage", userId: usage.userId });
           }
+          return "";
         }
         try {
           return await this.create({
@@ -849,7 +978,7 @@ var init_UsageRepository = __esm({
             timestamp: (/* @__PURE__ */ new Date()).toISOString()
           }, usage.userId);
         } catch (error) {
-          logger.error("UsageRepository: Falha ao registrar log no cliente", { error });
+          logMappedError(error, "usage:logUsage:client", { path: "llm_usage", userId: usage.userId });
           return "";
         }
       }
@@ -1367,26 +1496,25 @@ var GeminiAdapter = class {
   }
   async generateResponse(request) {
     if (!this.genAI) throw new Error("Gemini API Key n\xE3o configurada.");
-    const model = this.genAI.getGenerativeModel({
-      model: "gemini-flash-latest",
-      systemInstruction: getAimeeSystemInstruction(request.persona, (/* @__PURE__ */ new Date()).toLocaleString())
-    });
     const formattedHistory = request.history.map((m) => ({
       role: m.role === "user" ? "user" : "model",
       parts: [{ text: m.content }]
     }));
     const parts = [{ text: request.prompt }];
-    const result = await model.generateContent({
+    const response = await this.genAI.models.generateContent({
+      model: "gemini-flash-latest",
       contents: [...formattedHistory, { role: "user", parts }],
-      tools: request.tools ? [{ functionDeclarations: request.tools }] : []
+      config: {
+        systemInstruction: getAimeeSystemInstruction(request.persona, (/* @__PURE__ */ new Date()).toLocaleString()),
+        tools: request.tools ? [{ functionDeclarations: request.tools }] : void 0
+      }
     });
-    const response = await result.response;
-    const functionCalls = response.functionCalls()?.map((fc) => ({
+    const functionCalls = response.functionCalls?.map((fc) => ({
       name: fc.name,
       args: fc.args
     }));
     return {
-      content: response.text(),
+      content: response.text || "",
       functionCalls,
       provider: this.id,
       usage: response.usageMetadata ? {
@@ -1964,12 +2092,21 @@ Retorne o JSON estritamente formatado de acordo com a instru\xE7\xE3o de sa\xEDd
             batch.set(docRef, event, { merge: true });
           });
           await batch.commit();
+          logger.info("EventDiscoverySkill: Successfully wrote new events using Admin DB");
         } catch (err) {
-          logger.error("Admin DB failed to write new events", { error: err });
-          await this.repository.saveBatch(allNewEvents);
+          logger.error("Admin DB failed to write new events, nested fallback to Client Repo", { error: { message: err instanceof Error ? err.message : String(err) } });
+          try {
+            await this.repository.saveBatch(allNewEvents);
+          } catch (fallbackErr) {
+            logger.error("Client DB also failed to write new events (expected on unauthenticated serverless runtime)", { error: { message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr) } });
+          }
         }
       } else {
-        await this.repository.saveBatch(allNewEvents);
+        try {
+          await this.repository.saveBatch(allNewEvents);
+        } catch (fallbackErr) {
+          logger.error("Client DB failed to write new events (no admin DB available)", { error: { message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr) } });
+        }
       }
     }
     logger.info("EventDiscoverySkill: Job completed", { newEvents: allNewEvents.length });

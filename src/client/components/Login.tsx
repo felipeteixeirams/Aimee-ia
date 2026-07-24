@@ -472,7 +472,7 @@ export const Login: React.FC<LoginProps> = ({
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className="bg-neutral-900 border border-white/10 p-10 rounded-[3.5rem] w-full max-w-sm text-center shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+              className="bg-neutral-900 border border-white/10 p-10 rounded-3xl w-full max-w-sm text-center shadow-2xl"
             >
               <h2 className="text-2xl font-black text-white mb-4 tracking-tighter">RECUPERAR</h2>
               {!resetSent ? (
@@ -517,7 +517,7 @@ export const Login: React.FC<LoginProps> = ({
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className="bg-neutral-950 border border-white/10 p-8 rounded-[3rem] w-full max-w-sm relative shadow-2xl"
+              className="bg-neutral-950 border border-white/10 p-8 rounded-2xl w-full max-w-sm relative shadow-2xl"
             >
               <button 
                 onClick={() => { setShowSupport(false); setSupportSent(false); }}

@@ -76,9 +76,9 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-neutral-100 dark:border-neutral-800 text-center"
+            className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl p-8 md:p-10 shadow-2xl border border-neutral-100 dark:border-neutral-800 text-center"
           >
-            <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
+            <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center mx-auto mb-8">
               <AlertTriangle className="w-10 h-10 text-rose-500" />
             </div>
 

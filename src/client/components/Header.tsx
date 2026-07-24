@@ -108,7 +108,7 @@ export function Header({
   
   return (
     <>
-      <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-3 sm:pb-4 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-3xl shrink-0 z-40 sticky top-0 border-b border-neutral-200/50 dark:border-neutral-800/50 shadow-[0_4px_32px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_32px_rgba(0,0,0,0.3)]">
+      <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-3 sm:pb-4 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-3xl shrink-0 z-40 sticky top-0 border-b border-neutral-200/50 dark:border-neutral-800/50 shadow-xs">
         <div className="max-w-5xl mx-auto flex items-center justify-between py-1.5 sm:py-2">
           <div className="flex items-center gap-4 sm:gap-5">
             <button 
@@ -227,7 +227,7 @@ export function Header({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="fixed top-0 left-0 bottom-0 w-[300px] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-3xl shadow-[40px_0_100px_rgba(0,0,0,0.1)] z-[110] flex flex-col border-r border-neutral-200/50 dark:border-neutral-800/50 text-neutral-900 dark:text-white"
+              className="fixed top-0 left-0 bottom-0 w-[300px] bg-white dark:bg-neutral-900 shadow-2xl z-[110] flex flex-col border-r border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white"
             >
               <div className="p-8 border-b border-neutral-200/50 dark:border-neutral-800/50 flex items-center justify-between">
                 <h2 className="text-2xl font-display font-black tracking-tighter">Menu</h2>
@@ -350,7 +350,7 @@ export function Header({
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-[3rem] p-8 md:p-10 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar z-10 text-neutral-900 dark:text-white"
+              className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl p-8 md:p-10 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar z-10 text-neutral-900 dark:text-white"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
               
@@ -451,7 +451,7 @@ export function Header({
 
                 <button 
                   onClick={handleSaveProfile}
-                  className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4 mx-auto block cursor-pointer"
+                  className="w-full max-w-[320px] py-5 bg-brand text-brand-foreground rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-brand/20 active:scale-95 transition-all mt-4 mx-auto block cursor-pointer"
                 >
                   Salvar Alterações
                 </button>

@@ -443,7 +443,7 @@ export const ChatView = memo(({
                     whileHover={{ y: -4, scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => handleSendMessage(card.prompt)}
-                    className="text-left p-5 rounded-[2rem] bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 shadow-[0_2px_8px_rgba(0,0,0,0.015)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:bg-white dark:hover:bg-neutral-800 focus:outline-none transition-all flex flex-col justify-between h-[140px] group cursor-pointer"
+                    className="text-left p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 shadow-xs hover:shadow-sm focus:outline-none transition-all flex flex-col justify-between h-[140px] group cursor-pointer"
                   >
                     <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center border-0 font-bold", card.colorClass)}>
                       <CardIcon className="w-5 h-5" />
@@ -525,7 +525,7 @@ export const ChatView = memo(({
             </motion.div>
           )}
           
-          <div className="relative group flex items-end bg-white/70 dark:bg-neutral-900/70 backdrop-blur-3xl rounded-[2rem] border border-neutral-200/50 dark:border-neutral-700/50 focus-within:bg-white dark:focus-within:bg-neutral-900 focus-within:ring-4 focus-within:ring-brand/10 focus-within:border-brand/30 dark:focus-within:ring-brand/20 dark:focus-within:border-brand/30 transition-all p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] focus-within:shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:focus-within:shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+          <div className="relative group flex items-end bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus-within:ring-2 focus-within:ring-brand/30 focus-within:border-brand transition-all p-1.5 rounded-2xl shadow-sm focus-within:shadow-md">
             <textarea
               value={inputText}
               onChange={(e) => {

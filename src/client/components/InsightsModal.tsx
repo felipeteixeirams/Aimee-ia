@@ -32,7 +32,7 @@ export function InsightsModal({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-[3rem] shadow-2xl border border-neutral-100 dark:border-neutral-800 overflow-hidden"
+            className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-100 dark:border-neutral-800 overflow-hidden"
           >
             <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-800/50">
               <div className="flex items-center gap-3">
@@ -57,7 +57,7 @@ export function InsightsModal({
                 <button
                   key={insight.id}
                   onClick={() => handleGoToInsight(insight)}
-                  className="w-full text-left p-5 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-brand/5 dark:hover:bg-brand/10 border border-neutral-100 dark:border-neutral-800 rounded-[2rem] transition-all group relative overflow-hidden"
+                  className="w-full text-left p-5 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-brand/5 dark:hover:bg-brand/10 border border-neutral-100 dark:border-neutral-800 rounded-2xl transition-all group relative overflow-hidden"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0 mt-1">

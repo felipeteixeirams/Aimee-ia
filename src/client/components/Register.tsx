@@ -57,7 +57,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
             {/* Avatar Section */}
             <div className="flex flex-col items-center gap-4 mb-8">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-[2.5rem] overflow-hidden ring-4 ring-neutral-100 dark:ring-neutral-900 shadow-xl bg-neutral-100 dark:bg-neutral-800">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-neutral-100 dark:ring-neutral-900 shadow-xl bg-neutral-100 dark:bg-neutral-800">
                   {photoUrl ? (
                     <img src={photoUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -137,7 +137,7 @@ export const Register = ({ user, onComplete, onCancel }: RegisterProps) => {
                 type="submit"
                 disabled={isSubmitting}
                 className={cn(
-                  "w-full max-w-[280px] py-4 bg-brand text-brand-foreground rounded-[2rem] font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all mx-auto",
+                  "w-full max-w-[280px] py-4 bg-brand text-brand-foreground rounded-2xl font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all mx-auto",
                   isSubmitting && "opacity-50 pointer-events-none"
                 )}
               >

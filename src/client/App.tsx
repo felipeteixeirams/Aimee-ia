@@ -59,6 +59,7 @@ const ViewLoader = () => (
   </div>
 );
 import { AimeeAvatar } from './components/AimeeAvatar.js';
+import { BottomMenu } from './components/BottomMenu.js';
 import { NetworkStatus } from './components/NetworkStatus.js';
 import { Header } from './components/Header.js';
 import { InsightsModal } from './components/InsightsModal.js';
@@ -789,7 +790,7 @@ export default function App() {
           <motion.div 
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden"
+            className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-2xl p-8 shadow-2xl relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-brand via-rose-500 to-amber-500" />
             <div className="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
@@ -830,7 +831,7 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden relative pb-0 touch-pan-y">
+      <main className="flex-1 overflow-hidden relative pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:pb-0 touch-pan-y">
         <div className="h-full max-w-5xl mx-auto flex flex-col relative">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
@@ -1006,6 +1007,12 @@ export default function App() {
         </div>
       </main>
 
+      <BottomMenu 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        shoppingItemsCount={shoppingList.filter(i => !i.isStock).length} 
+      />
+
       <InsightsModal 
         showInsightsModal={showInsightsModal}
         setShowInsightsModal={setShowInsightsModal}
@@ -1027,7 +1034,7 @@ export default function App() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="flex flex-col items-center bg-white/80 dark:bg-neutral-900/80 border border-neutral-200/50 dark:border-neutral-800/50 p-8 rounded-[2rem] shadow-2xl max-w-xs w-full text-center"
+              className="flex flex-col items-center bg-white/80 dark:bg-neutral-900/80 border border-neutral-200/50 dark:border-neutral-800/50 p-8 rounded-2xl shadow-2xl max-w-xs w-full text-center"
             >
               <div className="relative mb-6">
                 <span className="absolute inset-0 rounded-full bg-brand/20 animate-ping" />

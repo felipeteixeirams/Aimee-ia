@@ -60,7 +60,7 @@ export const StatusScreen = ({ status, profile, onLogout, onRetry }: StatusScree
           <motion.div 
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="relative w-24 h-24 bg-neutral-50 dark:bg-neutral-900 rounded-[2.5rem] flex items-center justify-center border border-neutral-100 dark:border-neutral-800 shadow-2xl mx-auto"
+            className="relative w-24 h-24 bg-neutral-50 dark:bg-neutral-900 rounded-2xl flex items-center justify-center border border-neutral-100 dark:border-neutral-800 shadow-2xl mx-auto"
           >
             {content.icon}
           </motion.div>
@@ -97,7 +97,7 @@ export const StatusScreen = ({ status, profile, onLogout, onRetry }: StatusScree
           {onRetry && (status === 'rejected') && (
             <button
               onClick={onRetry}
-              className="w-full py-4 bg-brand text-brand-foreground rounded-[2rem] font-bold uppercase tracking-widest text-xs shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="w-full py-4 bg-brand text-brand-foreground rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               {content.button}
             </button>
@@ -105,7 +105,7 @@ export const StatusScreen = ({ status, profile, onLogout, onRetry }: StatusScree
 
           <button
             onClick={onLogout}
-            className="flex items-center justify-center gap-2 w-full py-4 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 rounded-[2rem] font-bold uppercase tracking-widest text-[10px] hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-4 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             Sair e Voltar ao Início

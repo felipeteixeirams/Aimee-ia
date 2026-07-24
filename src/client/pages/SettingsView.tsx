@@ -230,14 +230,14 @@ export const SettingsView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-[180px]"
+      className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-[calc(env(safe-area-inset-bottom)+5rem)]"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12 space-y-8">
           {/* Aesthetic & Brain Settings - MOVED TO TOP */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Visual Settings */}
-            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8">
+            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-brand/10 rounded-2xl flex items-center justify-center">
                   <Palette className="w-5 h-5 text-brand" />
@@ -429,7 +429,7 @@ export const SettingsView = ({
             </div>
 
             {/* Brain Personality Selection */}
-            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8">
+            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-8">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-brand/10 rounded-2xl flex items-center justify-center">
                   <Brain className="w-5 h-5 text-brand" />
@@ -494,7 +494,7 @@ export const SettingsView = ({
 
           {/* Global Admin Config */}
           {isSuperAdmin && (
-            <div className="bg-violet-50 dark:bg-violet-900/10 p-6 md:p-8 rounded-[2.5rem] border border-violet-100 dark:border-violet-900/30 overflow-visible">
+            <div className="bg-violet-50 dark:bg-violet-900/10 p-6 md:p-8 rounded-2xl border border-violet-100 dark:border-violet-900/30 overflow-visible">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-violet-100 dark:bg-violet-900/40 rounded-2xl flex items-center justify-center shadow-sm">
@@ -623,7 +623,7 @@ export const SettingsView = ({
           {/* Activity Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Active Space Selection */}
-            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
+            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
               <div>
                 <h4 className="text-xs font-black text-neutral-400 uppercase tracking-[0.2em] mb-1">Contexto Ativo</h4>
                 <p className="text-[10px] text-neutral-400 font-medium">Selecione o espaço que deseja visualizar e interagir.</p>
@@ -672,7 +672,7 @@ export const SettingsView = ({
             </div>
 
             {/* Invitation Section */}
-            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2.5rem] border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
+            <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm space-y-6">
               <div>
                 <h4 className="text-xs font-black text-neutral-400 uppercase tracking-[0.2em] mb-1">Colaboração</h4>
                 <p className="text-[10px] text-neutral-400 font-medium">Convide outros usuários para seu espaço inteligente.</p>
@@ -720,7 +720,7 @@ export const SettingsView = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {shares.map((share, i) => (
-                <div key={share.id || i} className="bg-white dark:bg-neutral-900 p-5 rounded-[2rem] border border-neutral-100 dark:border-neutral-800 flex flex-col justify-between gap-4 shadow-sm hover:border-brand/20 transition-all group">
+                <div key={share.id || i} className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 flex flex-col justify-between gap-4 shadow-sm hover:border-brand/20 transition-all group">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div className={cn(
@@ -776,7 +776,7 @@ export const SettingsView = ({
                 </div>
               ))}
               {shares.length === 0 && (
-                <div className="col-span-1 md:col-span-2 py-12 bg-white dark:bg-neutral-900/50 rounded-[2rem] border-2 border-dashed border-neutral-100 dark:border-neutral-800 flex flex-col items-center justify-center opacity-40">
+                <div className="col-span-1 md:col-span-2 py-12 bg-white dark:bg-neutral-900/50 rounded-2xl border-2 border-dashed border-neutral-100 dark:border-neutral-800 flex flex-col items-center justify-center opacity-40">
                   <LayoutGrid className="w-10 h-10 text-neutral-300 mb-3" />
                   <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Nenhum vínculo registrado</p>
                 </div>
