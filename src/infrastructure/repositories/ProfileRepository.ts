@@ -1,8 +1,7 @@
 import { BaseRepository } from './BaseRepository.js';
-import { UserProfile } from '../../types/index.js';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase.js';
-import { UserProfileSchema } from '../../models/index.js';
+import { UserProfile, UserProfileSchema } from '../../models/index.js';
 
 export class ProfileRepository extends BaseRepository<UserProfile & { id?: string }> {
   constructor() {
@@ -10,17 +9,11 @@ export class ProfileRepository extends BaseRepository<UserProfile & { id?: strin
   }
 
   async getProfile(uid: string): Promise<UserProfile | null> {
-    const docRef = doc(db, 'users', uid);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      return snap.data() as UserProfile;
-    }
-    return null;
+    return this.getById(uid, uid);
   }
 
   async updateProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
-    const docRef = doc(db, 'users', uid);
-    await updateDoc(docRef, updates);
+    return this.update(uid, updates, uid);
   }
 
   async getGoogleCredentials(uid: string): Promise<any | null> {

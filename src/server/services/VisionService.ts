@@ -43,7 +43,7 @@ export class VisionService {
           ],
           config: {
             responseMimeType: 'application/json',
-            responseSchema: zodToJsonSchema(ReceiptExtractionSchema) as any,
+            responseSchema: zodToJsonSchema(ReceiptExtractionSchema as any) as any,
           }
         });
 
@@ -59,7 +59,7 @@ export class VisionService {
 
         // 7. Backend insere registro financeiro no Firestore (Gasto total)
         await this.transactionRepo.create({
-          title: `Compras em ${extraction.merchantName}`,
+          description: `Compras em ${extraction.merchantName}`,
           amount: extraction.totalAmount,
           type: 'expense',
           category: 'Supermercado',

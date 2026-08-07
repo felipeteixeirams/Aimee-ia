@@ -1,6 +1,5 @@
 import { BaseRepository } from './BaseRepository.js';
-import { HouseholdTask } from '../../types/index.js';
-import { HouseholdTaskSchema } from '../../models/index.js';
+import { HouseholdTask, HouseholdTaskSchema } from '../../models/index.js';
 
 export class TaskRepository extends BaseRepository<HouseholdTask> {
   constructor() {

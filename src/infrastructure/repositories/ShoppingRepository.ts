@@ -1,6 +1,5 @@
 import { BaseRepository } from './BaseRepository.js';
-import { ShoppingItem } from '../../types/index.js';
-import { ShoppingItemSchema } from '../../models/index.js';
+import { ShoppingItem, ShoppingItemSchema } from '../../models/index.js';
 
 export class ShoppingRepository extends BaseRepository<ShoppingItem> {
   constructor() {

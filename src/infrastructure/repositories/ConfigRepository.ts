@@ -1,5 +1,5 @@
 import { BaseRepository } from './BaseRepository.js';
-import { GlobalConfig } from '../../types/index.js';
+import { GlobalConfig } from '../../models/index.js';
 import { db } from '../../lib/firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
 

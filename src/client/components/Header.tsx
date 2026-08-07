@@ -109,13 +109,14 @@ export function Header({
   return (
     <>
       <header className="px-4 sm:px-6 pt-[env(safe-area-inset-top)] pb-3 sm:pb-4 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-3xl shrink-0 z-40 sticky top-0 border-b border-neutral-200/50 dark:border-neutral-800/50 shadow-xs">
-        <div className="max-w-5xl mx-auto flex items-center justify-between py-1.5 sm:py-2">
+        <div className="max-w-5_5xl mx-auto flex items-center justify-between py-1.5 sm:py-2">
           <div className="flex items-center gap-4 sm:gap-5">
             <button 
               onClick={() => setShowSidebar(true)}
               className="p-2 -ml-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+              aria-label="Abrir menu lateral"
             >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
             </button>
             <div className="relative group">
               <button 
@@ -124,6 +125,7 @@ export function Header({
                   "relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm hover:shadow-md",
                   unreadInsightsCount > 0 ? "cursor-pointer" : "cursor-default"
                 )}
+                aria-label={unreadInsightsCount > 0 ? `${unreadInsightsCount} novos insights disponíveis` : "Ver insights e status da Aimee"}
               >
                 {unreadInsightsCount > 0 && (
                   <div className="absolute inset-0 rounded-2xl overflow-hidden z-0 scale-110">
@@ -163,7 +165,7 @@ export function Header({
                 <h1 className="text-xl sm:text-2xl font-display font-black tracking-tighter text-neutral-900 dark:text-white leading-none">Aimee</h1>
                 {isSuperAdmin && (
                   <div className="flex items-center gap-1 px-2 py-0.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full shadow-sm">
-                    <Shield className="w-2.5 h-2.5" />
+                    <Shield className="w-2.5 h-2.5" aria-hidden="true" />
                     <span className="text-[9px] font-black uppercase tracking-widest">Admin</span>
                   </div>
                 )}
@@ -202,7 +204,7 @@ export function Header({
                 onClick={() => setShowAdminPanel(true)}
                 className="relative w-10 h-10 flex items-center justify-center bg-brand/10 text-brand rounded-2xl hover:bg-brand/20 transition-all group active:scale-95"
               >
-                <Users className="w-5 h-5" />
+                <Users className="w-5 h-5" aria-hidden="true" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand text-brand-foreground text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-900 shadow-sm animate-pulse">
                   {pendingUsersCount}
                 </span>
@@ -234,8 +236,9 @@ export function Header({
                 <button 
                   onClick={() => setShowSidebar(false)}
                   className="p-2 -mr-2 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-all hover:scale-105 active:scale-95"
+                  aria-label="Fechar menu lateral"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
               <nav className="flex-1 overflow-y-auto p-4 space-y-1.5 no-scrollbar">
@@ -255,7 +258,7 @@ export function Header({
                           : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white hover:scale-105 active:scale-95"
                       )}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-5 h-5" aria-hidden="true" />
                       <span className="tracking-tight">{item.label}</span>
                     </button>
                   );
@@ -327,7 +330,7 @@ export function Header({
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2 text-xs rounded-2xl transition-all font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:scale-105 active:scale-95 outline-none"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4" aria-hidden="true" />
                   <span className="tracking-tight">Sair da aplicação</span>
                 </button>
               </div>

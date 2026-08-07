@@ -1,8 +1,13 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
 };
 var __export = (target, all) => {
   for (var name in all)
@@ -837,7 +842,7 @@ var init_BaseRepository = __esm({
         try {
           const q = query(collection(db, path2), ...constraints);
           const querySnapshot = await getDocs(q);
-          return querySnapshot.docs.map((doc4) => ({ id: doc4.id, ...doc4.data() }));
+          return querySnapshot.docs.map((doc6) => ({ id: doc6.id, ...doc6.data() }));
         } catch (error) {
           this.handleFirestoreError(error, "list" /* LIST */, path2);
           return [];
@@ -1767,8 +1772,420 @@ AimeeOrchestrator = __decorateClass([
 // src/server/container.ts
 import "reflect-metadata";
 import { container as container2 } from "tsyringe";
+
+// src/infrastructure/repositories/ChatRepository.ts
+init_BaseRepository();
+var ChatRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/chatHistory");
+  }
+};
+var chatRepository = new ChatRepository();
+
+// src/infrastructure/repositories/TaskRepository.ts
+init_BaseRepository();
+init_models();
+var TaskRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/tasks", HouseholdTaskSchema);
+  }
+};
+var taskRepository = new TaskRepository();
+
+// src/infrastructure/repositories/TransactionRepository.ts
+init_BaseRepository();
+init_models();
+var TransactionRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/transactions", TransactionSchema);
+  }
+};
+var transactionRepository = new TransactionRepository();
+
+// src/infrastructure/repositories/ShoppingRepository.ts
+init_BaseRepository();
+init_models();
+var ShoppingRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/shoppingList", ShoppingItemSchema);
+  }
+};
+var shoppingRepository = new ShoppingRepository();
+
+// src/infrastructure/repositories/ProfileRepository.ts
+init_BaseRepository();
+init_firebase();
+init_models();
+import { doc as doc3, getDoc as getDoc3 } from "firebase/firestore";
+var ProfileRepository = class extends BaseRepository {
+  constructor() {
+    super("users", UserProfileSchema);
+  }
+  async getProfile(uid) {
+    return this.getById(uid, uid);
+  }
+  async updateProfile(uid, updates) {
+    return this.update(uid, updates, uid);
+  }
+  async getGoogleCredentials(uid) {
+    const docRef = doc3(db, "users", uid, "private", "credentials_google");
+    const snap = await getDoc3(docRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  }
+};
+var profileRepository = new ProfileRepository();
+
+// src/infrastructure/repositories/EventRepository.ts
+init_BaseRepository();
+init_models();
+var EventRepository = class extends BaseRepository {
+  constructor() {
+    super("users/{userId}/events", FamilyEventSchema);
+  }
+};
+var eventRepository = new EventRepository();
+
+// src/infrastructure/repositories/ConfigRepository.ts
+init_BaseRepository();
+init_firebase();
+import { doc as doc4, setDoc } from "firebase/firestore";
+var ConfigRepository = class extends BaseRepository {
+  constructor() {
+    super("config");
+  }
+  async updateGlobal(updates, updatedBy) {
+    const docRef = doc4(db, "config", "global");
+    await setDoc(docRef, {
+      ...updates,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      updatedBy: updatedBy || "system"
+    }, { merge: true });
+  }
+};
+var configRepository = new ConfigRepository();
+
+// src/server/container.ts
+init_UsageRepository();
+
+// src/infrastructure/repositories/index.ts
+init_BaseRepository();
+
+// src/domain/skills/FinanceSkill.ts
+init_logger();
+
+// src/domain/services/ValidationService.ts
+init_models();
+import { z as z4 } from "zod";
+var ValidationService = class {
+  /**
+   * Valida uma transação financeira
+   */
+  static validateTransaction(data) {
+    try {
+      TransactionSchema.parse(data);
+      if (data.amount <= 0) return "O valor da transa\xE7\xE3o deve ser maior que zero.";
+      return null;
+    } catch (error) {
+      if (error instanceof z4.ZodError) {
+        const issue = error.issues[0];
+        return `Erro no campo ${issue.path.join(".")}: ${issue.message}`;
+      }
+      return "Dados da transa\xE7\xE3o inv\xE1lidos";
+    }
+  }
+  /**
+   * Valida uma tarefa doméstica
+   */
+  static validateTask(data) {
+    try {
+      HouseholdTaskSchema.parse(data);
+      return null;
+    } catch (error) {
+      if (error instanceof z4.ZodError) {
+        const issue = error.issues[0];
+        return `Erro no campo ${issue.path.join(".")}: ${issue.message}`;
+      }
+      return "Dados da tarefa inv\xE1lidos";
+    }
+  }
+  /**
+   * Valida um item de compra
+   */
+  static validateShoppingItem(data) {
+    try {
+      ShoppingItemSchema.parse(data);
+      if (data.quantity < 0) return "A quantidade n\xE3o pode ser negativa.";
+      return null;
+    } catch (error) {
+      if (error instanceof z4.ZodError) {
+        const issue = error.issues[0];
+        return `Erro no campo ${issue.path.join(".")}: ${issue.message}`;
+      }
+      return "Dados do item inv\xE1lidos";
+    }
+  }
+};
+
+// src/domain/skills/FinanceSkill.ts
+var FinanceSkill = class {
+  /**
+   * Registra uma transação e realiza ações secundárias (como atualizar metas ou alertar orçamentos)
+   */
+  async recordTransaction(userId, data) {
+    logger.info("FinanceSkill: Recording transaction", { userId, amount: data.amount });
+    const error = ValidationService.validateTransaction(data);
+    if (error) throw new Error(error);
+    const transactionId = await transactionRepository.create({
+      amount: data.amount || 0,
+      type: data.type || "expense",
+      description: data.description || "Sem descri\xE7\xE3o",
+      category: data.category || "others",
+      date: (/* @__PURE__ */ new Date()).toISOString()
+    }, userId);
+    return transactionId;
+  }
+  async getSummary(userId) {
+    const transactions = await transactionRepository.list([], userId);
+    const totalIncome = transactions.filter((t) => t.type === "income").reduce((acc, t) => acc + (t.amount || 0), 0);
+    const totalExpense = transactions.filter((t) => t.type === "expense").reduce((acc, t) => acc + (t.amount || 0), 0);
+    return {
+      balance: totalIncome - totalExpense,
+      totalIncome,
+      totalExpense,
+      transactionCount: transactions.length
+    };
+  }
+  async getCategoryBreakdown(userId) {
+    const transactions = await transactionRepository.list([], userId);
+    const expenses = transactions.filter((t) => t.type === "expense");
+    const breakdown = {};
+    expenses.forEach((t) => {
+      const cat = t.category || "others";
+      breakdown[cat] = (breakdown[cat] || 0) + (t.amount || 0);
+    });
+    return breakdown;
+  }
+  async getSavingsRate(userId) {
+    const summary = await this.getSummary(userId);
+    if (summary.totalIncome === 0) return 0;
+    return summary.balance / summary.totalIncome * 100;
+  }
+};
+var financeSkill = new FinanceSkill();
+
+// src/domain/skills/ShoppingSkill.ts
+init_logger();
+var ShoppingSkill = class {
+  /**
+   * Adiciona itens à lista garantindo que duplicados sejam tratados ou incrementados
+   */
+  async addItems(userId, items) {
+    const existingList = await shoppingRepository.list([], userId);
+    for (const item of items) {
+      const error = ValidationService.validateShoppingItem(item);
+      if (error) {
+        logger.warn("ShoppingSkill: Skipping invalid item", { item, error });
+        continue;
+      }
+      const existing = existingList.find((i) => i.name.toLowerCase() === item.name?.toLowerCase());
+      if (existing && existing.id) {
+        await shoppingRepository.update(existing.id, {
+          quantity: (existing.quantity || 0) + (item.quantity || 1),
+          purchased: false
+        }, userId);
+      } else {
+        await shoppingRepository.create({
+          ...item,
+          name: item.name || "Item sem nome",
+          quantity: item.quantity || 1,
+          purchased: false,
+          category: item.category || "Outros",
+          isStock: item.isStock || false
+        }, userId);
+      }
+    }
+  }
+  /**
+   * Finaliza uma compra, movendo itens para o estoque
+   */
+  async finalizeShopping(userId) {
+    const items = await shoppingRepository.list([], userId);
+    const purchased = items.filter((i) => i.purchased && !i.isStock);
+    await Promise.all(purchased.map((i) => i.id && shoppingRepository.update(i.id, {
+      isStock: true,
+      purchased: false,
+      lastPurchasedAt: (/* @__PURE__ */ new Date()).toISOString()
+    }, userId)));
+  }
+  async getStockReport(userId) {
+    const items = await shoppingRepository.list([], userId);
+    const inStock = items.filter((i) => i.isStock);
+    const missing = items.filter((i) => !i.isStock && !i.purchased);
+    return {
+      stockCount: inStock.length,
+      missingCount: missing.length,
+      criticalItems: inStock.filter((i) => (i.quantity || 0) <= 1)
+    };
+  }
+};
+var shoppingSkill = new ShoppingSkill();
+
+// src/lib/recurrenceUtils.ts
+import { addDays, addWeeks, addMonths, addYears, isAfter, endOfMonth, setDate, isValid, parseISO } from "date-fns";
+function generateRecurrenceInstances(startDateStr, recurrence, limit = 50) {
+  const instances = [];
+  let current = parseISO(startDateStr);
+  if (!isValid(current)) current = /* @__PURE__ */ new Date();
+  const endDate = recurrence.endTime ? parseISO(recurrence.endTime) : addYears(current, 1);
+  const maxInstances = limit;
+  let count = 0;
+  while (count < maxInstances && !isAfter(current, endDate)) {
+    if (recurrence.type === "daily") {
+      instances.push({ dueDate: current.toISOString() });
+      current = addDays(current, recurrence.interval || 1);
+    } else if (recurrence.type === "weekly") {
+      if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+        const weekStart = current;
+        for (let i = 0; i < 7; i++) {
+          const day = addDays(weekStart, i);
+          if (recurrence.daysOfWeek.includes(day.getDay()) && !isAfter(day, endDate)) {
+            instances.push({ dueDate: day.toISOString() });
+          }
+        }
+        current = addWeeks(current, 1);
+      } else {
+        instances.push({ dueDate: current.toISOString() });
+        current = addWeeks(current, recurrence.interval || 1);
+      }
+    } else if (recurrence.type === "monthly") {
+      const daysToProcess = recurrence.daysOfMonth && recurrence.daysOfMonth.length > 0 ? recurrence.daysOfMonth : [current.getDate()];
+      for (const day of daysToProcess) {
+        let targetDate = setDate(current, day);
+        const lastDay = endOfMonth(current);
+        let note;
+        let originalDueDate;
+        if (day > lastDay.getDate()) {
+          originalDueDate = targetDate.toISOString();
+          targetDate = lastDay;
+          note = `Data ajustada para o \xFAltimo dia do m\xEAs (originalmente dia ${day})`;
+        }
+        if (!isAfter(targetDate, endDate)) {
+          instances.push({
+            dueDate: targetDate.toISOString(),
+            originalDueDate,
+            note
+          });
+        }
+      }
+      current = addMonths(current, recurrence.interval || 1);
+    } else if (recurrence.type === "annual") {
+      instances.push({ dueDate: current.toISOString() });
+      current = addYears(current, recurrence.interval || 1);
+    }
+    count++;
+    if (recurrence.type === "weekly" || recurrence.type === "daily" || recurrence.type === "monthly" || recurrence.type === "annual") {
+    } else {
+      break;
+    }
+  }
+  return instances.filter((v, i, a) => a.findIndex((t) => t.dueDate === v.dueDate) === i).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+}
+
+// src/domain/skills/RoutineSkill.ts
+init_logger();
+var RoutineSkill = class {
+  /**
+   * Cria uma tarefa, lidando com recorrência se necessário
+   */
+  async addTask(userId, task) {
+    logger.info("RoutineSkill: Adding task", { userId, title: task.title });
+    const error = ValidationService.validateTask(task);
+    if (error) throw new Error(error);
+    if (task.recurrence) {
+      const recurrenceId = crypto.randomUUID();
+      const startDate = task.dueDate || (/* @__PURE__ */ new Date()).toISOString();
+      const instances = generateRecurrenceInstances(startDate, task.recurrence);
+      await Promise.all(instances.map((inst) => taskRepository.create({
+        ...task,
+        dueDate: inst.dueDate,
+        originalDueDate: inst.originalDueDate || null,
+        note: inst.note || null,
+        recurrenceId,
+        status: "todo"
+      }, userId)));
+    } else {
+      await taskRepository.create({
+        ...task,
+        status: "todo"
+      }, userId);
+    }
+  }
+  async updateTask(userId, taskId, updates) {
+    logger.info("RoutineSkill: Updating task", { userId, taskId });
+    await taskRepository.update(taskId, updates, userId);
+  }
+  async addEvent(userId, event) {
+    logger.info("RoutineSkill: Adding event", { userId, title: event.title });
+    await eventRepository.create(event, userId);
+  }
+  async removeEvent(userId, eventId) {
+    logger.info("RoutineSkill: Removing event", { userId, eventId });
+    await eventRepository.delete(eventId, userId);
+  }
+  async updateEvent(userId, eventId, updates) {
+    logger.info("RoutineSkill: Updating event", { userId, eventId });
+    await eventRepository.update(eventId, updates, userId);
+  }
+  /**
+   * Remove tarefas baseadas no escopo (única, seguintes, todas)
+   */
+  async deleteTaskWithScope(userId, taskId, scope) {
+    const taskData = await taskRepository.getById(taskId, userId);
+    if (!taskData) return;
+    if (scope === "single" || !taskData.recurrenceId) {
+      await taskRepository.delete(taskId, userId);
+    } else {
+      const allTasks = await taskRepository.list([], userId);
+      const toDelete = allTasks.filter((t) => {
+        if (t.recurrenceId !== taskData.recurrenceId) return false;
+        if (scope === "following" && t.dueDate && taskData.dueDate) {
+          return new Date(t.dueDate) >= new Date(taskData.dueDate);
+        }
+        return true;
+      });
+      await Promise.all(toDelete.map((t) => t.id && taskRepository.delete(t.id, userId)));
+    }
+  }
+  async getRoutineHealth(userId) {
+    const tasks = await taskRepository.list([], userId);
+    const completed = tasks.filter((t) => t.status === "done");
+    const overdue = tasks.filter((t) => t.status === "todo" && t.dueDate && new Date(t.dueDate) < /* @__PURE__ */ new Date());
+    return {
+      completionRate: tasks.length > 0 ? completed.length / tasks.length * 100 : 0,
+      overdueCount: overdue.length,
+      totalPending: tasks.filter((t) => t.status === "todo").length
+    };
+  }
+};
+var routineSkill = new RoutineSkill();
+
+// src/server/container.ts
 container2.registerSingleton(EmailService);
 container2.registerSingleton(AimeeOrchestrator);
+container2.registerInstance("ChatRepository", chatRepository);
+container2.registerInstance("TaskRepository", taskRepository);
+container2.registerInstance("TransactionRepository", transactionRepository);
+container2.registerInstance("ShoppingRepository", shoppingRepository);
+container2.registerInstance("ProfileRepository", profileRepository);
+container2.registerInstance("EventRepository", eventRepository);
+container2.registerInstance("ConfigRepository", configRepository);
+container2.registerInstance("UsageRepository", usageRepository);
+container2.registerInstance("FinanceSkill", financeSkill);
+container2.registerInstance("ShoppingSkill", shoppingSkill);
+container2.registerInstance("RoutineSkill", routineSkill);
 
 // src/server/routes.ts
 init_models();
@@ -1799,7 +2216,7 @@ import OpenAI2 from "openai";
 init_models();
 init_BaseRepository();
 init_firebase();
-import { collection as collection2, query as query2, where as where2, getDocs as getDocs2, writeBatch, doc as doc3 } from "firebase/firestore";
+import { collection as collection2, query as query2, where as where2, getDocs as getDocs2, writeBatch, doc as doc5 } from "firebase/firestore";
 var MonitorEventRepository = class extends BaseRepository {
   constructor() {
     super("monitor_events", MonitorEventSchema);
@@ -1812,8 +2229,8 @@ var MonitorEventRepository = class extends BaseRepository {
       );
       const snapshot = await getDocs2(q);
       const results = [];
-      snapshot.forEach((doc4) => {
-        const item = { id: doc4.id, ...doc4.data() };
+      snapshot.forEach((doc6) => {
+        const item = { id: doc6.id, ...doc6.data() };
         const parsed = this.schema.safeParse(item);
         if (parsed.success) {
           results.push(parsed.data);
@@ -1828,7 +2245,7 @@ var MonitorEventRepository = class extends BaseRepository {
   async saveBatch(events) {
     const batch = writeBatch(db);
     events.forEach((event) => {
-      const docRef = doc3(db, this.collectionPath, event.hash);
+      const docRef = doc5(db, this.collectionPath, event.hash);
       const parsed = this.schema.parse({ ...event, id: event.hash });
       batch.set(docRef, parsed, { merge: true });
     });
@@ -1852,7 +2269,7 @@ var EventMonitorConfigRepository = class extends BaseRepository {
 // src/domain/skills/EventDiscoverySkill.ts
 init_config();
 init_firebaseAdmin();
-import crypto from "crypto";
+import crypto2 from "crypto";
 var EventDiscoverySkill = class {
   constructor() {
     this.repository = new MonitorEventRepository();
@@ -2037,7 +2454,7 @@ Retorne o JSON estritamente formatado de acordo com a instru\xE7\xE3o de sa\xEDd
       const timestamp = (/* @__PURE__ */ new Date()).toISOString();
       for (const rawEvent of parsedResponse.events) {
         const hashContext = `${rawEvent.titulo}-${rawEvent.data_inicio}-${rawEvent.fonte}`;
-        const hash = crypto.createHash("md5").update(hashContext).digest("hex");
+        const hash = crypto2.createHash("md5").update(hashContext).digest("hex");
         events.push({
           hash,
           title: rawEvent.titulo || "Evento Sem T\xEDtulo",
@@ -2177,28 +2594,6 @@ var CircuitBreaker = class {
 init_models();
 init_logger();
 import { zodToJsonSchema } from "zod-to-json-schema";
-
-// src/infrastructure/repositories/TransactionRepository.ts
-init_BaseRepository();
-init_models();
-var TransactionRepository = class extends BaseRepository {
-  constructor() {
-    super("users/{userId}/transactions", TransactionSchema);
-  }
-};
-var transactionRepository = new TransactionRepository();
-
-// src/infrastructure/repositories/TaskRepository.ts
-init_BaseRepository();
-init_models();
-var TaskRepository = class extends BaseRepository {
-  constructor() {
-    super("users/{userId}/tasks", HouseholdTaskSchema);
-  }
-};
-var taskRepository = new TaskRepository();
-
-// src/server/services/VisionService.ts
 var VisionService = class {
   constructor() {
     this.genAI = new GoogleGenAI3({ apiKey: config.geminiApiKey });
@@ -2239,15 +2634,14 @@ var VisionService = class {
           parsed.confidenceScore = 0.9;
         }
         const extraction = ReceiptExtractionSchema.parse(parsed);
-        await this.transactionRepo.add({
-          userId: request.userId,
-          title: `Compras em ${extraction.merchantName}`,
+        await this.transactionRepo.create({
+          description: `Compras em ${extraction.merchantName}`,
           amount: extraction.totalAmount,
           type: "expense",
           category: "Supermercado",
           date: (/* @__PURE__ */ new Date()).toISOString()
-        });
-        const tasks = await this.taskRepo.getByUserId(request.userId);
+        }, request.userId);
+        const tasks = await this.taskRepo.list([], request.userId);
         const shoppingTasks = tasks.filter((t) => t.category === "errand" && t.status === "todo");
         for (const item of extraction.items) {
           const lowerName = item.name.toLowerCase();
@@ -2255,7 +2649,7 @@ var VisionService = class {
             (t) => lowerName.includes(t.title.toLowerCase()) || t.title.toLowerCase().includes(lowerName)
           );
           if (match && match.id) {
-            await this.taskRepo.update(match.id, { status: "done" });
+            await this.taskRepo.update(match.id, { status: "done" }, request.userId);
           }
         }
         return extraction;
