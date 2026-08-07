@@ -1,5 +1,5 @@
 import { shoppingRepository } from '../../infrastructure/repositories/index.js';
-import { ShoppingItem } from '../../types/index.js';
+import { ShoppingItem } from '../../models/index.js';
 import { logger } from '../../lib/logger.js';
 import { ValidationService } from '../services/ValidationService.js';
 

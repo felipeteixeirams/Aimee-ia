@@ -4,12 +4,17 @@ import { transactionRepository } from '../../infrastructure/repositories/index.j
 import { logger } from '../../lib/logger.js';
 
 // Mock dependencies
-vi.mock('../../infrastructure/repositories/index.js', () => ({
-  transactionRepository: {
-    create: vi.fn(),
-    list: vi.fn()
-  }
-}));
+vi.mock('../../infrastructure/repositories/index.js', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    transactionRepository: {
+      ...actual.transactionRepository,
+      create: vi.fn(),
+      list: vi.fn()
+    }
+  };
+});
 
 vi.mock('../../lib/logger.js', () => ({
   logger: {

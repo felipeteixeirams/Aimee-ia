@@ -88,13 +88,13 @@ const ChatMessageItem = memo(({
         )}>
           {msg.isInsight && msg.status !== 'error' && (
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-amber-200/50 dark:border-amber-800/50">
-              <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Insight Premium</span>
             </div>
           )}
           {msg.status === 'error' && (
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-red-200/50 dark:border-red-800/50">
-              <X className="w-3 h-3 text-red-600 dark:text-red-400" />
+              <X className="w-3 h-3 text-red-600 dark:text-red-400" aria-hidden="true" />
               <span className="text-[9px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">Falha no Envio</span>
             </div>
           )}
@@ -140,9 +140,9 @@ const ChatMessageItem = memo(({
                   title="Copiar"
                 >
                   {copiedId === (msg.id || index.toString()) ? (
-                    <Check className="w-3.5 h-3.5 text-green-500" />
+                    <Check className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                   )}
                 </button>
                 {msg.role === 'user' && (
@@ -154,7 +154,7 @@ const ChatMessageItem = memo(({
                     className="p-2 bg-white/80 dark:bg-neutral-800/80 backdrop-blur border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full shadow-xs hover:shadow-sm hover:scale-105 active:scale-95 transition-all"
                     title="Editar"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </button>
                 )}
               </div>
@@ -523,9 +523,10 @@ export const ChatView = memo(({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => scrollToBottom('smooth')}
+            aria-label="Rolar para o fim"
             className="absolute bottom-44 right-6 p-4 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-2xl text-brand transition-all z-30 active:scale-90"
           >
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-5 h-5" aria-hidden="true" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -604,11 +605,11 @@ export const ChatView = memo(({
                 )}
               >
                 {isTranscribing ? (
-                  <div className="w-4 h-4 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
                 ) : isRecording ? (
-                  <Square className="w-4 h-4 fill-current" />
+                  <Square className="w-4 h-4 fill-current" aria-hidden="true" />
                 ) : (
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-4 h-4" aria-hidden="true" />
                 )}
               </button>
               
@@ -617,7 +618,7 @@ export const ChatView = memo(({
                 disabled={!inputText.trim() || isTyping || isRecording || isTranscribing}
                 className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-[1.2rem] flex items-center justify-center transition-all hover:scale-105 hover:shadow-xl hover:shadow-black/20 dark:hover:shadow-white/20 active:scale-95 disabled:hover:scale-100 disabled:opacity-30 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 disabled:text-neutral-500 disabled:shadow-none shrink-0"
               >
-                <Send className="w-4 h-4 ml-0.5" />
+                <Send className="w-4 h-4 ml-0.5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -631,4 +632,3 @@ export const ChatView = memo(({
 });
 
 ChatView.displayName = 'ChatView';
-

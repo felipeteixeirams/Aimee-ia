@@ -1,6 +1,5 @@
 import { BaseRepository } from './BaseRepository.js';
-import { Transaction } from '../../types/index.js';
-import { TransactionSchema } from '../../models/index.js';
+import { Transaction, TransactionSchema } from '../../models/index.js';
 
 export class TransactionRepository extends BaseRepository<Transaction> {
   constructor() {

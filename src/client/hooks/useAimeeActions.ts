@@ -1,10 +1,10 @@
-import { auth, signOut, googleProvider, signInWithPopup } from '../../lib/firebase.js';
+import { auth, signOut, googleProvider, signInWithPopup } from "../../lib/firebase.js";
 import { 
   ChatMessage, UserProfile, Share, ShoppingItem, 
   GlobalConfig, ChatRole, UserStatus,
   Transaction, FinancialGoal, HouseholdTask, FamilyEvent,
   MonitorEvent, EventMonitorConfig
-} from '../../types/index.js';
+} from "../../types/index.js";
 import { 
   taskRepository, 
   transactionRepository, 
@@ -13,15 +13,15 @@ import {
   profileRepository, 
   eventRepository,
   configRepository 
-} from '../../infrastructure/repositories/index.js';
-import { User } from 'firebase/auth';
-import { aimeeClientOrchestrator } from '../services/aiService.js';
-import { fetchGoogleCalendarEvents } from '../services/calendarService.js';
-import { generateRecurrenceInstances } from '../../lib/recurrenceUtils.js';
-import { logger } from '../../lib/logger.js';
-import { useToast } from '../components/ToastProvider.js';
-import { notificationSchema } from '../../models/index.js';
-import { notificationService } from '../services/notificationService.js';
+} from "../../infrastructure/repositories/index.js";
+import { User } from "firebase/auth";
+import { aimeeClientOrchestrator } from "../services/aiService.js";
+import { fetchGoogleCalendarEvents } from "../services/calendarService.js";
+import { generateRecurrenceInstances } from "../../lib/recurrenceUtils.js";
+import { logger } from "../../lib/logger.js";
+import { useToast } from "../components/ToastProvider.js";
+import { notificationSchema } from "../../models/index.js";
+import { notificationService } from "../services/notificationService.js";
 
 interface AimeeData {
   messages: ChatMessage[];
@@ -43,6 +43,7 @@ export function useAimeeActions(
 ) {
   const { showToast } = useToast();
   
+
   const sendMessage = async (
     text: string, 
     activeSpace: string | null,
@@ -56,13 +57,13 @@ export function useAimeeActions(
     if (!user) return;
 
     if (!navigator.onLine) {
-      showToast('Sem conexão com a internet. Verifique sua rede.', 'error');
+      showToast("Sem conexão com a internet. Verifique sua rede.", "error");
       return;
     }
 
     const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    logger.info('Sending message', { userId: user.uid, activeSpace, textLength: text.length, hasAudio: !!audio });
+    logger.info("Sending message", { userId: user.uid, activeSpace, textLength: text.length, hasAudio: !!audio });
 
     if (!skipAddUserDoc) {
       try {
@@ -70,10 +71,10 @@ export function useAimeeActions(
           role: ChatRole.USER,
           content: audio ? "[Mensagem de Áudio]" : text,
           timestamp: new Date().toISOString(),
-          status: 'sent'
+          status: "sent"
         }, user.uid);
       } catch (error) {
-        logger.error('Error saving user message', { error });
+        logger.error("Error saving user message", { error });
       }
     }
 
@@ -95,11 +96,11 @@ export function useAimeeActions(
           aimeeData.goals,
           aimeeData.tasks,
           aimeeData.events,
-          profile?.selectedPersona || 'analytical', 
+          profile?.selectedPersona || "analytical",
           aimeeData.globalConfig.aiProvider,
           activeSpace || undefined,
           audio,
-          'chat'
+          "chat"
         );
         break; // Success!
       } catch (error: any) {
@@ -114,7 +115,7 @@ export function useAimeeActions(
     }
 
     if (!response) {
-      logger.error('Orchestrator failed after retries', { error: lastError?.message, userId: user.uid });
+      logger.error("Orchestrator failed after retries", { error: lastError?.message, userId: user.uid });
       setTyping(false);
       setTypingContent(null);
       
@@ -123,17 +124,17 @@ export function useAimeeActions(
           role: ChatRole.ASSISTANT,
           content: "Desculpe, tive um problema técnico ao processar sua mensagem. Você pode tentar novamente?",
           timestamp: new Date().toISOString(),
-          status: 'error',
-          error: lastError?.message || 'Erro desconhecido'
+          status: "error",
+          error: lastError?.message || "Erro desconhecido"
         }, user.uid);
       } catch (e) {
-        logger.error('Error saving failure message', { error: e });
+        logger.error("Error saving failure message", { error: e });
       }
       return;
     }
 
     try {
-      const blocks = response.split('\n\n').filter(b => b.trim());
+      const blocks = response.split("\n\n").filter(b => b.trim());
 
       for (let i = 0; i < blocks.length; i++) {
         let block = blocks[i];
@@ -144,9 +145,9 @@ export function useAimeeActions(
         if (actionMatch) {
           try {
             actions = JSON.parse(actionMatch[1]);
-            block = block.replace(/\[ACTIONS: [\s\S]*\]/g, '').trim();
+            block = block.replace(/\[ACTIONS: [\s\S]*\]/g, "").trim();
           } catch (e) {
-            logger.error('Error parsing AI actions', { error: e });
+            logger.error("Error parsing AI actions", { error: e });
           }
         }
 
@@ -155,7 +156,7 @@ export function useAimeeActions(
         if (suggestionMatch) {
           try {
             const suggestion = JSON.parse(suggestionMatch[1]);
-            block = block.replace(/\[SUGGESTION: [\s\S]*\]/g, '').trim();
+            block = block.replace(/\[SUGGESTION: [\s\S]*\]/g, "").trim();
             // Store suggestion in profile metadata
             if (user) {
               const currentSuggestions = profile?.aimeeMetadata?.suggestions || [];
@@ -165,10 +166,10 @@ export function useAimeeActions(
                   ...profile?.aimeeMetadata,
                   suggestions: updatedSuggestions
                 }
-              } as any).catch(err => logger.error('Error saving suggestion', { err }));
+              } as any).catch(err => logger.error("Error saving suggestion", { err }));
             }
           } catch (e) {
-            logger.error('Error parsing AI suggestion', { error: e });
+            logger.error("Error parsing AI suggestion", { error: e });
           }
         }
 
@@ -183,7 +184,7 @@ export function useAimeeActions(
           timestamp: new Date().toISOString(),
           isInsight,
           read: isInsight ? false : undefined,
-          status: 'sent',
+          status: "sent",
           actions: actions.length > 0 ? actions : undefined
         };
         
@@ -193,12 +194,12 @@ export function useAimeeActions(
           
           // Trigger local notification if enabled and insight
           if (profile?.preferences?.notificationsEnabled && isInsight) {
-            notificationService.notify('Novo Insight da Aimee 🧠', {
-              body: block.substring(0, 100) + '...'
+            notificationService.notify("Novo Insight da Aimee 🧠", {
+              body: block.substring(0, 100) + "..."
             });
           }
         } catch (error) {
-          logger.error('Error saving AI message', { error });
+          logger.error("Error saving AI message", { error });
         }
         
         if (i < blocks.length - 1) {
@@ -207,7 +208,7 @@ export function useAimeeActions(
       }
     } catch (error: any) {
       // This catch is now only for processing errors after the AI response is received
-      logger.error('Processing error', { error: error.message, userId: user.uid });
+      logger.error("Processing error", { error: error.message, userId: user.uid });
       setTyping(false);
       setTypingContent(null);
     } finally {
@@ -217,29 +218,29 @@ export function useAimeeActions(
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) return;
-    logger.info('Updating profile', { userId: user.uid, updates: Object.keys(updates) });
+    logger.info("Updating profile", { userId: user.uid, updates: Object.keys(updates) });
     try {
       await profileRepository.updateProfile(user.uid, updates);
     } catch (error: any) {
-      showToast('Erro ao atualizar perfil', 'error');
+      showToast("Erro ao atualizar perfil", "error");
     }
   };
 
   const updateGlobalConfig = async (updates: Partial<GlobalConfig>) => {
-    const isSuperAdmin = profile?.role === 'admin' || user?.email === 'felipeteixeirams@gmail.com';
+    const isSuperAdmin = profile?.role === "admin" || user?.email === "felipeteixeirams@gmail.com";
     if (!isSuperAdmin) return;
-    logger.info('Updating global config', { userId: user?.uid, updates: Object.keys(updates) });
+    logger.info("Updating global config", { userId: user?.uid, updates: Object.keys(updates) });
     try {
-      await configRepository.updateGlobal(updates, user?.email || 'system');
+      await configRepository.updateGlobal(updates, user?.email || "system");
     } catch (error) {
-      logger.error('Global config update error', { error });
+      logger.error("Global config update error", { error });
     }
   };
 
   const syncGoogleCalendar = async (token: string, targetUserId: string) => {
-    logger.info('Starting Google Calendar bidirectional sync', { targetUserId });
+    logger.info("Starting Google Calendar bidirectional sync", { targetUserId });
     try {
-      const { calendarService } = await import('../services/calendarService');
+      const { calendarService } = await import("../services/calendarService.js");
       const googleEvents = await calendarService.fetchGoogleCalendarEvents(token);
       const localEvents = await eventRepository.list([], targetUserId);
       
@@ -280,51 +281,51 @@ export function useAimeeActions(
               pushCount++;
             }
           } catch (e: any) {
-            logger.warn('Failed to push individual event to Google', { eventId: lEvent.id, error: e.message });
+            logger.warn("Failed to push individual event to Google", { eventId: lEvent.id, error: e.message });
           }
         }
       }
 
-      logger.info('Google Calendar sync complete', { pullCount, pushCount });
+      logger.info("Google Calendar sync complete", { pullCount, pushCount });
       return { pullCount, pushCount };
     } catch (error: any) {
-      logger.error('Google Calendar sync error', { error: error.message });
+      logger.error("Google Calendar sync error", { error: error.message });
       throw error;
     }
   };
 
-  const handleAdminAction = async (userId: string, action: 'approve' | 'reject' | 'block' | 'approveName' | 'rejectName') => {
-    if (profile?.role !== 'admin') return;
+  const handleAdminAction = async (userId: string, action: "approve" | "reject" | "block" | "approveName" | "rejectName") => {
+    if (profile?.role !== "admin") return;
 
     try {
       const uData = await profileRepository.getProfile(userId);
       if (!uData) return;
 
-      if (action === 'approveName') {
+      if (action === "approveName") {
         const newName = uData.pendingNameChange?.newName;
         if (newName) {
           await profileRepository.updateProfile(userId, {
             displayName: newName,
-            'pendingNameChange.status': 'approved'
+            "pendingNameChange.status": "approved"
           } as any);
-          showToast(`Nome de ${uData.username} alterado para ${newName}`, 'success');
+          showToast(`Nome de ${uData.username} alterado para ${newName}`, "success");
         }
         return;
       }
 
-      if (action === 'rejectName') {
+      if (action === "rejectName") {
         await profileRepository.updateProfile(userId, {
-          'pendingNameChange.status': 'rejected'
+          "pendingNameChange.status": "rejected"
         } as any);
-        showToast(`Solicitação de nome de ${uData.username} recusada`, 'info');
+        showToast(`Solicitação de nome de ${uData.username} recusada`, "info");
         return;
       }
 
       let status: UserStatus = UserStatus.APPROVED;
       let blockedUntil = null;
 
-      if (action === 'reject') status = UserStatus.REJECTED;
-      if (action === 'block') {
+      if (action === "reject") status = UserStatus.REJECTED;
+      if (action === "block") {
         status = UserStatus.BLOCKED;
         const d = new Date();
         d.setDate(d.getDate() + 5);
@@ -341,13 +342,13 @@ export function useAimeeActions(
       
       const validation = notificationSchema.safeParse(payload);
       if (validation.success) {
-        fetch('/api/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(validation.data)
         }).catch(() => {});
       } else {
-        logger.warn('Frontend validation failed for notify', { errors: validation.error.issues });
+        logger.warn("Frontend validation failed for notify", { errors: validation.error.issues });
       }
 
       // Log to admin
@@ -374,10 +375,10 @@ export function useAimeeActions(
           isStock: false,
           createdAt: new Date().toISOString()
         } as any, targetId);
-        showToast(`${item.name} adicionado à lista`, 'success', 2000);
+        showToast(`${item.name} adicionado à lista`, "success", 2000);
       } catch (err: any) {
-        logger.error('Error adding shopping item', { error: err });
-        showToast('Erro ao adicionar item', 'error');
+        logger.error("Error adding shopping item", { error: err });
+        showToast("Erro ao adicionar item", "error");
       }
     },
     toggle: async (item: ShoppingItem, targetId: string, extraUpdates?: Partial<ShoppingItem>) => {
@@ -388,9 +389,9 @@ export function useAimeeActions(
           lastPurchasedAt: !item.purchased ? new Date().toISOString() : item.lastPurchasedAt,
           ...extraUpdates
         }, targetId);
-        showToast(item.purchased ? 'Item marcado como pendente' : 'Item marcado como comprado', 'success', 2000);
+        showToast(item.purchased ? "Item marcado como pendente" : "Item marcado como comprado", "success", 2000);
       } catch (err) {
-        showToast('Erro ao atualizar item', 'error');
+        showToast("Erro ao atualizar item", "error");
       }
     },
     moveToStock: async (item: ShoppingItem, targetId: string) => {
@@ -400,9 +401,9 @@ export function useAimeeActions(
           isStock: true,
           purchased: false
         }, targetId);
-        showToast(`${item.name} movido para o estoque`, 'success', 2000);
+        showToast(`${item.name} movido para o estoque`, "success", 2000);
       } catch (err) {
-        showToast('Erro ao mover item', 'error');
+        showToast("Erro ao mover item", "error");
       }
     },
     moveToList: async (item: ShoppingItem, targetId: string) => {
@@ -410,20 +411,20 @@ export function useAimeeActions(
       try {
         await shoppingRepository.update(item.id, {
           isStock: false,
-          urgency: 'medium'
+          urgency: "medium"
         }, targetId);
-        showToast(`${item.name} movido para a lista`, 'success', 2000);
+        showToast(`${item.name} movido para a lista`, "success", 2000);
       } catch (err) {
-        showToast('Erro ao mover item', 'error');
+        showToast("Erro ao mover item", "error");
       }
     },
     delete: async (item: ShoppingItem, targetId: string) => {
       if (!item.id) return;
       try {
         await shoppingRepository.delete(item.id, targetId);
-        showToast('Item removido', 'success', 2000);
+        showToast("Item removido", "success", 2000);
       } catch (err) {
-        showToast('Erro ao remover item', 'error');
+        showToast("Erro ao remover item", "error");
       }
     },
     finish: async (cartTotal: number, recordedPrices: Record<string, number>, recordedQuantities: Record<string, number>, targetId: string) => {
@@ -444,30 +445,30 @@ export function useAimeeActions(
 
         if (cartTotal > 0) {
           await transactionRepository.create({
-            description: 'Compra de Supermercado',
+            description: "Compra de Supermercado",
             amount: cartTotal,
-            type: 'expense',
-            category: 'Mercado',
+            type: "expense",
+            category: "Mercado",
             date: new Date().toISOString(),
             userId: targetId,
             createdAt: new Date().toISOString(),
           } as any, targetId);
-          showToast(`Gasto de R$ ${cartTotal.toFixed(2)} registrado e ${itemsToMove.length} itens movidos`, 'success', 3000);
+          showToast(`Gasto de R$ ${cartTotal.toFixed(2)} registrado e ${itemsToMove.length} itens movidos`, "success", 3000);
         } else if (itemsToMove.length > 0) {
-          showToast(`${itemsToMove.length} itens movidos para o estoque`, 'success', 2000);
+          showToast(`${itemsToMove.length} itens movidos para o estoque`, "success", 2000);
         }
         
         // E.1: Trigger insight after shopping
-        triggerInsightSweep(targetId, 'shopping_finish');
+        triggerInsightSweep(targetId, "shopping_finish");
       } catch (err) {
-        logger.error('Error finishing shopping', { error: err });
-        showToast('Erro ao finalizar compras', 'error');
+        logger.error("Error finishing shopping", { error: err });
+        showToast("Erro ao finalizar compras", "error");
       }
     }
   };
 
   const triggerInsightSweep = async (targetId: string, trigger: string) => {
-    logger.info('Triggering insight sweep', { targetId, trigger });
+    logger.info("Triggering insight sweep", { targetId, trigger });
     
     // 1. Check for data historical depth (minimum 30 days of transactions)
     const sortedTransactions = [...aimeeData.transactions].sort((a, b) => 
@@ -490,14 +491,14 @@ export function useAimeeActions(
     }
 
     if (!hasEnoughData) {
-      logger.info('Not enough data for strategic insight yet', { targetId });
+      logger.info("Not enough data for strategic insight yet", { targetId });
       return;
     }
 
     let prompt = "";
-    if (trigger === 'shopping_finish') {
+    if (trigger === "shopping_finish") {
       prompt = `O usuário finalizou compras. Analise o impacto no orçamento mensal e traga um insight estratégico sobre fôlego financeiro ou desvio de metas.`;
-    } else if (trigger === 'finance_update') {
+    } else if (trigger === "finance_update") {
       prompt = `Novas transações adicionadas. Analise se há padrões de alto impacto no histórico de 90 dias ou falta de reserva de emergência conforme as metas.`;
     }
 
@@ -513,11 +514,11 @@ export function useAimeeActions(
         aimeeData.goals,
         aimeeData.tasks,
         aimeeData.events,
-        profile?.selectedPersona || 'analytical',
+        profile?.selectedPersona || "analytical",
         aimeeData.globalConfig.aiProvider,
         undefined, // targetUserId
         undefined, // audio
-        'insight_sweep'
+        "insight_sweep"
       );
 
       // Extract actions if present
@@ -526,9 +527,9 @@ export function useAimeeActions(
       if (actionMatch) {
         try {
           actions = JSON.parse(actionMatch[1]);
-          insight = insight.replace(/\[ACTIONS: [\s\S]*\]/g, '').trim();
+          insight = insight.replace(/\[ACTIONS: [\s\S]*\]/g, "").trim();
         } catch (e) {
-          logger.error('Error parsing AI actions in insight', { error: e });
+          logger.error("Error parsing AI actions in insight", { error: e });
         }
       }
 
@@ -543,8 +544,8 @@ export function useAimeeActions(
       }, targetId);
 
       if (profile?.preferences?.notificationsEnabled) {
-        notificationService.notify('Alerta Estratégico 🚀', {
-          body: insight.substring(0, 120) + '...'
+        notificationService.notify("Alerta Estratégico 🚀", {
+          body: insight.substring(0, 120) + "..."
         });
       }
 
@@ -556,7 +557,7 @@ export function useAimeeActions(
       } as any);
 
     } catch (err) {
-      logger.error('Proactive insight failure', { err });
+      logger.error("Proactive insight failure", { err });
     }
   };
 
@@ -569,13 +570,13 @@ export function useAimeeActions(
           date: data.date || new Date().toISOString(),
           createdAt: new Date().toISOString()
         } as any, targetId);
-        showToast('Transação registrada', 'success', 2000);
+        showToast("Transação registrada", "success", 2000);
         
         // Trigger insight after manual finance update
-        triggerInsightSweep(targetId, 'finance_update');
+        triggerInsightSweep(targetId, "finance_update");
       } catch (err: any) {
-        logger.error('Error adding transaction', { error: err });
-        showToast('Erro ao registrar transação', 'error');
+        logger.error("Error adding transaction", { error: err });
+        showToast("Erro ao registrar transação", "error");
       }
     }
   };
@@ -584,26 +585,26 @@ export function useAimeeActions(
     toggle: async (taskId: string, currentStatus: string, targetId: string) => {
       try {
         await taskRepository.update(taskId, {
-          status: currentStatus === 'done' ? 'todo' : 'done' as any
+          status: currentStatus === "done" ? "todo" : "done" as any
         }, targetId);
-        showToast(currentStatus === 'done' ? 'Tarefa aberta' : 'Tarefa concluída', 'success', 2000);
+        showToast(currentStatus === "done" ? "Tarefa aberta" : "Tarefa concluída", "success", 2000);
 
-        if (profile?.preferences?.notificationsEnabled && currentStatus !== 'done') {
-            notificationService.notify('Tarefa Concluída! ✅', {
-              body: 'Mais um passo rumo ao sucesso familiar.'
+        if (profile?.preferences?.notificationsEnabled && currentStatus !== "done") {
+            notificationService.notify("Tarefa Concluída! ✅", {
+              body: "Mais um passo rumo ao sucesso familiar."
             });
         }
       } catch (err) {
-        showToast('Erro ao atualizar tarefa', 'error');
+        showToast("Erro ao atualizar tarefa", "error");
       }
     },
     create: async (task: Partial<HouseholdTask>, targetId: string) => {
       try {
         const baseTask = {
           ...task,
-          status: task.status || 'todo' as any,
+          status: task.status || "todo" as any,
           assignedTo: task.assignedTo || null,
-          category: (task.category as any) || 'cleaning',
+          category: (task.category as any) || "cleaning",
           isAllDay: task.isAllDay ?? false,
           createdAt: new Date().toISOString()
         };
@@ -624,23 +625,23 @@ export function useAimeeActions(
           await taskRepository.create(baseTask as any, targetId);
         }
 
-        showToast('Tarefa adicionada com sucesso', 'success', 2000);
+        showToast("Tarefa adicionada com sucesso", "success", 2000);
       } catch (err) {
-        showToast('Erro ao adicionar tarefa', 'error');
+        showToast("Erro ao adicionar tarefa", "error");
       }
     },
-    update: async (taskId: string, updates: Partial<HouseholdTask>, targetId: string, scope: 'single' | 'following' | 'all' = 'single') => {
+    update: async (taskId: string, updates: Partial<HouseholdTask>, targetId: string, scope: "single" | "following" | "all" = "single") => {
       try {
         const taskData = await taskRepository.getById(taskId, targetId);
         if (!taskData) return;
 
-        if (scope === 'single' || !taskData.recurrenceId) {
+        if (scope === "single" || !taskData.recurrenceId) {
           await taskRepository.update(taskId, updates, targetId);
         } else {
           const relatedTasks = await taskRepository.list([], targetId);
           const filteredTasks = relatedTasks.filter(d => {
             if (d.recurrenceId !== taskData.recurrenceId) return false;
-            if (scope === 'following' && d.dueDate && taskData.dueDate) {
+            if (scope === "following" && d.dueDate && taskData.dueDate) {
               return new Date(d.dueDate) >= new Date(taskData.dueDate);
             }
             return true;
@@ -648,23 +649,23 @@ export function useAimeeActions(
 
           await Promise.all(filteredTasks.map(d => d.id && taskRepository.update(d.id, updates, targetId)));
         }
-        showToast('Tarefa atualizada', 'success', 2000);
+        showToast("Tarefa atualizada", "success", 2000);
       } catch (err) {
-        showToast('Erro ao atualizar tarefa', 'error');
+        showToast("Erro ao atualizar tarefa", "error");
       }
     },
-    delete: async (taskId: string, targetId: string, scope: 'single' | 'following' | 'all' = 'single') => {
+    delete: async (taskId: string, targetId: string, scope: "single" | "following" | "all" = "single") => {
       try {
         const taskData = await taskRepository.getById(taskId, targetId);
         if (!taskData) return;
 
-        if (scope === 'single' || !taskData.recurrenceId) {
+        if (scope === "single" || !taskData.recurrenceId) {
           await taskRepository.delete(taskId, targetId);
         } else {
           const relatedTasks = await taskRepository.list([], targetId);
           const filteredTasks = relatedTasks.filter(d => {
             if (d.recurrenceId !== taskData.recurrenceId) return false;
-            if (scope === 'following' && d.dueDate && taskData.dueDate) {
+            if (scope === "following" && d.dueDate && taskData.dueDate) {
               return new Date(d.dueDate) >= new Date(taskData.dueDate);
             }
             return true;
@@ -672,9 +673,9 @@ export function useAimeeActions(
 
           await Promise.all(filteredTasks.map(d => d.id && taskRepository.delete(d.id, targetId)));
         }
-        showToast('Tarefa removida', 'success', 2000);
+        showToast("Tarefa removida", "success", 2000);
       } catch (err) {
-        showToast('Erro ao remover tarefa', 'error');
+        showToast("Erro ao remover tarefa", "error");
       }
     }
   };
@@ -694,7 +695,7 @@ export function useAimeeActions(
         try {
           await chatRepository.update(msgId, { read: true }, user.uid);
         } catch (error) {
-          logger.error('Error marking message as read', { error });
+          logger.error("Error marking message as read", { error });
         }
       },
       updateMessage: async (msgId: string, content: string) => {
@@ -702,7 +703,7 @@ export function useAimeeActions(
         try {
           await chatRepository.update(msgId, { content, timestamp: new Date().toISOString() }, user.uid);
         } catch (error) {
-          logger.error('Error updating message', { error });
+          logger.error("Error updating message", { error });
         }
       }
     },
@@ -710,10 +711,10 @@ export function useAimeeActions(
       delete: async (eventId: string, targetId: string) => {
         try {
           await eventRepository.delete(eventId, targetId);
-          showToast('Evento removido', 'success', 2000);
+          showToast("Evento removido", "success", 2000);
         } catch (error) {
-          logger.error('Error deleting event', { error });
-          showToast('Erro ao remover evento', 'error');
+          logger.error("Error deleting event", { error });
+          showToast("Erro ao remover evento", "error");
         }
       }
     },
@@ -721,30 +722,30 @@ export function useAimeeActions(
       save: async (config: any, targetId: string) => {
         try {
           // Send to API or save directly if repository
-          // Wait, I didn't create a repository in FE for this. 
-          // I can save via profileRepository? No, let's create a direct Firestore call to "users/userId/monitor_config"
-          const { db } = await import('../../lib/firebase.js');
-          const { collection, addDoc, setDoc, doc } = await import('firebase/firestore');
-          const configRef = doc(db, `users/${targetId}/monitor_config`, config.id || 'default');
+          // Wait, I didn"t create a repository in FE for this.
+          // I can save via profileRepository? No, let"s create a direct Firestore call to "users/userId/monitor_config"
+          const { db } = await import("../../lib/firebase.js");
+          const { collection, addDoc, setDoc, doc } = await import("firebase/firestore");
+          const configRef = doc(db, `users/${targetId}/monitor_config`, config.id || "default");
           await setDoc(configRef, { ...config, userId: targetId });
-          showToast('Configurações atualizadas', 'success', 2000);
+          showToast("Configurações atualizadas", "success", 2000);
 
           // Se o monitor foi configurado como ativo e não há eventos salvos ainda,
           // podemos triggar a primeira execução em background!
           if (config.active && (!aimeeData.monitorEvents || aimeeData.monitorEvents.length === 0)) {
-            logger.info('Primeiro trigger de descoberta de eventos iniciado em background.');
-            fetch('/api/events/discovery/trigger', { method: 'POST' })
+            logger.info("Primeiro trigger de descoberta de eventos iniciado em background.");
+            fetch("/api/events/discovery/trigger", { method: "POST" })
               .then(res => res.json())
               .then(data => {
-                logger.info('Job de descoberta inicial concluído', data);
+                logger.info("Job de descoberta inicial concluído", data);
               })
               .catch(err => {
-                logger.error('Erro ao triggar descoberta inicial', { err });
+                logger.error("Erro ao triggar descoberta inicial", { err });
               });
           }
         } catch (error: any) {
-          logger.error('Error saving monitor config', { error });
-          showToast('Erro ao salvar monitor', 'error');
+          logger.error("Error saving monitor config", { error });
+          showToast("Erro ao salvar monitor", "error");
         }
       }
     },
@@ -752,12 +753,12 @@ export function useAimeeActions(
       if (!user) return;
       try {
         await profileRepository.updateProfile(user.uid, {
-          'gamification.currentWeeklySpending': weeklySpending,
-          'gamification.points': points,
-          'gamification.level': level
+          "gamification.currentWeeklySpending": weeklySpending,
+          "gamification.points": points,
+          "gamification.level": level
         } as any);
       } catch (error) {
-        logger.error('Error updating gamification', { error });
+        logger.error("Error updating gamification", { error });
       }
     }
   };
