@@ -67,6 +67,22 @@ O aplicativo funciona pelo navegador, permitindo a instalação nativa simplific
     2.  *Certificados SSL exigidos*: Domínio customizado (`getaimee.com`) com HTTPS ativo obrigatório em servidores Cloud Run ou Firebase Hosting.
     3.  *Termos Legais e Políticas*: Publicação de documentos obrigatórios de privacidade para aceitação de domínios públicos de SSO do Google Workspace.
 
+#### 🛠️ 2.1.1 Solução de problemas: app instalado no iPhone (tela inicial)
+
+*   **Sintomas**: faixa branca embaixo da tela (sob o menu lateral, a curva entre o menu e o conteúdo some) e efeito de "vidro" sobre o topo. No Safari e no computador isso não acontece.
+*   **Causa**: `viewport-fit=cover` no meta viewport. Com o app instalado, o WebKit não pinta a faixa da barra inferior, e `apple-mobile-web-app-status-bar-style: black-translucent` gera o efeito de vidro no topo. Relatos abertos: https://bugs.webkit.org/show_bug.cgi?id=236445 e https://bugs.webkit.org/show_bug.cgi?id=254868.
+*   **Não funcionou (não repetir)**: regras CSS para cobrir a faixa (`100dvh`, `100lvh`, `-webkit-fill-available`, `calc(var(--altura) + env(safe-area-inset-bottom))`, pintar `html` ou `body`) e pintar `html`/`body` via `:has(...)`.
+*   **Solução aplicada**:
+    *   `src/client/components/StandaloneViewport.tsx`, montado na raiz (`src/client/main.tsx`), remove só `viewport-fit=cover` quando `(display-mode: standalone)`. Os demais parâmetros do viewport são mantidos. No navegador comum nada muda.
+    *   `--safe-bottom` (`src/client/index.css`) é o padding inferior de segurança: `env(safe-area-inset-bottom)` no navegador e `max(env(safe-area-inset-bottom), 16px)` no app instalado. Use `var(--safe-bottom)` em paddings inferiores, nunca `env()` direto.
+    *   `env(safe-area-inset-top)` dos cabeçalhos segue igual. Sem `cover`, ele passa a valer `0` no app instalado, o que é esperado porque o conteúdo começa abaixo da barra de status.
+*   **Ponto de atenção**: `env(safe-area-inset-bottom, 16px)` **não** funciona como fallback. O Safari define a variável como `0` quando não há `cover`, e o fallback do `env()` só vale quando a variável não existe. Por isso o `max()`.
+*   **Como verificar** (app instalado pela tela inicial do iPhone):
+    1.  nenhuma faixa branca embaixo, com o menu fechado ou aberto;
+    2.  com menu lateral, a curva do conteúdo aparece sobre o fundo do menu;
+    3.  nenhum efeito de vidro sobre o topo;
+    4.  campos de entrada e a barra inferior ficam acima da barra de gestos, sem cobri-la. Se ficarem apertados, ajuste o `16px` em `--safe-bottom`.
+
 ### 📱 2.2 Frente Secundária: Aplicativo Nativo (Lojas Oficiais)
 
 Envelopamento do aplicativo com CapacitorJS para distribuição direta na App Store (Apple) e Google Play Store.

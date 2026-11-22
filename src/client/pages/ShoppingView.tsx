@@ -285,7 +285,7 @@ export const ShoppingView = ({
           ))}
         </div>
 
-        <div className="p-6 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-900 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+        <div className="p-6 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-900 pb-[calc(1.5rem+var(--safe-bottom))]">
           {shoppingList.filter(item => !item.isStock).length > 0 && shoppingList.filter(item => !item.isStock).every(item => item.purchased) ? (
             <motion.button
               initial={{ scale: 0.9, opacity: 0 }}
@@ -313,7 +313,7 @@ export const ShoppingView = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+      className="h-full overflow-y-auto overflow-x-hidden p-6 space-y-6 pb-[calc(var(--safe-bottom)+5rem)]"
     >
       <div className="flex items-center justify-between">
         <div>
