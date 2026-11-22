@@ -230,7 +230,7 @@ export const SettingsView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+      className="h-full overflow-y-auto p-4 md:p-8 space-y-8 no-scrollbar pb-[calc(var(--safe-bottom)+5rem)]"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12 space-y-8">

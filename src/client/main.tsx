@@ -27,9 +27,11 @@ if ('serviceWorker' in navigator) {
 
 import { ToastProvider } from './components/ToastProvider.js';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary.js';
+import { StandaloneViewport } from './components/StandaloneViewport.js';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <StandaloneViewport />
     <GlobalErrorBoundary>
       <ToastProvider>
         <App />

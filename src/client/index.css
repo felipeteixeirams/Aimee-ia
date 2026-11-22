@@ -68,9 +68,26 @@
   }
 
   --safe-area-top: env(safe-area-inset-top);
-  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-bottom: var(--safe-bottom);
   --safe-area-left: env(safe-area-inset-left);
   --safe-area-right: env(safe-area-inset-right);
+}
+
+/*
+ * Padding inferior de segurança (barra de gestos do iPhone).
+ * No app instalado, StandaloneViewport.tsx tira viewport-fit=cover, e então
+ * env(safe-area-inset-bottom) vale 0. Como o env() só usa fallback quando a variável
+ * não existe (e ela existe, com valor 0), o mínimo de 16px é aplicado com max().
+ * Use sempre var(--safe-bottom) nos paddings inferiores, nunca env() direto.
+ */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --safe-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  }
 }
 
 @layer base {

@@ -831,7 +831,7 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden relative pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:pb-0 touch-pan-y">
+      <main className="flex-1 overflow-hidden relative pb-[calc(var(--safe-bottom)+3.5rem)] md:pb-0 touch-pan-y">
         <div className="h-full max-w-5xl mx-auto flex flex-col relative">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div

@@ -19,7 +19,7 @@ export function BottomMenu({ activeTab, setActiveTab, shoppingItemsCount }: Bott
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-3xl border-t border-neutral-200/50 dark:border-neutral-800/50 pb-[env(safe-area-inset-bottom)]">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-3xl border-t border-neutral-200/50 dark:border-neutral-800/50 pb-[var(--safe-bottom)]">
       <div className="flex items-center justify-around px-2 py-2">
         {tabs.map(tab => {
           const Icon = tab.icon;

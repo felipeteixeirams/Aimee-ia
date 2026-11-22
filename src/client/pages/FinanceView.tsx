@@ -104,7 +104,7 @@ export const FinanceView = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="h-full overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 no-scrollbar pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+      className="h-full overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 no-scrollbar pb-[calc(var(--safe-bottom)+5rem)]"
     >
       {/* Gamification & Goals Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
